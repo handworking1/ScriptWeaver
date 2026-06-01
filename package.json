@@ -1,0 +1,73 @@
+{
+  "name": "script-character-chat",
+  "version": "1.0.0",
+  "description": "Local-first script character chat app with customizable AI interface",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build && electron-builder",
+    "build:win": "tsc && vite build && set CSC_IDENTITY_AUTO_DISCOVERY=false && set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/ && electron-builder --win",
+    "build:mac": "tsc && vite build && electron-builder --mac",
+    "build:linux": "tsc && vite build && electron-builder --linux",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "lowlight": "^3.1.0",
+    "nanoid": "^5.0.9",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-markdown": "^9.0.1",
+    "rehype-highlight": "^7.0.1",
+    "remark-gfm": "^4.0.0",
+    "sql.js": "^1.12.0",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.15",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/sql.js": "^1.4.9",
+    "autoprefixer": "^10.4.20",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.16",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3",
+    "vite-plugin-electron": "^0.28.8",
+    "vite-plugin-electron-renderer": "^0.14.6"
+  },
+  "build": {
+    "appId": "com.script-character-chat.app",
+    "productName": "剧本角色聊天",
+    "artifactName": "${productName}-${version}-${arch}.${ext}",
+    "forceCodeSigning": false,
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "asarUnpack": [
+      "node_modules/sql.js/**"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "signAndEditExecutable": false
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"]
+    }
+  }
+}

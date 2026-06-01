@@ -1,0 +1,347 @@
+import { useEffect, useState } from 'react';
+import { useCharacterStore } from '@/stores/characterStore';
+import { useScriptStore } from '@/stores/scriptStore';
+import { useConfigStore } from '@/stores/configStore';
+import { useNavStore } from '@/stores/navStore';
+import { CharacterCard } from '@/components/CharacterCard';
+import { SettingsDiscussion } from '@/components/SettingsDiscussion';
+import { generateId } from '@/lib/id';
+import type { Character } from '@/types';
+
+export function CharactersPage() {
+  const { scripts, loadScripts } = useScriptStore();
+  const { activeConfigId } = useConfigStore();
+  const { characters, loading, loadCharacters, addCharacter, editCharacter, removeCharacter } = useCharacterStore();
+  const { selectedScriptId, selectScript, selectedCharacterId, selectCharacter, navigate } = useNavStore();
+
+  const [showForm, setShowForm] = useState(false);
+  const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [showDiscuss, setShowDiscuss] = useState(false);
+
+  // Form state
+  const [name, setName] = useState('');
+  const [personality, setPersonality] = useState('');
+  const [background, setBackground] = useState('');
+  const [speakingStyle, setSpeakingStyle] = useState('');
+  const [appearance, setAppearance] = useState('');
+  const [avatar, setAvatar] = useState('');
+
+
+
+  const handleAiComplete = async () => {
+    if (!name.trim() || !activeConfigId) return;
+    setAiLoading(true);
+    try {
+      const result = await window.electronAPI.aiComplete(activeConfigId, 'character', {
+        name: name.trim(),
+        personality,
+        background,
+        speakingStyle,
+        appearance,
+      });
+      if (result.error) { alert('AI 补全失败：' + result.error); return; }
+      if (result.personality) setPersonality(result.personality);
+      if (result.background) setBackground(result.background);
+      if (result.speakingStyle) setSpeakingStyle(result.speakingStyle);
+      if (result.appearance) setAppearance(result.appearance);
+    } catch (err: any) {
+      alert('AI 补全失败：' + err.message);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadScripts();
+  }, []);
+
+  useEffect(() => {
+    if (selectedScriptId) {
+      loadCharacters(selectedScriptId);
+    }
+  }, [selectedScriptId]);
+
+  const currentScript = scripts.find((s) => s.id === selectedScriptId);
+
+  const openCreate = () => {
+    setEditingCharacter(null);
+    setName('');
+    setPersonality('');
+    setBackground('');
+    setSpeakingStyle('');
+    setAppearance('');
+    setAvatar('');
+    setShowForm(true);
+  };
+
+  const openEdit = (character: Character) => {
+    setEditingCharacter(character);
+    setName(character.name);
+    setPersonality(character.personality);
+    setBackground(character.background);
+    setSpeakingStyle(character.speakingStyle);
+    setAppearance(character.appearance);
+    setAvatar(character.avatar);
+    setShowForm(true);
+  };
+
+  const handlePickAvatar = async () => {
+    const path = await window.electronAPI.pickAvatar();
+    if (path) setAvatar(path);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !selectedScriptId) return;
+
+    if (editingCharacter) {
+      await editCharacter(editingCharacter.id, {
+        name: name.trim(),
+        personality: personality.trim(),
+        background: background.trim(),
+        speakingStyle: speakingStyle.trim(),
+        appearance: appearance.trim(),
+        avatar,
+      });
+    } else {
+      await addCharacter({
+        id: generateId(),
+        scriptId: selectedScriptId,
+        name: name.trim(),
+        personality: personality.trim(),
+        background: background.trim(),
+        speakingStyle: speakingStyle.trim(),
+        appearance: appearance.trim(),
+        avatar,
+        createdAt: Date.now(),
+      });
+    }
+    setShowForm(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    await removeCharacter(id);
+    if (selectedCharacterId === id) selectCharacter(null);
+  };
+
+  const handleSelect = (id: string) => {
+    selectCharacter(id);
+  };
+
+  const goToChat = () => {
+    if (selectedScriptId && selectedCharacterId) navigate('chat');
+  };
+
+  return (
+    <div className="flex-1 overflow-y-auto p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-100">🎭 角色管理</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {currentScript ? `剧本：${currentScript.title}` : '请先在剧本管理中选择一个剧本'}
+            </p>
+          </div>
+          <button
+            onClick={openCreate}
+            disabled={!selectedScriptId}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            + 新建角色
+          </button>
+        </div>
+
+        {/* Script Selector */}
+        {scripts.length > 0 && (
+          <div className="flex gap-2 mb-6 flex-wrap">
+            {scripts.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => selectScript(s.id)}
+                className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                  selectedScriptId === s.id
+                    ? 'bg-purple-900/60 text-purple-300 border border-purple-500/50'
+                    : 'bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-600'
+                }`}
+              >
+                {s.title}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Form Modal */}
+        {showForm && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setShowForm(false)}>
+            <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-lg font-semibold text-gray-100 mb-4">
+                {editingCharacter ? '编辑角色' : '新建角色'}
+              </h3>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-sm text-gray-400">姓名 *</label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowDiscuss(true)}
+                        disabled={!activeConfigId}
+                        className="text-xs text-blue-400 hover:text-blue-300 disabled:text-gray-600"
+                      >
+                        💬 讨论
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAiComplete}
+                        disabled={aiLoading || !name.trim() || !activeConfigId}
+                        className="text-xs text-purple-400 hover:text-purple-300 disabled:text-gray-600"
+                      >
+                        {aiLoading ? '⏳ 生成中...' : '✨ AI 补全人设'}
+                      </button>
+                    </div>
+                  </div>
+                  {showDiscuss && activeConfigId && (
+                    <SettingsDiscussion
+                      configId={activeConfigId}
+                      type="character"
+                      fields={{ name, personality, background, speakingStyle, appearance }}
+                      onClose={() => setShowDiscuss(false)}
+                    />
+                  )}
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-purple-500"
+                    placeholder="输入角色名后点击 AI 补全自动生成性格、背景等"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">性格描述</label>
+                  <textarea
+                    value={personality}
+                    onChange={(e) => setPersonality(e.target.value)}
+                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-purple-500 h-20 resize-none"
+                    placeholder="如：傲娇、温柔、腹黑..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">背景故事</label>
+                  <textarea
+                    value={background}
+                    onChange={(e) => setBackground(e.target.value)}
+                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-purple-500 h-20 resize-none"
+                    placeholder="角色的过往经历..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">说话风格（口癖）</label>
+                  <input
+                    type="text"
+                    value={speakingStyle}
+                    onChange={(e) => setSpeakingStyle(e.target.value)}
+                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-purple-500"
+                    placeholder="如：句尾加喵~、自称本小姐、说话文绉绉..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">外貌描述</label>
+                  <textarea
+                    value={appearance}
+                    onChange={(e) => setAppearance(e.target.value)}
+                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-purple-500 h-16 resize-none"
+                    placeholder="发型、瞳色、服饰..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">头像</label>
+                  <div className="flex gap-2 items-center">
+                    <button
+                      type="button"
+                      onClick={handlePickAvatar}
+                      className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-sm transition-colors"
+                    >
+                      选择图片
+                    </button>
+                    {avatar && (
+                      <span className="text-xs text-gray-400 truncate max-w-[200px]">{avatar}</span>
+                    )}
+                  </div>
+                  {avatar && (
+                    <div className="mt-2 w-16 h-16 rounded-full overflow-hidden bg-gray-700">
+                      <img src={`file://${avatar}`} alt="头像预览" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    {editingCharacter ? '保存' : '创建'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Character List */}
+        {!selectedScriptId ? (
+          <div className="text-center py-16">
+            <div className="text-5xl mb-4">👆</div>
+            <p className="text-gray-500">请先在剧本管理中创建剧本，然后选择剧本</p>
+          </div>
+        ) : loading ? (
+          <div className="text-center text-gray-500 py-12">加载中...</div>
+        ) : characters.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="text-5xl mb-4">🎭</div>
+            <p className="text-gray-500 mb-4">该剧本下还没有角色</p>
+            <button
+              onClick={openCreate}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              + 新建角色
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {characters.map((character) => (
+                <CharacterCard
+                  key={character.id}
+                  character={character}
+                  onEdit={openEdit}
+                  onDelete={handleDelete}
+                  onSelect={handleSelect}
+                  isSelected={selectedCharacterId === character.id}
+                />
+              ))}
+            </div>
+            {selectedCharacterId && (
+              <div className="mt-6 text-center">
+                <button
+                  onClick={goToChat}
+                  className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  → 与「{characters.find((c) => c.id === selectedCharacterId)?.name}」开始对话
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,128 @@
+import { useState, useEffect } from 'react';
+
+interface CharEntry {
+  id: string;
+  name: string;
+  personality: string;
+  favorability: number;
+  bodyType: string;
+  kinks: string;
+  status: string;
+  notes: string;
+}
+
+interface Props {
+  scriptId: string;
+  onClose: () => void;
+}
+
+function defaultChar(id: string): CharEntry {
+  return { id, name: '', personality: '', favorability: 50, bodyType: '', kinks: '', status: '', notes: '' };
+}
+
+export function CharacterCompendium({ scriptId, onClose }: Props) {
+  const [chars, setChars] = useState<CharEntry[]>([]);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => { load(); }, []);
+
+  const load = async () => {
+    try {
+      const data = await window.electronAPI.getSetting(`compendium_${scriptId}`);
+      if (data) setChars(JSON.parse(data));
+    } catch { /* empty */ }
+  };
+
+  const save = async (updated: CharEntry[]) => {
+    setChars(updated);
+    await window.electronAPI.setSetting(`compendium_${scriptId}`, JSON.stringify(updated));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1500);
+  };
+
+  const addChar = () => save([...chars, defaultChar(Date.now().toString())]);
+  const removeChar = (id: string) => save(chars.filter((c) => c.id !== id));
+  const updateChar = (id: string, patch: Partial<CharEntry>) =>
+    save(chars.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+
+  const getFavorColor = (v: number) => {
+    if (v >= 80) return 'text-pink-400';
+    if (v >= 60) return 'text-green-400';
+    if (v >= 40) return 'text-gray-300';
+    if (v >= 20) return 'text-yellow-400';
+    return 'text-red-400';
+  };
+
+  const getFavorLabel = (v: number) => {
+    if (v >= 90) return '❤️ 挚爱';
+    if (v >= 75) return '💕 喜欢';
+    if (v >= 55) return '😊 友好';
+    if (v >= 35) return '😐 中立';
+    if (v >= 15) return '😒 冷淡';
+    return '😠 敌视';
+  };
+
+  return (
+    <div className="fixed inset-y-0 right-0 w-80 bg-gray-900 border-l border-gray-700 flex flex-col z-[60] shadow-2xl">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+        <div>
+          <div className="text-sm font-medium text-gray-200">📖 角色图鉴</div>
+          <div className="text-xs text-gray-500">{chars.length} 个角色</div>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={addChar} className="text-xs text-purple-400 hover:text-purple-300">+ 添加</button>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-300">✕</button>
+        </div>
+      </div>
+
+      {saved && <div className="px-4 py-1 bg-green-900/30 text-green-400 text-xs text-center">✓ 已保存</div>}
+
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        {chars.length === 0 && (
+          <div className="text-center text-gray-600 text-xs py-8">点击 + 添加角色，记录对话中出现的人物信息</div>
+        )}
+        {chars.map((c) => (
+          <div key={c.id} className="bg-gray-800 rounded-xl border border-gray-700 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <input value={c.name} onChange={(e) => updateChar(c.id, { name: e.target.value })}
+                className="bg-transparent text-sm font-medium text-gray-100 focus:outline-none border-b border-transparent focus:border-purple-500 w-24"
+                placeholder="角色名" />
+              <button onClick={() => removeChar(c.id)} className="text-gray-600 hover:text-red-400 text-xs">✕</button>
+            </div>
+
+            <input value={c.personality} onChange={(e) => updateChar(c.id, { personality: e.target.value })}
+              className="w-full bg-gray-900 rounded px-2 py-1 text-xs text-gray-300 mb-2 focus:outline-none focus:border-purple-500 border border-gray-700"
+              placeholder="性格..." />
+
+            <div className="mb-2">
+              <div className="flex items-center justify-between text-xs mb-1">
+                <span className="text-gray-500">好感度</span>
+                <span className={getFavorColor(c.favorability)}>{c.favorability} · {getFavorLabel(c.favorability)}</span>
+              </div>
+              <input type="range" min={0} max={100} value={c.favorability}
+                onChange={(e) => updateChar(c.id, { favorability: parseInt(e.target.value) })}
+                className="w-full h-1 accent-purple-500" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <input value={c.bodyType} onChange={(e) => updateChar(c.id, { bodyType: e.target.value })}
+                className="bg-gray-900 rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-purple-500 border border-gray-700"
+                placeholder="身材..." />
+              <input value={c.kinks} onChange={(e) => updateChar(c.id, { kinks: e.target.value })}
+                className="bg-gray-900 rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-purple-500 border border-gray-700"
+                placeholder="性癖..." />
+            </div>
+
+            <input value={c.status} onChange={(e) => updateChar(c.id, { status: e.target.value })}
+              className="w-full bg-gray-900 rounded px-2 py-1 text-xs text-gray-300 mb-2 focus:outline-none focus:border-purple-500 border border-gray-700"
+              placeholder="状态：健康/受伤/昏迷..." />
+
+            <textarea value={c.notes} onChange={(e) => updateChar(c.id, { notes: e.target.value })}
+              className="w-full bg-gray-900 rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:border-purple-500 border border-gray-700 h-12 resize-none"
+              placeholder="备注、关系、特殊能力..." />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
