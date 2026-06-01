@@ -1,4 +1,23 @@
-# 叙世 · ScriptWeaver
+<div align="center">
+
+# 叙 世
+
+### *ScriptWeaver*
+
+---
+
+**写剧本 · 塑角色 · 构世界 · AI 全程协创**
+
+一个本地优先、AI 驱动的沉浸式叙事创作平台。从灵感到成书，每一步都有 AI 相伴。
+
+[![Release](https://img.shields.io/badge/下载-Windows%20EXE-blue)](../../releases)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Electron](https://img.shields.io/badge/Electron-33-9feaf9)](https://electronjs.org)
+[![React](https://img.shields.io/badge/React-18-61dafb)](https://react.dev)
+
+</div>
+
+---
 
 > **AI 驱动的叙事空间 — 每个故事，都值得被讲述。**
 
