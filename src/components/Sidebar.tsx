@@ -21,7 +21,7 @@ export function Sidebar() {
   return (
     <aside className={`w-56 flex flex-col h-full ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'} border-r`}>
       <div className={`p-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
-        <h1 className="text-lg font-bold text-purple-500">剧本角色聊天</h1>
+        <h1 className="text-lg font-bold text-purple-500">叙世</h1>
         <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>本地优先 · AI 驱动</p>
       </div>
       <nav className="flex-1 py-2">

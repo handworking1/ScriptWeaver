@@ -41,7 +41,7 @@
   },
   "build": {
     "appId": "com.script-character-chat.app",
-    "productName": "剧本角色聊天",
+    "productName": "叙世",
     "artifactName": "${productName}-${version}-${arch}.${ext}",
     "forceCodeSigning": false,
     "files": [

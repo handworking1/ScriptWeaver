@@ -11,7 +11,7 @@ function createWindow() {
     height: 800,
     minWidth: 900,
     minHeight: 600,
-    title: '剧本角色聊天',
+    title: '叙世 · ScriptWeaver',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
