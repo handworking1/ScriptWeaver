@@ -3,4 +3,5 @@ dist/
 dist-electron/
 release/
 *.db
+*.exe
 .env
