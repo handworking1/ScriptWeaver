@@ -96,11 +96,11 @@ export function ChatInput({
             className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-100 focus:outline-none focus:border-purple-500 resize-none h-12"
             rows={1} disabled={isStreaming} />
           <button onClick={handleAIGenerate} disabled={replyLoading || isStreaming || !activeConfigId || recentMessages.length < 2}
-            className="px-4 py-3 bg-amber-700 hover:bg-amber-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0 transition-colors" title="AI 写回复">
-            {replyLoading ? '⏳ 生成中' : '✨ AI写'}
+            className="w-12 h-12 bg-amber-700 hover:bg-amber-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl flex items-center justify-center flex-shrink-0 transition-colors" title="AI 写回复">
+            <span className="text-sm">{replyLoading ? '⏳' : '✨'}</span>
           </button>
           <button onClick={handleSend} disabled={!inputValue.trim() || isStreaming}
-            className="px-5 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl font-medium flex-shrink-0">发送</button>
+            className="px-6 h-12 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0 flex items-center">发送</button>
         </div>
       </div>
     </>

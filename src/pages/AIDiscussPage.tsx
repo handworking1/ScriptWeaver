@@ -376,15 +376,15 @@ ${JSON.stringify(getFields(), null, 2)}`;
             placeholder="输入你的剧本想法... (Enter 发送)"
             className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-100 focus:outline-none focus:border-purple-500 resize-none h-12"
             rows={1} disabled={loading || !activeConfigId} />
-          <button onClick={handleUndo} disabled={messages.length < 2 || loading} className="px-4 py-3 bg-gray-700 hover:bg-gray-600 disabled:opacity-30 text-gray-300 rounded-xl text-sm font-medium flex-shrink-0" title="撤回最后一轮对话">↩ 撤回</button>
-          <button onClick={handleExtractChars} disabled={extracting || messages.length === 0 || !activeConfigId} className="px-4 py-3 bg-blue-700 hover:bg-blue-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0">{extracting ? '⏳' : '👥 角色'}</button>
+          <button onClick={handleUndo} disabled={messages.length < 2 || loading} className="px-4 h-12 bg-gray-700 hover:bg-gray-600 disabled:opacity-30 text-gray-300 rounded-xl text-sm font-medium flex-shrink-0 flex items-center" title="撤回最后一轮对话">↩ 撤回</button>
+          <button onClick={handleExtractChars} disabled={extracting || messages.length === 0 || !activeConfigId} className="px-4 h-12 bg-blue-700 hover:bg-blue-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0 flex items-center">{extracting ? '⏳' : '👥 角色'}</button>
           {targetScriptId && (
-            <button onClick={handleApply} disabled={applying || messages.length === 0 || !activeConfigId} className="px-4 py-3 bg-amber-700 hover:bg-amber-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0">{applying ? '⏳' : '📥 应用'}</button>
+            <button onClick={handleApply} disabled={applying || messages.length === 0 || !activeConfigId} className="px-4 h-12 bg-amber-700 hover:bg-amber-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0 flex items-center">{applying ? '⏳' : '📥 应用'}</button>
           )}
           {!targetScriptId && (
-            <button onClick={handleGenerate} disabled={generating || messages.length === 0 || !activeConfigId} className="px-4 py-3 bg-green-700 hover:bg-green-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0">{generating ? '⏳' : '📝 生成'}</button>
+            <button onClick={handleGenerate} disabled={generating || messages.length === 0 || !activeConfigId} className="px-4 h-12 bg-green-700 hover:bg-green-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0 flex items-center">{generating ? '⏳' : '📝 生成'}</button>
           )}
-          <button onClick={handleSend} disabled={!input.trim() || loading || !activeConfigId} className="px-5 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl font-medium flex-shrink-0">发送</button>
+          <button onClick={handleSend} disabled={!input.trim() || loading || !activeConfigId} className="px-5 h-12 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0 flex items-center">发送</button>
         </div>
       </div>
     </div>
