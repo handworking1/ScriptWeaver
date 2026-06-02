@@ -168,8 +168,8 @@ export function ScriptsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    await removeScript(id);
-    if (selectedScriptId === id) selectScript(null);
+    try { await removeScript(id); if (selectedScriptId === id) selectScript(null); }
+    catch (err: any) { alert('删除失败：' + (err.message || '未知错误')); }
   };
 
   const handleSelect = (id: string) => {

@@ -154,8 +154,8 @@ export function CharactersPage() {
   };
 
   const handleDelete = async (id: string) => {
-    await removeCharacter(id);
-    if (selectedCharacterId === id) selectCharacter(null);
+    try { await removeCharacter(id); if (selectedCharacterId === id) selectCharacter(null); }
+    catch (err: any) { alert('删除失败：' + (err.message || '未知错误')); }
   };
 
   const handleSelect = (id: string) => {
