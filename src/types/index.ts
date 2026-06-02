@@ -19,6 +19,7 @@ export interface ScriptExtra {
   timeline: string;
   chapters: string;
   banghuiEnabled: string;
+  lorebook?: { id: string; keywords: string; content: string }[];
 }
 
 export interface Script {

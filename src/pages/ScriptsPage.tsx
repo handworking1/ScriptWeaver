@@ -5,6 +5,7 @@ import { useNavStore } from '@/stores/navStore';
 import { ScriptCard } from '@/components/ScriptCard';
 import { ImportExportButtons } from '@/components/ImportExportButtons';
 import { generateId } from '@/lib/id';
+import { LorebookEditor } from '@/components/LorebookEditor';
 import type { Script } from '@/types';
 
 export function ScriptsPage() {
@@ -39,6 +40,7 @@ export function ScriptsPage() {
   const [timeline, setTimeline] = useState('');
   const [chapters, setChapters] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [lorebook, setLorebook] = useState<{ id: string; keywords: string; content: string }[]>([]);
   const [showExtra, setShowExtra] = useState(false);
 
   const GENRE_CATEGORIES = [
@@ -112,6 +114,7 @@ export function ScriptsPage() {
     setTimeline(ed.timeline || '');
     setChapters(ed.chapters || '');
     setSelectedTags(ed.tags ? ed.tags.split(',').filter(Boolean) : []);
+    setLorebook(Array.isArray(ed.lorebook) ? ed.lorebook : []);
     setShowExtra(false);
     setShowForm(true);
   };
@@ -135,6 +138,7 @@ export function ScriptsPage() {
       timeline: timeline.trim(),
       chapters: chapters.trim(),
       strictMode, workflowMode, recapMode, periodicSummary, ruleSelfCheck, banghuiEnabled,
+      lorebook,
     };
 
     /** Try/catch guards against missing DB columns or constraint violations.
@@ -335,6 +339,9 @@ export function ScriptsPage() {
                       <textarea value={extraDataText} onChange={(e) => setExtraDataText(e.target.value)}
                         className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-purple-500 h-16 resize-none"
                         placeholder="势力关系、等级系统、货币、特殊规则等..." />
+                    </div>
+                    <div className="border-t border-gray-700 pt-3">
+                      <LorebookEditor entries={lorebook} onChange={setLorebook} />
                     </div>
                     <div>
                       <label className="block text-xs text-gray-500 mb-1">对标作品</label>

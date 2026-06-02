@@ -31,6 +31,11 @@ interface Props {
   replyLength: string;
   /** en: Change reply length / zh: 更改回复长度 */
   onReplyLengthChange: (len: 'A' | 'B' | 'C' | 'D') => void;
+  /** Author's note */
+  authorNote: string;
+  onAuthorNoteChange: (note: string) => void;
+  showAuthorNote: boolean;
+  onToggleAuthorNote: () => void;
   selectedScriptId: string | null;
 }
 
@@ -42,6 +47,7 @@ export const ChatHeader = memo(function ChatHeader({
   onScriptPreview, showScriptPreview,
   onQuestList, showQuestList, hasQuests,
   replyLength, onReplyLengthChange,
+  authorNote, onAuthorNoteChange, showAuthorNote, onToggleAuthorNote,
   selectedScriptId,
 }: Props) {
   return (
@@ -95,6 +101,7 @@ export const ChatHeader = memo(function ChatHeader({
             <option value="C">📏 C 800字</option>
           </select>
         )}
+        <button onClick={onToggleAuthorNote} className={`px-2 py-1 text-xs rounded ${showAuthorNote ? 'bg-amber-900/40 text-amber-300' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`} title="作者注记">📝</button>
         {!isStreaming && displayMessagesLen > 0 && <button onClick={onSummary} className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-gray-300 rounded" title="总结">📋</button>}
         {!isStreaming && displayMessagesLen > 0 && <button onClick={onBranch} className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-gray-300 rounded" title="分支">🔀</button>}
         {!isStreaming && displayMessagesLen > 0 && <button onClick={onRegenerate} className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-gray-300 rounded" title="重新生成">🔄</button>}

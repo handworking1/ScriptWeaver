@@ -405,6 +405,51 @@ export function registerIpcHandlers(): void {
       }
       const sendMessages = [...systemMsgs, ...kept];
 
+      /** Lorebook injection: scan recent messages for keyword matches / 世界信息注入 */
+      if (conversationId) {
+        try {
+          const conv = getConversation(conversationId);
+          if (conv) {
+            const s = getScript(conv.script_id);
+            if (s) {
+            let ed: any = {};
+            try { ed = JSON.parse(s.extra_data || '{}'); } catch { /* ignore */ }
+            const lb = (ed as any)?.lorebook;
+            if (Array.isArray(lb) && lb.length > 0) {
+              const recentText = kept.map((m: any) => m.content).join(' ').slice(-2000);
+              const matched: string[] = [];
+              for (const entry of lb) {
+                if (!entry.keywords || !entry.content) continue;
+                const keys = entry.keywords.split(/[,，]/).map((k: string) => k.trim()).filter(Boolean);
+                if (keys.some((k: string) => recentText.includes(k))) {
+                  matched.push(entry.content);
+                }
+              }
+              if (matched.length > 0) {
+                const lore = `\n\n【世界信息】${matched.join('\n')}`;
+                sendMessages[sendMessages.length - 1] = {
+                  ...sendMessages[sendMessages.length - 1],
+                  content: (sendMessages[sendMessages.length - 1] as any).content + lore.slice(0, 1000),
+                };
+              }
+            }
+            } // if (s)
+          }
+        } catch { /* lorebook injection is best-effort */ }
+
+        /** Author's Note injection / 作者注记注入 */
+        try {
+          const note = getSetting('author_note_' + conversationId);
+          if (note) {
+            const trimmed = note.slice(0, 500);
+            sendMessages[sendMessages.length - 1] = {
+              ...sendMessages[sendMessages.length - 1],
+              content: (sendMessages[sendMessages.length - 1] as any).content + `\n\n【作者注记】${trimmed}`,
+            };
+          }
+        } catch { /* best-effort */ }
+      }
+
       const body: any = {
         model: configRow.model,
         messages: sendMessages,
