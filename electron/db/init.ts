@@ -32,7 +32,7 @@ export async function initDatabase(): Promise<void> {
   db.run('PRAGMA foreign_keys = ON');
 
   // Create tables
-  db.run(`CREATE TABLE IF NOT EXISTS scripts (id TEXT PRIMARY KEY, title TEXT NOT NULL, world_setting TEXT DEFAULT '', background TEXT DEFAULT '', created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`);
+  db.run(`CREATE TABLE IF NOT EXISTS scripts (id TEXT PRIMARY KEY, title TEXT NOT NULL, world_setting TEXT DEFAULT '', background TEXT DEFAULT '', extra_data TEXT DEFAULT '{}', created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`);
   db.run(`CREATE TABLE IF NOT EXISTS characters (id TEXT PRIMARY KEY, script_id TEXT NOT NULL REFERENCES scripts(id) ON DELETE CASCADE, name TEXT NOT NULL, personality TEXT DEFAULT '', background TEXT DEFAULT '', speaking_style TEXT DEFAULT '', appearance TEXT DEFAULT '', avatar TEXT DEFAULT '', created_at INTEGER NOT NULL)`);
   db.run(`CREATE TABLE IF NOT EXISTS ai_configs (id TEXT PRIMARY KEY, name TEXT NOT NULL, api_url TEXT NOT NULL, api_key_encrypted TEXT DEFAULT '', model TEXT NOT NULL, temperature REAL DEFAULT 0.8, max_tokens INTEGER DEFAULT 2048, top_p REAL DEFAULT 1.0, frequency_penalty REAL DEFAULT 0, presence_penalty REAL DEFAULT 0)`);
   db.run(`CREATE TABLE IF NOT EXISTS conversations (id TEXT PRIMARY KEY, script_id TEXT NOT NULL, character_id TEXT NOT NULL, parent_id TEXT DEFAULT NULL, title TEXT DEFAULT '', created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, FOREIGN KEY(script_id) REFERENCES scripts(id), FOREIGN KEY(character_id) REFERENCES characters(id))`);
@@ -50,7 +50,9 @@ export async function initDatabase(): Promise<void> {
   const version = currentVersion.length ? (currentVersion[0].values[0] as number[])[0] : 0;
 
   if (version < 1) {
-    // Columns parent_id and extra_data are now in CREATE TABLE, no ALTER needed
+    // For existing DBs created before these columns were in CREATE TABLE
+    try { db.run('ALTER TABLE conversations ADD COLUMN parent_id TEXT DEFAULT NULL'); } catch (_) { /* exists */ }
+    try { db.run('ALTER TABLE scripts ADD COLUMN extra_data TEXT DEFAULT \'{}\''); } catch (_) { /* exists */ }
     db.run('PRAGMA user_version = 1');
   }
 
