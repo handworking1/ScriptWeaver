@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 interface Props {
   inputValue: string;
   setInputValue: (v: string) => void;
@@ -8,17 +10,39 @@ interface Props {
   activeConfigId: string | null;
   failoverConfigId: string | null;
   sendMessage: (configId: string, text: string, failover?: string) => void;
+  recentMessages: { role: string; content: string }[];
+  characterName?: string;
 }
 
 export function ChatInput({
   inputValue, setInputValue, isStreaming, shortcutBar, shortcutsExpanded,
   setShortcutsExpanded, activeConfigId, failoverConfigId, sendMessage,
+  recentMessages, characterName,
 }: Props) {
+  const [aiReplies, setAiReplies] = useState<string[]>([]);
+  const [replyLoading, setReplyLoading] = useState(false);
+
   const handleSend = () => {
     const c = inputValue.trim();
     if (!c || isStreaming || !activeConfigId) return;
     setInputValue('');
     sendMessage(activeConfigId, c, failoverConfigId ?? undefined);
+  };
+
+  const handleAIGenerate = async () => {
+    if (replyLoading || !activeConfigId || recentMessages.length < 2) return;
+    setReplyLoading(true);
+    try {
+      const chatHistory = recentMessages.map(m => `[${m.role === 'user' ? '主角' : characterName || 'NPC'}]: ${m.content}`).join('\n');
+      const result = await window.electronAPI.discussSettings(activeConfigId, 'character',
+        { name: characterName || '', personality: '', background: '', speakingStyle: '', appearance: '' },
+        [{ role: 'system', content: `根据以下对话，为用户主角生成3个自然流畅的回复选项。每个选项10-30字左右，符合当前情境和角色关系。严格用|分隔，不加编号。\n\n对话：\n${chatHistory}` }]);
+      if (result.reply) {
+        const items = result.reply.split(/[|、]/).map(s => s.replace(/^\s*\d+[\.\、\)）]\s*/, '').trim()).filter(Boolean).slice(0, 3);
+        if (items.length > 0) setAiReplies(items);
+      }
+    } catch (err) { console.error('[AIGenerate]', err); }
+    finally { setReplyLoading(false); }
   };
 
   return (
@@ -40,6 +64,29 @@ export function ChatInput({
           )}
         </div>
       )}
+
+      {/* AI reply suggestions */}
+      {aiReplies.length > 0 && (
+        <div className="flex-shrink-0 bg-gray-900 border-b border-gray-800 px-4 pb-2">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center gap-2 text-xs text-gray-500 mb-1.5">
+              <span>✨ AI 建议回复</span>
+              <button onClick={handleAIGenerate} disabled={replyLoading} className="text-purple-400 hover:text-purple-300 disabled:text-gray-600">
+                {replyLoading ? '⏳' : '🔄 换一批'}
+              </button>
+            </div>
+            <div className="flex gap-1.5 flex-wrap">
+              {aiReplies.map((r, i) => (
+                <button key={i} onClick={() => { setInputValue(r); setAiReplies([]); }}
+                  className="px-3 py-1.5 text-xs bg-gray-800 border border-purple-500/30 hover:border-purple-400 text-gray-300 hover:text-gray-100 rounded-lg transition-colors text-left max-w-xs truncate">
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex-shrink-0 bg-gray-900 border-t border-gray-800 p-4">
         <div className="max-w-3xl mx-auto flex gap-3">
           <textarea value={inputValue} onChange={(e) => setInputValue(e.target.value)}
@@ -47,6 +94,10 @@ export function ChatInput({
             placeholder="输入消息... (Enter 发送)"
             className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-100 focus:outline-none focus:border-purple-500 resize-none h-12"
             rows={1} disabled={isStreaming} />
+          <button onClick={handleAIGenerate} disabled={replyLoading || isStreaming || !activeConfigId || recentMessages.length < 2}
+            className="px-4 py-3 bg-amber-700 hover:bg-amber-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0 transition-colors" title="AI 写回复">
+            {replyLoading ? '⏳' : '✨'}
+          </button>
           <button onClick={handleSend} disabled={!inputValue.trim() || isStreaming}
             className="px-5 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl font-medium flex-shrink-0">发送</button>
         </div>
