@@ -125,7 +125,7 @@ export function HistoryPage() {
         <button onClick={async () => {
           if (!showStats) {
             const convs = filterScriptId
-              ? await window.electronAPI.getConversations(filterScriptId)
+              ? await window.electronAPI.getConversations(filterScriptId, filterCharacterId)
               : conversations;
             let totalMsgs = 0, totalWords = 0, totalTokens = 0;
             for (const c of convs) {

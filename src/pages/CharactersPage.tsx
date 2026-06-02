@@ -5,7 +5,7 @@ import { useConfigStore } from '@/stores/configStore';
 import { useNavStore } from '@/stores/navStore';
 import { CharacterCard } from '@/components/CharacterCard';
 import { generateId } from '@/lib/id';
-import { importCharacterCard, exportToCardV2 } from '@/lib/characterCard';
+import { importCharacterCard } from '@/lib/characterCard';
 import type { Character } from '@/types';
 
 export function CharactersPage() {

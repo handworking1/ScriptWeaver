@@ -352,8 +352,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
             [{ role:'system', content:`用1-2句话总结对话剧情进展：\n${newMessages.slice(-20).map(m=>`[${m.role}]: ${m.content.slice(0,800)}`).join('\n')}` }]);
           if (r.reply) {
             const raw = await window.electronAPI.getSetting('auto_summaries_' + convId);
-            (JSON.parse(raw||'[]') as any[]).push({ text: r.reply, at: Date.now() });
-            await window.electronAPI.setSetting('auto_summaries_' + convId, JSON.stringify((JSON.parse(raw||'[]') as any[]).slice(-20)));
+            const list: any[] = JSON.parse(raw || '[]');
+            list.push({ text: r.reply, at: Date.now() });
+            await window.electronAPI.setSetting('auto_summaries_' + convId, JSON.stringify(list.slice(-20)));
           }
         } catch { /* best-effort */ }
       }

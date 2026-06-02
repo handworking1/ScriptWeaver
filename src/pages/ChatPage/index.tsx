@@ -244,7 +244,13 @@ export function ChatPage() {
     const list = raw ? JSON.parse(raw) : [];
     const text = list.length === 0 ? '暂无自动摘要' : list.map((s: any) => `📌 ${new Date(s.at).toLocaleString('zh-CN')}\n${s.text}`).join('\n\n');
     const w = window.open('', '_blank', 'width=500,height=400');
-    if (w) { w.document.write(`<pre style="color:#e0e0e0;background:#1a1a2e;padding:16px;font-size:13px;line-height:1.6;white-space:pre-wrap;font-family:sans-serif">${text}</pre>`); w.document.title = '摘要历史'; }
+    if (w) {
+      w.document.title = '摘要历史';
+      const pre = w.document.createElement('pre');
+      pre.style.cssText = 'color:#e0e0e0;background:#1a1a2e;padding:16px;font-size:13px;line-height:1.6;white-space:pre-wrap;font-family:sans-serif';
+      pre.textContent = text;
+      w.document.body.appendChild(pre);
+    }
   }).catch(() => {});
 }} selectedScriptId={selectedScriptId} />
       {/* Author's Note / 作者注记 */}

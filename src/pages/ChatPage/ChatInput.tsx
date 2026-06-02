@@ -46,6 +46,14 @@ export const ChatInput = memo(function ChatInput({
     setShowTemplates(false);
   };
 
+  /** Close template dropdown on outside click / 点击外部关闭模板下拉 */
+  useEffect(() => {
+    if (!showTemplates) return;
+    const handler = (e: MouseEvent) => { if (!(e.target as HTMLElement).closest('.template-dropdown')) setShowTemplates(false); };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [showTemplates]);
+
   /** Watch input for '@' — load matching characters from the script roster for autocomplete.
    *  监听输入中的@符号，从剧本角色列表加载匹配角色名供补全。
    *  Debounced at 300ms + stale-query guard to prevent thundering-herd on fast typing.
@@ -199,7 +207,7 @@ export const ChatInput = memo(function ChatInput({
               <span className="text-sm">📋</span>
             </button>
             {showTemplates && (
-              <div className="absolute bottom-full right-0 mb-2 w-64 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto">
+              <div className="template-dropdown absolute bottom-full right-0 mb-2 w-64 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto">
                 {templates.length === 0 ? (
                   <div className="p-3 text-xs text-gray-500">暂无模板，在设置中添加</div>
                 ) : templates.map((t, i) => (
