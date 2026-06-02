@@ -245,6 +245,15 @@ export function AIDiscussPage() {
   // ── Apply to existing script ────────────────────
   const handleApply = async () => {
     if (!targetScriptId || messages.length === 0 || !activeConfigId) return;
+    /** Only apply to real scripts, not new_* discussions / 只能应用到真实剧本 */
+    if (targetScriptId.startsWith('new_')) {
+      setMessages(prev => [...prev, { role: 'assistant', content: '❌ 当前是临时讨论，请先生成剧本再应用。' }]);
+      return;
+    }
+    if (!selectedScript) {
+      setMessages(prev => [...prev, { role: 'assistant', content: '❌ 未找到所选剧本，请刷新后重试。' }]);
+      return;
+    }
     setApplying(true);
     const prompt = `综合以上讨论，提取最新的剧本设定更新。必须输出严格JSON，不要任何额外文字：
 {
@@ -262,11 +271,21 @@ ${JSON.stringify(getFields(), null, 2)}`;
     const history = messages.map(m => ({ role: m.role, content: m.content }));
     try {
       const result = await window.electronAPI.discussSettings(activeConfigId, 'script', getFields(), [...history, { role: 'user' as const, content: prompt }]);
+      if (result.error) {
+        setMessages((prev) => [...prev, { role: 'assistant', content: '❌ 应用失败：' + result.error }]);
+        setApplying(false);
+        return;
+      }
       if (result.reply) {
-        const match = result.reply.match(/\{[\s\S]*?\}/);
+        // en: 贪婪匹配完整JSON对象 / Greedy match for full JSON object
+        const match = result.reply.match(/\{[\s\S]*\}/);
         if (match) {
           let data: any;
-          try { data = JSON.parse(match[0]); } catch (err) { console.error('[apply] parse error:', err); setApplying(false); return; }
+          try { data = JSON.parse(match[0]); } catch (err) {
+            setMessages((prev) => [...prev, { role: 'assistant', content: '❌ AI 返回格式异常，请重试。内容预览：' + match[0].slice(0, 100) }]);
+            setApplying(false);
+            return;
+          }
           await editScript(targetScriptId, {
             title: data.title || selectedScript?.title,
             worldSetting: data.worldSetting || selectedScript?.worldSetting,
@@ -281,10 +300,14 @@ ${JSON.stringify(getFields(), null, 2)}`;
             } as any,
           });
           await loadScripts();
-          setMessages((prev) => [...prev, { role: 'assistant', content: '✅ 设定已更新到剧本。可在剧本管理中查看。' }]);
+          setMessages((prev) => [...prev, { role: 'assistant', content: '✅ 设定已更新到剧本「' + (data.title || selectedScript.title) + '」。可在剧本管理中查看。' }]);
+        } else {
+          setMessages((prev) => [...prev, { role: 'assistant', content: '❌ AI 未返回有效JSON，请重新讨论后重试。' }]);
         }
+      } else {
+        setMessages((prev) => [...prev, { role: 'assistant', content: '❌ AI 无回复，请检查配置或重试。' }]);
       }
-    } catch (err: any) { console.error('[apply]', err); }
+    } catch (err: any) { setMessages((prev) => [...prev, { role: 'assistant', content: '❌ 应用出错：' + (err.message || '未知错误') }]); }
     finally { setApplying(false); }
   };
 
@@ -481,7 +504,8 @@ ${JSON.stringify(getFields(), null, 2)}`;
       <DiscussActionBar
         input={input} setInput={setInput}
         loading={loading} generating={generating} extracting={extracting} applying={applying}
-        targetScriptId={targetScriptId} messagesLen={messages.length} activeConfigId={activeConfigId}
+        targetScriptId={targetScriptId} isRealScript={!!targetScriptId && !targetScriptId.startsWith('new_')}
+        messagesLen={messages.length} activeConfigId={activeConfigId}
         onSend={handleSend} onUndo={handleUndo} onExtractChars={handleExtractChars}
         onApply={handleApply} onGenerate={handleGenerate}
       />

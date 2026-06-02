@@ -13,6 +13,8 @@ interface DiscussActionBarProps {
   extracting: boolean;
   applying: boolean;
   targetScriptId: string;
+  /** Whether targetScriptId is a real script (not new_* discussion) / 是否为真实剧本（非新建讨论） */
+  isRealScript: boolean;
   messagesLen: number;
   activeConfigId: string | null;
   onSend: () => void;
@@ -24,7 +26,7 @@ interface DiscussActionBarProps {
 
 export function DiscussActionBar({
   input, setInput, loading, generating, extracting, applying,
-  targetScriptId, messagesLen, activeConfigId,
+  targetScriptId, isRealScript, messagesLen, activeConfigId,
   onSend, onUndo, onExtractChars, onApply, onGenerate,
 }: DiscussActionBarProps) {
   return (
@@ -46,7 +48,7 @@ export function DiscussActionBar({
           className="px-4 h-12 bg-blue-700 hover:bg-blue-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0 flex items-center">
           {extracting ? '⏳' : '👥 角色'}
         </button>
-        {targetScriptId ? (
+        {isRealScript ? (
           <button onClick={onApply} disabled={applying || messagesLen === 0 || !activeConfigId}
             className="px-4 h-12 bg-amber-700 hover:bg-amber-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0 flex items-center">
             {applying ? '⏳' : '📥 应用'}
