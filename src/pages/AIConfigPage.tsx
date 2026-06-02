@@ -590,8 +590,8 @@ export function AIConfigPage() {
 
             {/* Template Form Modal */}
             {showTplForm && (
-              <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setShowTplForm(false)}>
-                <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 w-full max-w-lg mx-4" onClick={(e) => e.stopPropagation()}>
+              <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 w-full max-w-lg mx-4">
                   <h3 className="text-lg font-semibold text-gray-100 mb-4">{editingTplId ? '编辑模板' : '新建模板'}</h3>
                   <form onSubmit={async (e) => { e.preventDefault();
                     if (!tplForm.name.trim() || !tplForm.systemPrompt.trim()) return;

@@ -380,7 +380,7 @@ ${JSON.stringify(getFields(), null, 2)}`;
           )}
           {messages.map((m, i) => (
             <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] rounded-xl px-4 py-2.5 text-sm ${m.role === 'user' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-200'}`}>
+              <div className={`max-w-[80%] rounded-xl px-4 py-2.5 text-sm break-words overflow-hidden ${m.role === 'user' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-200'}`}>
                 {m.role === 'assistant' ? <MarkdownRenderer content={m.content} /> : m.content}
               </div>
             </div>
