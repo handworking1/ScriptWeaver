@@ -47,10 +47,10 @@ const electronAPI = {
   deletePromptTemplate: (id: string) => ipcRenderer.invoke('template:delete', id),
 
   // Chat streaming
-  chatSend: (configId: string, messages: any[], failoverConfigId?: string) =>
+  chatSend: (configId: string, messages: { role: string; content: string; _conversationId?: string }[], failoverConfigId?: string) =>
     ipcRenderer.invoke('chat:send', configId, messages, failoverConfigId),
   chatStop: () => ipcRenderer.invoke('chat:stop'),
-  chatSummary: (configId: string, messages: any[], characterName: string) =>
+  chatSummary: (configId: string, messages: { role: string; content: string }[], characterName: string) =>
     ipcRenderer.invoke('chat:summary', configId, messages, characterName),
   onChatToken: (callback: (data: { token: string; conversationId: string }) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, data: { token: string; conversationId: string }) =>
@@ -78,14 +78,14 @@ const electronAPI = {
   },
 
   // AI Discuss
-  discussSettings: (configId: string, type: string, fields: any, history: any[]) =>
+  discussSettings: (configId: string, type: string, fields: Record<string, string>, history: { role: string; content: string }[]) =>
     ipcRenderer.invoke('ai:discuss', configId, type, fields, history),
 
   // API Test
   testApi: (configId: string) => ipcRenderer.invoke('api:test', configId),
 
   // AI Complete
-  aiComplete: (configId: string, type: 'script' | 'character', partial: any) =>
+  aiComplete: (configId: string, type: 'script' | 'character', partial: Record<string, string>) =>
     ipcRenderer.invoke('ai:complete', configId, type, partial),
 
   // Global Settings

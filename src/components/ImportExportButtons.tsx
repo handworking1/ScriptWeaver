@@ -30,6 +30,7 @@ export function ImportExportButtons() {
       try {
         const text = await file.text();
         const data = JSON.parse(text);
+        if (!confirm('导入将覆盖当前所有数据（剧本、角色、对话、配置），确定继续？')) return;
         await window.electronAPI.importData(data);
         await loadScripts();
         alert('导入成功！');

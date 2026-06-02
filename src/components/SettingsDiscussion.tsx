@@ -74,7 +74,8 @@ export function SettingsDiscussion({ configId, type, fields, onClose, onCreateSc
       if (result.reply) {
         const match = result.reply.match(/\{[\s\S]*\}/);
         if (match) {
-          const data = JSON.parse(match[0]);
+          let data: any;
+          try { data = JSON.parse(match[0]); } catch { setMessages([...messages, { role: 'assistant', content: '❌ AI 返回格式异常' }]); setGenerating(false); return; }
           onCreateScript(data);
           setMessages([...messages, { role: 'assistant', content: '✅ 剧本已生成！' }]);
         } else {

@@ -4,17 +4,18 @@ import { useNavStore } from '@/stores/navStore';
 import { ConversationList } from '@/components/ConversationList';
 import { ChatBubble } from '@/components/ChatBubble';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
-import { exportConversationToMarkdown, exportConversationToJSON } from '@/lib/export';
+import { exportConversationToMarkdown, exportConversationToJSON, markdownToHtml } from '@/lib/export';
 import type { Conversation, Message } from '@/types';
 
-// Simple character name cache
-const charNameCache: Record<string, string> = {};
+// Character name cache with 5-minute TTL
+const charNameCache: Record<string, { name: string; ts: number }> = {};
 
 async function getCharName(charId: string): Promise<string> {
-  if (charNameCache[charId]) return charNameCache[charId];
+  const cached = charNameCache[charId];
+  if (cached && Date.now() - cached.ts < 300_000) return cached.name;
   const c = await window.electronAPI.getCharacter(charId);
   const name = c?.name ?? '未知角色';
-  charNameCache[charId] = name;
+  charNameCache[charId] = { name, ts: Date.now() };
   return name;
 }
 
@@ -178,7 +179,7 @@ export function HistoryPage() {
                     if (!selectedConv) return;
                     getCharName(selectedConv.characterId).then((name) => {
                       const md = exportConversationToMarkdown(selectedConv!, messages, name);
-                      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${selectedConv!.title}</title><style>body{font-family:serif;max-width:800px;margin:40px auto;padding:20px;line-height:1.8;font-size:16px}h1{text-align:center}h3{color:#555}@media print{body{margin:20px}}</style></head><body>${md.replace(/\n/g,'<br>').replace(/### /g,'<h3>').replace(/# /g,'<h1>').replace(/---/g,'<hr>')}</body></html>`;
+                      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${selectedConv!.title}</title><style>body{font-family:serif;max-width:800px;margin:40px auto;padding:20px;line-height:1.8;font-size:16px}h1{text-align:center}h3{color:#555}@media print{body{margin:20px}}</style></head><body>${markdownToHtml(md)}</body></html>`;
                       const w = window.open('', '_blank');
                       if (!w) { alert('弹窗被拦截，请允许弹窗后重试'); return; }
                       w.document.write(html);

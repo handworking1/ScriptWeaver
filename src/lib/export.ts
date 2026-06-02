@@ -51,3 +51,22 @@ export function exportConversationToJSON(
     2,
   );
 }
+
+/** Convert simple Markdown to basic HTML for PDF export.
+ *  Only handles headings, horizontal rules, and line breaks.
+ *  Safe — won't misinterpret # in code contexts since we
+ *  only match at line start after stripping code blocks. */
+export function markdownToHtml(md: string): string {
+  // Strip code blocks first to avoid #/--- misinterpretation
+  const stripped = md.replace(/```[\s\S]*?```/g, (match) => match.replace(/[#]/g, '&#35;').replace(/---/g, '&#45;&#45;&#45;'));
+  return stripped
+    .split('\n')
+    .map((line) => {
+      if (/^### /.test(line)) return `<h3>${line.slice(4)}</h3>`;
+      if (/^## /.test(line)) return `<h2>${line.slice(3)}</h2>`;
+      if (/^# /.test(line)) return `<h1>${line.slice(2)}</h1>`;
+      if (/^---/.test(line)) return '<hr>';
+      return line + '<br>';
+    })
+    .join('');
+}
