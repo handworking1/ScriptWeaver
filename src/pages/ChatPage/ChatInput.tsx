@@ -12,12 +12,13 @@ interface Props {
   sendMessage: (configId: string, text: string, failover?: string) => void;
   recentMessages: { role: string; content: string }[];
   characterName?: string;
+  banghuiEnabled?: boolean;
 }
 
 export function ChatInput({
   inputValue, setInputValue, isStreaming, shortcutBar, shortcutsExpanded,
   setShortcutsExpanded, activeConfigId, failoverConfigId, sendMessage,
-  recentMessages, characterName,
+  recentMessages, characterName, banghuiEnabled,
 }: Props) {
   const [aiReplies, setAiReplies] = useState<string[]>([]);
   const [replyLoading, setReplyLoading] = useState(false);
@@ -91,12 +92,12 @@ export function ChatInput({
         <div className="max-w-3xl mx-auto flex gap-3">
           <textarea value={inputValue} onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-            placeholder="输入消息... (Enter 发送)"
+            placeholder={banghuiEnabled ? '输入消息或帮回指令...' : '输入消息... (Enter 发送)'}
             className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-100 focus:outline-none focus:border-purple-500 resize-none h-12"
             rows={1} disabled={isStreaming} />
           <button onClick={handleAIGenerate} disabled={replyLoading || isStreaming || !activeConfigId || recentMessages.length < 2}
             className="px-4 py-3 bg-amber-700 hover:bg-amber-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0 transition-colors" title="AI 写回复">
-            {replyLoading ? '⏳' : '✨'}
+            {replyLoading ? '⏳ 生成中' : '✨ AI写'}
           </button>
           <button onClick={handleSend} disabled={!inputValue.trim() || isStreaming}
             className="px-5 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl font-medium flex-shrink-0">发送</button>

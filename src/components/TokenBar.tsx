@@ -1,3 +1,5 @@
+import React from 'react';
+
 interface TokenBarProps {
   used: number;
   limit: number;
@@ -5,7 +7,7 @@ interface TokenBarProps {
   estimatedCost: string;
 }
 
-export function TokenBar({ used, limit, totalInSession, estimatedCost }: TokenBarProps) {
+export const TokenBar = React.memo(function TokenBar({ used, limit, totalInSession, estimatedCost }: TokenBarProps) {
   const pct = Math.min(100, Math.round((used / limit) * 100));
   const isWarning = pct > 70;
   const isDanger = pct > 90;
@@ -34,4 +36,4 @@ export function TokenBar({ used, limit, totalInSession, estimatedCost }: TokenBa
       <span className="text-gray-500">{estimatedCost}</span>
     </div>
   );
-}
+});

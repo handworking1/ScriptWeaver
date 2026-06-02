@@ -12,6 +12,9 @@ export function exportAllData() {
 }
 
 export function importAllData(data: { scripts: any[]; characters: any[]; conversations: any[]; messages: any[]; aiConfigs: any[]; promptTemplates?: any[] }) {
+  if (!Array.isArray(data.scripts) || !Array.isArray(data.characters) || !Array.isArray(data.conversations) || !Array.isArray(data.messages) || !Array.isArray(data.aiConfigs)) {
+    throw new Error('导入数据格式无效：缺少必要的数据表');
+  }
   const d = getDb();
   try {
   d.run('BEGIN TRANSACTION');
