@@ -1,6 +1,6 @@
 {
   "name": "script-character-chat",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Local-first script character chat app with customizable AI interface",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -56,7 +56,7 @@
       "node_modules/sql.js/**"
     ],
     "directories": {
-      "output": "release"
+      "output": "release/v${version}"
     },
     "win": {
       "target": [
