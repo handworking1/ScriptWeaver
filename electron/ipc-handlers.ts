@@ -367,9 +367,18 @@ export function registerIpcHandlers(): void {
       if (!configRow) continue;
 
       const apiKey = decryptApiKey(configRow.api_key_encrypted);
+
+      /** en: Keep system messages intact, trim oldest non-system messages if too many.
+       *  zh: 保留系统消息完整，非系统消息超过100条时裁最早的消息（不动剧本设定）。 */
+      const systemMsgs = messages.filter((m: any) => m.role === 'system');
+      const nonSystem = messages.filter((m: any) => m.role !== 'system');
+      const sendMessages = nonSystem.length > 100
+        ? [...systemMsgs, ...nonSystem.slice(-80)]
+        : messages;
+
       const body = {
         model: configRow.model,
-        messages,
+        messages: sendMessages,
         temperature: configRow.temperature,
         max_tokens: configRow.max_tokens,
         top_p: configRow.top_p,

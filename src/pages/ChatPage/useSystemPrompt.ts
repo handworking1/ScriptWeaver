@@ -8,8 +8,6 @@ function roughTokens(text: string): number {
 
 /** Max system prompt tokens before truncation / 截断阈值 */
 const MAX_SYSTEM_TOKENS = 6000;
-/** Max length for worldSetting/background in prompt / 核心字段最大长度 */
-const MAX_FIELD_LEN = 800;
 
 /** en: Truncate system prompt if it exceeds token limit.
  *  zh: 系统提示超长时逐级截断。Priority: keep core, trim banghui > protagonist > globalRules. */
@@ -154,11 +152,8 @@ export function useSystemPrompt(
   };
 
   const build1v1Prompt = async (char: Character): Promise<string> => {
-    // en: 截断过长背景 / Truncate long background
-    const bg = (script?.background || '');
-    const truncatedBg = bg.length > MAX_FIELD_LEN ? bg.slice(0, MAX_FIELD_LEN) + '...(已精简)' : bg;
     const tpl = templates.find((t) => t.id === activeTemplateId);
-    let p = tpl ? buildSystemPromptFromTemplate(tpl, char, truncatedBg) : buildSystemPrompt(char, truncatedBg);
+    let p = tpl ? buildSystemPromptFromTemplate(tpl, char, script?.background) : buildSystemPrompt(char, script?.background);
     p = applySystemMode(p);
     p = applyNarrativeMode(p);
     p = await applyGlobalRules(p);
@@ -169,12 +164,7 @@ export function useSystemPrompt(
   };
 
   const buildWorldPrompt = async (): Promise<string> => {
-    // en: 截断过长字段 / Truncate overly long core fields
-    const ws = (script?.worldSetting || '未设定');
-    const bg = (script?.background || '未设定');
-    const truncatedWs = ws.length > MAX_FIELD_LEN ? ws.slice(0, MAX_FIELD_LEN) + '...(已精简)' : ws;
-    const truncatedBg = bg.length > MAX_FIELD_LEN ? bg.slice(0, MAX_FIELD_LEN) + '...(已精简)' : bg;
-    let p = `你是剧本《${script?.title || '未命名'}》的叙述者（Game Master）。\n\n【世界观】${truncatedWs}\n【故事背景】${truncatedBg}\n\n以第二人称引导玩家，控制NPC，描述场景。NPC说话标注【名字】。`;
+    let p = `你是剧本《${script?.title || '未命名'}》的叙述者（Game Master）。\n\n【世界观】${script?.worldSetting || '未设定'}\n【故事背景】${script?.background || '未设定'}\n\n以第二人称引导玩家，控制NPC，描述场景。NPC说话标注【名字】。`;
     p = applySystemMode(p);
     p = applyNarrativeMode(p);
     p = await applyGmSettings(p);
