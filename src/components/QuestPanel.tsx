@@ -63,7 +63,9 @@ export function QuestPanel({ scriptId, conversationId, configId, mainQuests, sid
     // Restore saved status
     (async () => {
       try {
-        const key = STORAGE_KEY_PREFIX + scriptId;
+        // en: 按对话隔离任务状态 / Per-conversation quest state
+        const suffix = conversationId ? `_${conversationId}` : '';
+        const key = STORAGE_KEY_PREFIX + scriptId + suffix;
         const raw = await window.electronAPI.getSetting(key);
         if (raw) {
           const saved: Record<string, Quest['status']> = JSON.parse(raw);
@@ -80,7 +82,8 @@ export function QuestPanel({ scriptId, conversationId, configId, mainQuests, sid
   const persist = async (updated: Quest[]) => {
     const map: Record<string, Quest['status']> = {};
     updated.forEach(q => { map[q.id] = q.status; });
-    await window.electronAPI.setSetting(STORAGE_KEY_PREFIX + scriptId, JSON.stringify(map));
+    const suffix = conversationId ? `_${conversationId}` : '';
+    await window.electronAPI.setSetting(STORAGE_KEY_PREFIX + scriptId + suffix, JSON.stringify(map));
   };
 
   /** Toggle quest status: pending → active → done → pending / 切换任务状态 */

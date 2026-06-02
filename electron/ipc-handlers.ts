@@ -385,13 +385,8 @@ export function registerIpcHandlers(): void {
         });
         // Rejoin with proper separator
         const result = kept.join('\n\n---\n\n');
-        // If everything was removed, return a minimal prompt
-        if (result.trim().length < 20) {
-          const first = blocks[0] || '';
-          const idx = first.indexOf('\n\n以第二人称');
-          if (idx > 0) return first.slice(idx + 2);
-          return first.slice(0, 200);
-        }
+        // If everything was removed, keep full original content / 全部被删则保留原文
+        if (result.trim().length < 20) return content;
         return result;
       };
       const systemMsgs = messages.filter((m: any) => m.role === 'system').map((m: any) => ({

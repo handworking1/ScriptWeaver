@@ -117,6 +117,7 @@ export function ChatPage() {
     } catch (err) {
       console.error('[ChatPage] start1v1Chat failed:', err);
       useChatStore.getState().setStreamError('启动对话失败：' + (err as Error).message);
+      setShowSetup(true);
     }
   };
 
@@ -165,17 +166,19 @@ export function ChatPage() {
   };
 
   /** en: Change reply length mid-conversation and update format rules / 对话中更改回复长度 */
-  const handleReplyLengthChange = (len: 'A' | 'B' | 'C' | 'D') => {
+  const handleReplyLengthChange = async (len: 'A' | 'B' | 'C' | 'D') => {
     setReplyLength(len);
     try {
       const msgs = useChatStore.getState().messages;
       const sysMsg = msgs.find(m => m.role === 'system');
       if (sysMsg && activeConversationId) {
         const lm: Record<string, string> = { A: '每次回复>=3000字', B: '每次回复~1500字', C: '每次回复~800字', D: '自主决定回复长度，倾向长回复' };
-        const newRules = `\n\n---\n【回复长度】${lm[len]}`;
+        const rules = [`\n\n---\n【回复长度】${lm[len]}`];
+        if (interactionOpts === 'T') rules.push('【互动选项】末尾用 [SUGGESTIONS: ...] 提供3个可选行动');
         const clean = sysMsg.content.replace(/\n\n---\n【回复长度】[^\n]*(\n【互动选项】[^\n]*)?/g, '');
-        window.electronAPI.updateMessage(sysMsg.id, clean + newRules);
-        useChatStore.getState().loadMessages(activeConversationId);
+        const updated = clean + rules.join('\n');
+        await window.electronAPI.updateMessage(sysMsg.id, updated);
+        await useChatStore.getState().loadMessages(activeConversationId);
       }
     } catch (err) { console.error('[replyLength] update failed:', err); }
   };

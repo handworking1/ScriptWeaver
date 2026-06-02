@@ -164,7 +164,12 @@ export function useSystemPrompt(
   };
 
   const buildWorldPrompt = async (): Promise<string> => {
-    let p = `你是剧本《${script?.title || '未命名'}》的叙述者（Game Master）。\n\n【世界观】${script?.worldSetting || '未设定'}\n【故事背景】${script?.background || '未设定'}\n\n以第二人称引导玩家，控制NPC，描述场景。NPC说话标注【名字】。`;
+    const mq = script?.extraData?.mainQuests;
+    const sq = script?.extraData?.sideQuests;
+    let p = `你是剧本《${script?.title || '未命名'}》的叙述者（Game Master）。\n\n【世界观】${script?.worldSetting || '未设定'}\n【故事背景】${script?.background || '未设定'}`;
+    if (mq) p += `\n【主线任务】${mq}`;
+    if (sq) p += `\n【支线任务】${sq}`;
+    p += `\n\n以第二人称引导玩家，控制NPC，描述场景。NPC说话标注【名字】。`;
     p = applySystemMode(p);
     p = applyNarrativeMode(p);
     p = await applyGmSettings(p);
