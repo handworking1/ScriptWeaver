@@ -315,6 +315,11 @@ ${JSON.stringify(getFields(), null, 2)}`;
               </span>
             );
           })}
+          {!targetScriptId && (
+            <span className="inline-flex items-center gap-0.5 px-2 py-1 text-xs rounded bg-purple-900/50 text-purple-300">
+              新建讨论
+            </span>
+          )}
           <button onClick={() => { setTargetScriptId(''); setMessages([]); setTargetTitle(''); }} className="px-2 py-1 text-xs rounded bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200">+</button>
           <select value="" onChange={e => { if (e.target.value) openScript(e.target.value); }}
             className="bg-gray-700 text-gray-400 hover:bg-gray-600 rounded px-1 py-0.5 text-xs">
@@ -323,9 +328,7 @@ ${JSON.stringify(getFields(), null, 2)}`;
               <option key={s.id} value={s.id}>{s.title}</option>
             ))}
           </select>
-          {!targetScriptId && <input value={targetTitle} onChange={e => setTargetTitle(e.target.value)} className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 w-36" placeholder="新剧本标题" />}
         </div>
-        {!targetScriptId && <input value={targetTitle} onChange={e => setTargetTitle(e.target.value)} className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 w-36" placeholder="新剧本标题（可选）" />}
         <div className="ml-auto flex gap-1.5 flex-wrap">
           <span className="text-xs text-gray-600 self-center mr-1">AI:</span>
           {configs.map(c => (
