@@ -53,7 +53,7 @@ export function AIDiscussPage() {
         } else {
           setMessages([]);
         }
-      } catch { setMessages([]); }
+      } catch (err) { console.error('[discuss] load:', err); setMessages([]); }
     })();
   }, [targetScriptId]);
 
@@ -214,7 +214,7 @@ ${JSON.stringify(getFields(), null, 2)}`;
       const result = await window.electronAPI.discussSettings(activeConfigId, 'character', { name: '', personality: '', background: '', speakingStyle: '', appearance: '' }, [...history, { role: 'user' as const, content: prompt }]);
       if (result.reply) {
         const match = result.reply.match(/\[[\s\S]*?\]/);
-        if (match) { try { setDetectedChars(JSON.parse(match[0])); } catch {} }
+        if (match) { try { setDetectedChars(JSON.parse(match[0])); } catch (err) { console.error('[extractChars] parse:', err); } }
         else { setMessages(prev => [...prev, { role: 'assistant', content: '❌ 未检测到角色信息' }]); }
       }
     } catch (err) { console.error('[extractChars]', err); }

@@ -33,7 +33,7 @@ export function CharacterCompendium({ scriptId, conversationId, configId, onClos
     try {
       const data = await window.electronAPI.getSetting(`compendium_${scriptId}`);
       if (data) setChars(JSON.parse(data));
-    } catch { /* empty */ }
+    } catch (err) { console.error('[compendium] load:', err); }
   };
 
   const save = async (updated: CharEntry[]) => {

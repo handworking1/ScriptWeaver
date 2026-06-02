@@ -27,13 +27,13 @@ export function estimateMessagesTokens(messages: { content: string }[]): number 
   return messages.reduce((sum, m) => sum + estimateTokens(m.content), 0);
 }
 
-/** Estimated cost per 1M tokens (user-configurable) */
-const DEFAULT_INPUT_COST = 0.15;   // $0.15 per 1M input tokens (GPT-4o-mini)
-const DEFAULT_OUTPUT_COST = 0.60;  // $0.60 per 1M output tokens
+/** Estimated cost per 1M tokens — approximate reference only, varies by model */
+const DEFAULT_INPUT_COST = 0.15;   // reference (GPT-4o-mini-ish)
+const DEFAULT_OUTPUT_COST = 0.60;
 
 export function estimateCost(promptTokens: number, completionTokens: number): string {
   const cost = (promptTokens / 1_000_000) * DEFAULT_INPUT_COST +
     (completionTokens / 1_000_000) * DEFAULT_OUTPUT_COST;
-  if (cost < 0.01) return '< $0.01';
-  return `$${cost.toFixed(4)}`;
+  if (cost < 0.01) return '≈ <$0.01';
+  return `≈ $${cost.toFixed(4)}`;
 }

@@ -42,7 +42,8 @@ describe('tokenCounter', () => {
   });
 
   test('estimateCost formats correctly', () => {
-    expect(estimateCost(0, 1000)).toMatch(/^[<$]/);
+    const result = estimateCost(0, 1000);
+    expect(result).toMatch(/≈/);
   });
 });
 
