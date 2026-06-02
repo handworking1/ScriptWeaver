@@ -27,8 +27,6 @@ export function AIDiscussPage() {
   const [detectedChars, setDetectedChars] = useState<any[]>([]);
   const [targetScriptId, setTargetScriptId] = useState<string>('');
   const [targetTitle, setTargetTitle] = useState('');
-  const [showManage, setShowManage] = useState(false);
-  const [showCharCreate, setShowCharCreate] = useState(false);
   const [charName, setCharName] = useState('');
   const [charPersonality, setCharPersonality] = useState('');
   const [editFields, setEditFields] = useState<Record<string, string>>({});
@@ -275,22 +273,18 @@ ${JSON.stringify(getFields(), null, 2)}`;
 
   return (
     <div className="flex-1 flex flex-col h-full">
-      <div className="flex-shrink-0 bg-gray-900 border-b border-gray-800 px-4 py-3 flex items-center gap-3">
+      <div className="flex-shrink-0 bg-gray-900 border-b border-gray-800 px-4 py-3 flex items-center gap-3 flex-wrap">
         <h2 className="text-lg font-bold text-gray-100">💬 AI 剧本讨论</h2>
-        <div className="flex gap-2 ml-4">
-          <select value={targetScriptId} onChange={e => { setTargetScriptId(e.target.value); window.electronAPI.setSetting('discuss_last_script', e.target.value); }}
-            className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-xs text-gray-200">
-            <option value="">新建剧本讨论</option>
-            {scripts.map(s => (<option key={s.id} value={s.id}>{s.title}</option>))}
-          </select>
-          {!targetScriptId && <input value={targetTitle} onChange={e => setTargetTitle(e.target.value)} className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-xs text-gray-200 w-40" placeholder="剧本标题（可选）" />}
+        <div className="flex gap-1.5 flex-wrap">
+          <button onClick={() => { setTargetScriptId(''); setMessages([]); }} className={`px-2 py-1 text-xs rounded ${!targetScriptId ? 'bg-purple-900/50 text-purple-300' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}>+ 新建</button>
+          {scripts.map(s => (
+            <button key={s.id} onClick={() => { setTargetScriptId(s.id); window.electronAPI.setSetting('discuss_last_script', s.id); }}
+              className={`px-2 py-1 text-xs rounded transition-colors ${targetScriptId === s.id ? 'bg-purple-900/50 text-purple-300' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}>{s.title}</button>
+          ))}
         </div>
-        <div className="ml-auto flex gap-2 items-center">
-          {targetScriptId && (
-            <button onClick={() => setShowCharCreate(!showCharCreate)} className="text-xs text-green-400 hover:text-green-300">
-              {showCharCreate ? '▲ 角色' : '🎭 角色'}
-            </button>
-          )}
+        {!targetScriptId && <input value={targetTitle} onChange={e => setTargetTitle(e.target.value)} className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 w-36" placeholder="新剧本标题（可选）" />}
+        <div className="ml-auto flex gap-1.5 flex-wrap">
+          <span className="text-xs text-gray-600 self-center mr-1">AI:</span>
           {configs.map(c => (
             <button key={c.id} onClick={() => useConfigStore.getState().setActiveConfig(c.id)}
               className={`px-2 py-1 text-xs rounded transition-colors ${activeConfigId === c.id ? 'bg-purple-900/50 text-purple-300' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}>{c.name}</button>
@@ -298,31 +292,25 @@ ${JSON.stringify(getFields(), null, 2)}`;
         </div>
       </div>
 
-      {/* Character quick-create */}
-      {showCharCreate && targetScriptId && (
+      {/* Always-visible character quick-create */}
+      {targetScriptId && (
         <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700 px-4 py-2">
           <div className="max-w-3xl mx-auto flex gap-2 items-center">
-            <input value={charName} onChange={e => setCharName(e.target.value)} placeholder="角色名" className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 w-24" />
-            <input value={charPersonality} onChange={e => setCharPersonality(e.target.value)} placeholder="性格（可选）" className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 flex-1" />
+            <span className="text-xs text-gray-500 flex-shrink-0">🎭 角色:</span>
+            <input value={charName} onChange={e => setCharName(e.target.value)} placeholder="名称" className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 w-20" />
+            <input value={charPersonality} onChange={e => setCharPersonality(e.target.value)} placeholder="性格" className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 flex-1" />
             <button onClick={async () => {
               if (!charName.trim()) return;
               await window.electronAPI.createCharacter({ id: generateId(), scriptId: targetScriptId, name: charName.trim(), personality: charPersonality.trim(), background: '', speakingStyle: '', appearance: '', avatar: '', createdAt: Date.now() } as any);
               setCharName(''); setCharPersonality('');
-            }} className="px-3 py-1 text-xs bg-green-700 hover:bg-green-600 text-white rounded">+ 添加</button>
+            }} className="px-3 py-1 text-xs bg-green-700 hover:bg-green-600 text-white rounded flex-shrink-0">+ 添加</button>
           </div>
         </div>
       )}
 
+      {/* Always-visible manage panel */}
       {selectedScript && (
-        <>
-          <div className="flex-shrink-0 bg-gray-800/50 px-4 py-2 border-b border-gray-800 text-xs text-gray-500 flex items-center">
-            <span>当前：<span className="text-gray-300">{selectedScript.title}</span> · 世界观：{selectedScript.worldSetting?.slice(0, 40) || '未设定'}</span>
-            <button onClick={() => setShowManage(!showManage)} className="ml-auto text-xs text-purple-400 hover:text-purple-300">
-              {showManage ? '▲ 收起管理' : '▼ 管理设定'}
-            </button>
-          </div>
-          {showManage && (
-            <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700 px-4 py-3 max-h-64 overflow-y-auto">
+        <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700 px-4 py-3 max-h-52 overflow-y-auto">
               <div className="max-w-3xl mx-auto space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div><label className="block text-xs text-gray-500 mb-0.5">标题</label><input value={editFields.title || ''} onChange={e => setEditFields({...editFields, title: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" /></div>
@@ -373,8 +361,6 @@ ${JSON.stringify(getFields(), null, 2)}`;
                 <button onClick={handleSaveManual} className="px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded">💾 保存设定</button>
               </div>
             </div>
-          )}
-        </>
       )}
 
       <div className="flex-1 overflow-y-auto p-4">
