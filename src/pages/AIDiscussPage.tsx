@@ -59,7 +59,7 @@ export function AIDiscussPage() {
 
   const selectedScript = scripts.find((s) => s.id === targetScriptId);
 
-  // Sync editFields when script changes
+  // Sync editFields when script changes (all extraData fields)
   useEffect(() => {
     if (!selectedScript) { setEditFields({}); return; }
     const ed = selectedScript.extraData || {} as any;
@@ -74,6 +74,18 @@ export function AIDiscussPage() {
       data: ed.data || '',
       timeline: ed.timeline || '',
       chapters: ed.chapters || '',
+      tags: ed.tags || '',
+      referenceWorks: ed.referenceWorks || '',
+      eraBackground: ed.eraBackground || '',
+      protagonistDilemma: ed.protagonistDilemma || '',
+      coreCheat: ed.coreCheat || '',
+      ageRule: ed.ageRule || '',
+      narrativeMode: ed.narrativeMode || 'mode3',
+      strictMode: ed.strictMode || 'strict',
+      workflowMode: ed.workflowMode || 'guided',
+      recapMode: ed.recapMode || 'N',
+      periodicSummary: ed.periodicSummary || 'O',
+      ruleSelfCheck: ed.ruleSelfCheck || 'Y',
     });
   }, [selectedScript?.id, selectedScript?.title, selectedScript?.worldSetting, selectedScript?.background, JSON.stringify(selectedScript?.extraData)]);
 
@@ -93,6 +105,18 @@ export function AIDiscussPage() {
         data: editFields.data,
         timeline: editFields.timeline,
         chapters: editFields.chapters,
+        tags: editFields.tags,
+        referenceWorks: editFields.referenceWorks,
+        eraBackground: editFields.eraBackground,
+        protagonistDilemma: editFields.protagonistDilemma,
+        coreCheat: editFields.coreCheat,
+        ageRule: editFields.ageRule,
+        narrativeMode: editFields.narrativeMode,
+        strictMode: editFields.strictMode,
+        workflowMode: editFields.workflowMode,
+        recapMode: editFields.recapMode,
+        periodicSummary: editFields.periodicSummary,
+        ruleSelfCheck: editFields.ruleSelfCheck,
       } as any,
     });
     await loadScripts();
@@ -254,48 +278,49 @@ ${JSON.stringify(getFields(), null, 2)}`;
             </button>
           </div>
           {showManage && (
-            <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700 px-4 py-3">
+            <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700 px-4 py-3 max-h-64 overflow-y-auto">
               <div className="max-w-3xl mx-auto space-y-2">
                 <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-0.5">标题</label>
-                    <input value={editFields.title || ''} onChange={e => setEditFields({...editFields, title: e.target.value})}
-                      className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-0.5">世界观</label>
-                    <input value={editFields.worldSetting || ''} onChange={e => setEditFields({...editFields, worldSetting: e.target.value})}
-                      className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" />
-                  </div>
+                  <div><label className="block text-xs text-gray-500 mb-0.5">标题</label><input value={editFields.title || ''} onChange={e => setEditFields({...editFields, title: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" /></div>
+                  <div><label className="block text-xs text-gray-500 mb-0.5">世界观</label><input value={editFields.worldSetting || ''} onChange={e => setEditFields({...editFields, worldSetting: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" /></div>
                 </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-0.5">故事背景</label>
-                  <textarea value={editFields.background || ''} onChange={e => setEditFields({...editFields, background: e.target.value})}
-                    className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-14 resize-none" />
+                <div><label className="block text-xs text-gray-500 mb-0.5">故事背景</label><textarea value={editFields.background || ''} onChange={e => setEditFields({...editFields, background: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" /></div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><label className="block text-xs text-gray-500 mb-0.5">对标作品</label><input value={editFields.referenceWorks || ''} onChange={e => setEditFields({...editFields, referenceWorks: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" /></div>
+                  <div><label className="block text-xs text-gray-500 mb-0.5">时代背景</label><input value={editFields.eraBackground || ''} onChange={e => setEditFields({...editFields, eraBackground: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-0.5">主线任务</label>
-                    <textarea value={editFields.mainQuests || ''} onChange={e => setEditFields({...editFields, mainQuests: e.target.value})}
-                      className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-0.5">支线任务</label>
-                    <textarea value={editFields.sideQuests || ''} onChange={e => setEditFields({...editFields, sideQuests: e.target.value})}
-                      className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" />
-                  </div>
+                  <div><label className="block text-xs text-gray-500 mb-0.5">主线任务</label><textarea value={editFields.mainQuests || ''} onChange={e => setEditFields({...editFields, mainQuests: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" /></div>
+                  <div><label className="block text-xs text-gray-500 mb-0.5">支线任务</label><textarea value={editFields.sideQuests || ''} onChange={e => setEditFields({...editFields, sideQuests: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-0.5">时间线</label>
-                    <textarea value={editFields.timeline || ''} onChange={e => setEditFields({...editFields, timeline: e.target.value})}
-                      className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-0.5">章节</label>
-                    <textarea value={editFields.chapters || ''} onChange={e => setEditFields({...editFields, chapters: e.target.value})}
-                      className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" />
-                  </div>
+                  <div><label className="block text-xs text-gray-500 mb-0.5">主角困境</label><textarea value={editFields.protagonistDilemma || ''} onChange={e => setEditFields({...editFields, protagonistDilemma: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" /></div>
+                  <div><label className="block text-xs text-gray-500 mb-0.5">金手指</label><textarea value={editFields.coreCheat || ''} onChange={e => setEditFields({...editFields, coreCheat: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><label className="block text-xs text-gray-500 mb-0.5">环境描述</label><textarea value={editFields.environment || ''} onChange={e => setEditFields({...editFields, environment: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-10 resize-none" /></div>
+                  <div><label className="block text-xs text-gray-500 mb-0.5">地图</label><textarea value={editFields.map || ''} onChange={e => setEditFields({...editFields, map: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-10 resize-none" /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><label className="block text-xs text-gray-500 mb-0.5">时间线</label><textarea value={editFields.timeline || ''} onChange={e => setEditFields({...editFields, timeline: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" /></div>
+                  <div><label className="block text-xs text-gray-500 mb-0.5">章节</label><textarea value={editFields.chapters || ''} onChange={e => setEditFields({...editFields, chapters: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><label className="block text-xs text-gray-500 mb-0.5">其他数据</label><input value={editFields.data || ''} onChange={e => setEditFields({...editFields, data: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" /></div>
+                  <div><label className="block text-xs text-gray-500 mb-0.5">年龄规则</label><input value={editFields.ageRule || ''} onChange={e => setEditFields({...editFields, ageRule: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><label className="block text-xs text-gray-500 mb-0.5">类型标签</label><input value={editFields.tags || ''} onChange={e => setEditFields({...editFields, tags: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" /></div>
+                  <div><label className="block text-xs text-gray-500 mb-0.5">创作模式</label><select value={editFields.narrativeMode || 'mode3'} onChange={e => setEditFields({...editFields, narrativeMode: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200"><option value="mode1">模式1·沉浸扮演</option><option value="mode2">模式2·上帝视角</option><option value="mode3">模式3·混合</option></select></div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div><label className="block text-xs text-gray-500 mb-0.5">严格度</label><select value={editFields.strictMode || 'strict'} onChange={e => setEditFields({...editFields, strictMode: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200"><option value="strict">严格</option><option value="loose">宽松</option></select></div>
+                  <div><label className="block text-xs text-gray-500 mb-0.5">工作流</label><select value={editFields.workflowMode || 'guided'} onChange={e => setEditFields({...editFields, workflowMode: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200"><option value="guided">引导</option><option value="flexible">灵活</option></select></div>
+                  <div><label className="block text-xs text-gray-500 mb-0.5">前情提要</label><select value={editFields.recapMode || 'N'} onChange={e => setEditFields({...editFields, recapMode: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200"><option value="N">不开启</option><option value="Y">开启</option></select></div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><label className="block text-xs text-gray-500 mb-0.5">定期总结</label><select value={editFields.periodicSummary || 'O'} onChange={e => setEditFields({...editFields, periodicSummary: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200"><option value="O">开启</option><option value="P">不开启</option></select></div>
+                  <div><label className="block text-xs text-gray-500 mb-0.5">规则自检</label><select value={editFields.ruleSelfCheck || 'Y'} onChange={e => setEditFields({...editFields, ruleSelfCheck: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200"><option value="Y">开启</option><option value="N">不开启</option></select></div>
                 </div>
                 <button onClick={handleSaveManual} className="px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded">💾 保存设定</button>
               </div>
