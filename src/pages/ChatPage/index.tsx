@@ -62,6 +62,7 @@ export function ChatPage() {
       selectScript(conv.scriptId); selectCharacter(conv.characterId || null);
       setChatMode(conv.characterId ? '1v1' : 'world');
       useChatStore.getState().setActiveConversation(conv.id);
+      addOpenConv(conv.id, conv.title || '未命名');
       await loadMessages(conv.id);
       setResumeConversation(null);
       setShowSetup(false);
