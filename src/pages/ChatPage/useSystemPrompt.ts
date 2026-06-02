@@ -71,13 +71,13 @@ export function useSystemPrompt(
     const ed = script?.extraData;
     if (!ed) return prompt;
     const ps: string[] = [];
-    if (ed.strictMode === 'loose') ps.push('【执行严格度：宽松模式】');
-    else ps.push('【执行严格度：严格模式】');
-    if (ed.workflowMode === 'flexible') ps.push('【工作流：灵活启动】');
-    else ps.push('【工作流：引导模式】');
-    if (ed.recapMode === 'Y') ps.push('【前情提要：开启】');
-    if (ed.periodicSummary === 'O') ps.push('【定期总结：开启】');
-    if (ed.ruleSelfCheck === 'Y') ps.push('【规则自检：开启】');
+    if (ed.strictMode === 'loose') ps.push('【执行严格度：宽松模式】设定作为参考，可适当自由发挥。');
+    else ps.push('【执行严格度：严格模式 - 必须遵守】严格遵循以上所有设定和规则，不得偏离。');
+    if (ed.workflowMode === 'flexible') ps.push('【工作流：灵活启动】直接开始剧情，无需额外引导。');
+    else ps.push('【工作流：引导模式】在关键节点提供引导和选择。');
+    if (ed.recapMode === 'Y') ps.push('【前情提要：开启 - 必须遵守】每次回复前先用一句话简要回顾当前剧情进展。');
+    if (ed.periodicSummary === 'O') ps.push('【定期总结：开启 - 必须遵守】每10轮对话后进行一次内部剧情状态总结。');
+    if (ed.ruleSelfCheck === 'Y') ps.push('【规则自检：开启 - 必须遵守】每次回复前自检是否偏离角色设定和剧本规则。');
     if (ed.tags) ps.push(`【类型标签】${ed.tags}`);
     if (ps.length) return `${ps.join('\n')}\n\n---\n\n${prompt}`;
     return prompt;
@@ -145,8 +145,8 @@ export function useSystemPrompt(
   };
 
   const getFormatRules = (): string => {
-    const lm: Record<string, string> = { A: '每次回复>=3000字', B: '每次回复~1500字', C: '每次回复~800字', D: '自主决定回复长度，倾向长回复' };
-    const rules = [`【回复长度】${lm[replyLength]}`];
+    const lm: Record<string, string> = { A: '每次回复必须>=3000字，特定描写>=300字', B: '每次回复必须~1500字', C: '每次回复必须~800字', D: '自主决定回复长度，倾向长回复，特定描写>=300字' };
+    const rules = [`【回复长度 - 必须遵守】${lm[replyLength]}`];
     if (interactionOpts === 'T') rules.push('【互动选项 - 必须严格遵守】每次回复末尾必须用 [SUGGESTIONS: 选项1 | 选项2 | 选项3] 格式提供3个可选行动。即使回复很短也要提供。');
     return `\n\n---\n${rules.join('\n')}`;
   };

@@ -177,10 +177,10 @@ export function ChatPage() {
       const msgs = useChatStore.getState().messages;
       const sysMsg = msgs.find(m => m.role === 'system');
       if (sysMsg && activeConversationId) {
-        const lm: Record<string, string> = { A: '每次回复>=3000字', B: '每次回复~1500字', C: '每次回复~800字', D: '自主决定回复长度，倾向长回复' };
-        const rules = [`\n\n---\n【回复长度】${lm[len]}`];
+        const lm: Record<string, string> = { A: '每次回复必须>=3000字，特定描写>=300字', B: '每次回复必须~1500字', C: '每次回复必须~800字', D: '自主决定回复长度，倾向长回复，特定描写>=300字' };
+        const rules = [`\n\n---\n【回复长度 - 必须遵守】${lm[len]}`];
         if (interactionOpts === 'T') rules.push('【互动选项】末尾用 [SUGGESTIONS: ...] 提供3个可选行动');
-        const clean = sysMsg.content.replace(/\n\n---\n【回复长度】[^\n]*(\n【互动选项】[^\n]*)?/g, '');
+        const clean = sysMsg.content.replace(/\n\n---\n【回复长度[^\n]*(\n【互动选项】[^\n]*)?/g, '');
         const updated = clean + rules.join('\n');
         await window.electronAPI.updateMessage(sysMsg.id, updated);
         await useChatStore.getState().loadMessages(activeConversationId);
