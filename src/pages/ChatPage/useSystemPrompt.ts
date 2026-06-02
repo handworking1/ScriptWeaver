@@ -147,7 +147,7 @@ export function useSystemPrompt(
   const getFormatRules = (): string => {
     const lm: Record<string, string> = { A: '每次回复>=3000字', B: '每次回复~1500字', C: '每次回复~800字', D: '自主决定回复长度，倾向长回复' };
     const rules = [`【回复长度】${lm[replyLength]}`];
-    if (interactionOpts === 'T') rules.push('【互动选项】末尾用 [SUGGESTIONS: ...] 提供3个可选行动');
+    if (interactionOpts === 'T') rules.push('【互动选项 - 必须严格遵守】每次回复末尾必须用 [SUGGESTIONS: 选项1 | 选项2 | 选项3] 格式提供3个可选行动。即使回复很短也要提供。');
     return `\n\n---\n${rules.join('\n')}`;
   };
 
@@ -168,11 +168,11 @@ export function useSystemPrompt(
     const sq = script?.extraData?.sideQuests;
     // en: Split into blocks with --- separator so stripFirstUseOnly can remove them
     let p = `你是剧本《${script?.title || '未命名'}》的叙述者（Game Master）。`;
-    p += `\n\n---\n【世界观】${script?.worldSetting || '未设定'}`;
-    p += `\n\n---\n【故事背景】${script?.background || '未设定'}`;
-    if (mq) p += `\n\n---\n【主线任务】${mq}`;
-    if (sq) p += `\n\n---\n【支线任务】${sq}`;
-    p += `\n\n---\n以第二人称引导玩家，控制NPC，描述场景。NPC说话标注【名字】。`;
+    p += `\n\n---\n\n【世界观】${script?.worldSetting || '未设定'}`;
+    p += `\n\n---\n\n【故事背景】${script?.background || '未设定'}`;
+    if (mq) p += `\n\n---\n\n【主线任务】${mq}`;
+    if (sq) p += `\n\n---\n\n【支线任务】${sq}`;
+    p += `\n\n---\n\n以第二人称引导玩家，控制NPC，描述场景。NPC说话标注【名字】。`;
     p = applySystemMode(p);
     p = applyNarrativeMode(p);
     p = await applyGmSettings(p);
@@ -180,7 +180,7 @@ export function useSystemPrompt(
     p = await applyProtagonist(p);
     p = applyBanghui(p);
     p += getFormatRules();
-    if (interactionOpts === 'T') p += '\n在关键决策点用 [SUGGESTIONS: ...] 提供选项。';
+    if (interactionOpts === 'T') p += '\n每次回复末尾必须提供 [SUGGESTIONS: 选项1 | 选项2 | 选项3]。';
     return truncateSystemPrompt(p);
   };
 
