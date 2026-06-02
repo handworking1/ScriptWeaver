@@ -50,8 +50,7 @@ export async function initDatabase(): Promise<void> {
   const version = currentVersion.length ? (currentVersion[0].values[0] as number[])[0] : 0;
 
   if (version < 1) {
-    db.run('ALTER TABLE conversations ADD COLUMN parent_id TEXT DEFAULT NULL');
-    db.run('ALTER TABLE scripts ADD COLUMN extra_data TEXT DEFAULT \'{}\'');
+    // Columns parent_id and extra_data are now in CREATE TABLE, no ALTER needed
     db.run('PRAGMA user_version = 1');
   }
 
