@@ -8,6 +8,7 @@ import { useNavStore } from '@/stores/navStore';
 
 import { CharacterCompendium } from '@/components/CharacterCompendium';
 import { ScriptPreview } from '@/components/ScriptPreview';
+import { QuestPanel } from '@/components/QuestPanel';
 import { TokenBar } from '@/components/TokenBar';
 import { generateId } from '@/lib/id';
 import type { Message } from '@/types';
@@ -45,6 +46,7 @@ export function ChatPage() {
   const [shortcutsExpanded, setShortcutsExpanded] = useState(true);
   const [showCompendium, setShowCompendium] = useState(false);
   const [showScriptPreview, setShowScriptPreview] = useState(false);
+  const [showQuestList, setShowQuestList] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   /** Loading state for world intro generation / 世界介绍生成中的加载状态 */
   const [worldIntroLoading, setWorldIntroLoading] = useState(false);
@@ -195,7 +197,7 @@ export function ChatPage() {
           ))}
           <button onClick={() => setShowSetup(true)} className="px-2 py-0.5 text-xs rounded bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200">+</button>
       </div>
-      <ChatHeader characterName={character?.name} characterAvatar={character?.avatar} scriptTitle={script?.title} chatMode={chatMode} isStreaming={isStreaming} displayMessagesLen={displayMessages.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} onBack={() => setShowSetup(true)} onStop={stopStreaming} onSummary={() => { if (activeConfigId && activeConversationId) { const name = character?.name || script?.title || '当前剧情'; requestSummary(activeConfigId, name); } }} onBranch={async () => { if (selectedScriptId && selectedCharacterId) await branchConversation(selectedScriptId, selectedCharacterId); }} onRegenerate={async () => { if (activeConfigId) await regenerateLast(activeConfigId, failoverConfigId ?? undefined); }} onUndo={() => undoLastMessage()} onConvList={loadConvList} onCompendium={() => setShowCompendium(!showCompendium)} showCompendium={showCompendium} onScriptPreview={() => setShowScriptPreview(!showScriptPreview)} showScriptPreview={showScriptPreview} selectedScriptId={selectedScriptId} />
+      <ChatHeader characterName={character?.name} characterAvatar={character?.avatar} scriptTitle={script?.title} chatMode={chatMode} isStreaming={isStreaming} displayMessagesLen={displayMessages.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} onBack={() => setShowSetup(true)} onStop={stopStreaming} onSummary={() => { if (activeConfigId && activeConversationId) { const name = character?.name || script?.title || '当前剧情'; requestSummary(activeConfigId, name); } }} onBranch={async () => { if (selectedScriptId && selectedCharacterId) await branchConversation(selectedScriptId, selectedCharacterId); }} onRegenerate={async () => { if (activeConfigId) await regenerateLast(activeConfigId, failoverConfigId ?? undefined); }} onUndo={() => undoLastMessage()} onConvList={loadConvList} onCompendium={() => setShowCompendium(!showCompendium)} showCompendium={showCompendium} onScriptPreview={() => setShowScriptPreview(!showScriptPreview)} showScriptPreview={showScriptPreview} onQuestList={() => setShowQuestList(!showQuestList)} showQuestList={showQuestList} hasQuests={!!(script?.extraData?.mainQuests || script?.extraData?.sideQuests)} selectedScriptId={selectedScriptId} />
       <TokenBar used={tokenCount} limit={tokenLimit} totalInSession={totalTokensSession} estimatedCost={estimatedCost} />
 
       {/* Error toast — auto-dismiss after 5s / 错误横幅，5秒自动消失 */}
@@ -233,6 +235,7 @@ export function ChatPage() {
       )}
       {showCompendium && selectedScriptId && <CharacterCompendium scriptId={selectedScriptId} conversationId={activeConversationId} configId={activeConfigId} onClose={() => setShowCompendium(false)} />}
       {showScriptPreview && script && <ScriptPreview script={script} onClose={() => setShowScriptPreview(false)} />}
+      {showQuestList && selectedScriptId && <QuestPanel scriptId={selectedScriptId} conversationId={activeConversationId} configId={activeConfigId} mainQuests={script?.extraData?.mainQuests || ''} sideQuests={script?.extraData?.sideQuests || ''} onClose={() => setShowQuestList(false)} />}
     </div>
   );
 }

@@ -18,6 +18,9 @@ interface Props {
   showCompendium: boolean;
   onScriptPreview: () => void;
   showScriptPreview: boolean;
+  onQuestList: () => void;
+  showQuestList: boolean;
+  hasQuests: boolean;
   selectedScriptId: string | null;
 }
 
@@ -26,7 +29,9 @@ export function ChatHeader({
   displayMessagesLen, searchQuery, onSearchChange,
   onBack, onStop, onSummary, onBranch, onRegenerate, onUndo,
   onConvList, onCompendium, showCompendium,
-  onScriptPreview, showScriptPreview, selectedScriptId,
+  onScriptPreview, showScriptPreview,
+  onQuestList, showQuestList, hasQuests,
+  selectedScriptId,
 }: Props) {
   return (
     <div className="flex-shrink-0 bg-gray-900 border-b border-gray-800 px-4 py-2 flex items-center gap-3 flex-wrap">
@@ -69,6 +74,7 @@ export function ChatHeader({
         {!isStreaming && displayMessagesLen > 0 && <button onClick={onUndo} className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-gray-300 rounded" title="撤销最后一条消息">↩</button>}
         {selectedScriptId && <><button onClick={onConvList} className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded">💬 对话</button>
         <button onClick={onScriptPreview} className={`px-2 py-1 text-xs rounded ${showScriptPreview ? 'bg-purple-900/50 text-purple-300' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`}>📜 剧本</button>
+        {hasQuests && <button onClick={onQuestList} className={`px-2 py-1 text-xs rounded ${showQuestList ? 'bg-purple-900/50 text-purple-300' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`}>📋 任务</button>}
         <button onClick={onCompendium} className={`px-2 py-1 text-xs rounded ${showCompendium ? 'bg-purple-900/50 text-purple-300' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`}>📖 图鉴</button></>}
       </div>
     </div>
