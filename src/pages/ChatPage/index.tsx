@@ -59,7 +59,11 @@ export function ChatPage() {
       const conv = await window.electronAPI.getConversation(resumeConversationId);
       if (!conv) return;
       selectScript(conv.scriptId); selectCharacter(conv.characterId || null);
-      setChatMode(conv.characterId ? '1v1' : 'world'); setResumeConversation(null); setShowSetup(true);
+      setChatMode(conv.characterId ? '1v1' : 'world');
+      useChatStore.getState().setActiveConversation(conv.id);
+      await loadMessages(conv.id);
+      setResumeConversation(null);
+      setShowSetup(false);
     })();
   }, [resumeConversationId, activeConfigId]);
 

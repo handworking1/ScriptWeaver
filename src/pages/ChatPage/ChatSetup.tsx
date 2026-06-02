@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { useScriptStore } from '@/stores/scriptStore';
 import { useConfigStore } from '@/stores/configStore';
 import { useTemplateStore } from '@/stores/templateStore';
 import { useNavStore } from '@/stores/navStore';
+import { useChatStore } from '@/stores/chatStore';
 import { CharacterSelector } from './CharacterSelector';
 
 interface Props {
@@ -29,6 +31,24 @@ export function ChatSetup({
   const selectCharacter = useNavStore((s) => s.selectCharacter);
   const setActiveTemplate = useTemplateStore((s) => s.setActiveTemplate);
   const setActiveConfig = useConfigStore((s) => s.setActiveConfig);
+  const navigate = useNavStore((s) => s.navigate);
+
+  const [recentConvs, setRecentConvs] = useState<any[]>([]);
+  useEffect(() => {
+    if (selectedScriptId) {
+      window.electronAPI.getConversations(selectedScriptId).then(c => setRecentConvs(c.slice(0, 5)));
+    } else { setRecentConvs([]); }
+  }, [selectedScriptId]);
+
+  const resumeConv = async (convId: string) => {
+    const conv = await window.electronAPI.getConversation(convId);
+    if (!conv) return;
+    selectScript(conv.scriptId);
+    selectCharacter(conv.characterId || null);
+    useChatStore.getState().setActiveConversation(convId);
+    useChatStore.getState().loadMessages(convId);
+    navigate('chat');
+  };
 
   return (
     <div className="flex-1 overflow-y-auto p-6">
@@ -112,6 +132,21 @@ export function ChatSetup({
             className="w-full mt-4 px-4 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg font-medium">
             {chatMode === 'world' ? '🌍 我要去了' : '我要去了'}
           </button>
+
+          {recentConvs.length > 0 && (
+            <div className="mt-6 pt-4 border-t border-gray-700">
+              <div className="text-xs text-gray-500 mb-2">或继续之前的对话：</div>
+              <div className="space-y-1">
+                {recentConvs.map((c: any) => (
+                  <button key={c.id} onClick={() => resumeConv(c.id)}
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors">
+                    <div className="truncate">{c.title || '未命名'}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{new Date(c.updatedAt).toLocaleString('zh-CN')}{c.parentId ? ' · 🔀分支' : ''}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
