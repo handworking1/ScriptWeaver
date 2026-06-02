@@ -121,16 +121,19 @@ export function ChatPage() {
       setConvTitles(prev => ({ ...prev, [id]: title }));
     }
   };
-  /** Close a conversation tab; fallback to another tab if active was closed / 关闭对话标签，若关闭的是活跃标签则回退 */
+  /** Close a conversation tab / 关闭对话标签 */
   const closeConv = (id: string) => {
-    setOpenConvIds(prev => {
-      const updated = prev.filter(x => x !== id);
-      if (activeConversationId === id && updated.length > 0) {
-        switchConv(updated[updated.length - 1]);
-      }
-      return updated;
-    });
+    setOpenConvIds(prev => prev.filter(x => x !== id));
   };
+
+  /** When the active conversation is removed from tabs, switch to another or show setup / 活跃标签被关闭时回退 */
+  useEffect(() => {
+    if (activeConversationId && !openConvIds.includes(activeConversationId) && openConvIds.length > 0) {
+      switchConv(openConvIds[openConvIds.length - 1]);
+    } else if (activeConversationId && !openConvIds.includes(activeConversationId)) {
+      setShowSetup(true);
+    }
+  }, [openConvIds, activeConversationId]);
   const switchConv = async (id: string) => {
     useChatStore.getState().setActiveConversation(id);
     useChatStore.getState().loadMessages(id);
