@@ -46,7 +46,7 @@
   "build": {
     "appId": "com.script-character-chat.app",
     "productName": "叙世",
-    "artifactName": "${productName}-${version}-${arch}.${ext}",
+    "artifactName": "${productName}-v${version}-免安装版.${ext}",
     "forceCodeSigning": false,
     "files": [
       "dist/**/*",
@@ -70,9 +70,6 @@
         }
       ],
       "signAndEditExecutable": false
-    },
-    "zip": {
-      "artifactName": "${productName}-v${version}-免安装版.${ext}"
     },
     "nsis": {
       "oneClick": false,
