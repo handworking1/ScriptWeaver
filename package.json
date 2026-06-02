@@ -1,6 +1,6 @@
 {
   "name": "script-character-chat",
-  "version": "1.3.1",
+  "version": "1.3.0",
   "description": "Local-first script character chat app with customizable AI interface",
   "main": "dist-electron/main.js",
   "scripts": {
