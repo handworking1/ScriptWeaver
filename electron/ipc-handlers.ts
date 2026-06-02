@@ -368,18 +368,34 @@ export function registerIpcHandlers(): void {
 
       const apiKey = decryptApiKey(configRow.api_key_encrypted);
 
-      /** en: Strip global rules from system messages — rules only needed at conversation start.
-       *  zh: 从系统消息中剥离全局规则——规则仅需在对话开始时使用一次。 */
-      const stripGlobalRules = (content: string): string => {
-        const idx = content.indexOf('【全局规则');
-        if (idx < 0) return content;
-        const end = content.indexOf('\n\n---\n\n', idx);
-        if (end > idx) return content.slice(0, idx) + content.slice(end + 8);
-        const nl = content.indexOf('\n', idx);
-        return nl > idx ? content.slice(0, idx) + content.slice(nl) : content.slice(0, idx);
+      /** en: Strip first-use-only sections from system messages.
+       *  zh: 从系统消息中剥离仅首次使用的段落（世界观/背景/全局规则等）。 */
+      const stripFirstUseOnly = (content: string): string => {
+        // Remove blocks that should only appear once (separated by \n\n---\n\n)
+        const blocks = content.split('\n\n---\n\n');
+        // Keep: format rules (always at end), remove: worldview/background/rules blocks
+        const toRemove = ['【世界观】', '【故事背景】', '【全局规则', '【类型标签】', '【执行严格度】',
+          '【创作模式】', '【GM主持设置】', '【玩家/主角设定】', '【[帮回]核心辅助系统',
+          '【工作流】', '【前情提要】', '【定期总结】', '【规则自检】'];
+        const kept = blocks.filter((b, i, arr) => {
+          // Always keep the last block (format rules / core instruction)
+          if (i === arr.length - 1) return true;
+          // Keep if not a removable section
+          return !toRemove.some(prefix => b.trim().startsWith(prefix));
+        });
+        // Rejoin with proper separator
+        const result = kept.join('\n\n---\n\n');
+        // If everything was removed, return a minimal prompt
+        if (result.trim().length < 20) {
+          const first = blocks[0] || '';
+          const idx = first.indexOf('\n\n以第二人称');
+          if (idx > 0) return first.slice(idx + 2);
+          return first.slice(0, 200);
+        }
+        return result;
       };
       const systemMsgs = messages.filter((m: any) => m.role === 'system').map((m: any) => ({
-        ...m, content: stripGlobalRules(m.content || ''),
+        ...m, content: stripFirstUseOnly(m.content || ''),
       }));
       const nonSystem = messages.filter((m: any) => m.role !== 'system');
       const trimmedNonSystem = nonSystem.length > 100 ? nonSystem.slice(-80) : nonSystem;
