@@ -90,7 +90,7 @@ export function ChatPage() {
         try {
           const introResult = await window.electronAPI.discussSettings(activeConfigId, 'script',
             { title: script?.title, worldSetting: script?.worldSetting, background: script?.background, mainQuests: '', sideQuests: '', environment: '', map: '', data: '' },
-            [{ role: 'system', content: `请以GM身份，用3-5句话介绍以下世界的开场。包含世界观概况、当前氛围和玩家处境。不要用【】标注。\n标题：${script?.title}\n世界观：${script?.worldSetting}\n背景：${script?.background}` }]);
+            [{ role: 'system', content: `请以GM身份，用2-3段话生动介绍以下世界。只描述世界观概况、当前氛围和玩家初始处境，使用第二人称叙述。不要提任何工作流或下一步指引，不要用【】标注。\n标题：${script?.title}\n世界观：${script?.worldSetting}\n背景：${script?.background}` }]);
           if (introResult.reply) {
             await window.electronAPI.createMessage({ id: generateId(), conversationId: conv.id, role: 'assistant', content: introResult.reply, timestamp: Date.now() + 1 });
             await loadMessages(conv.id);
