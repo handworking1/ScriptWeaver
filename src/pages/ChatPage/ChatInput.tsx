@@ -100,11 +100,20 @@ export function ChatInput({
       const result = await window.electronAPI.discussSettings(activeConfigId, 'character',
         { name: characterName || '', personality: '', background: '', speakingStyle: '', appearance: '' },
         [{ role: 'system', content: `根据以下对话，为用户主角生成3个自然流畅的回复选项。每个选项10-30字左右，符合当前情境和角色关系。严格用|分隔，不加编号。\n\n对话：\n${chatHistory}` }]);
-      if (result.reply) {
+      if (result.error) {
+        console.error('[AIGenerate] API error:', result.error);
+        setAiReplies(['❌ ' + result.error]);
+      } else if (result.reply) {
         const items = result.reply.split(/[|、]/).map(s => s.replace(/^\s*\d+[\.\、\)）]\s*/, '').trim()).filter(Boolean).slice(0, 3);
         if (items.length > 0) setAiReplies(items);
+        else setAiReplies(['AI 未生成有效回复，请重试']);
+      } else {
+        setAiReplies(['AI 无响应，请检查网络或API配置']);
       }
-    } catch (err) { console.error('[AIGenerate]', err); }
+    } catch (err: any) {
+      console.error('[AIGenerate]', err);
+      setAiReplies(['❌ ' + (err.message || '未知错误')]);
+    }
     finally { setReplyLoading(false); }
   };
 
