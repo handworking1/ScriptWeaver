@@ -34,7 +34,16 @@ export function AIDiscussPage() {
   const [editFields, setEditFields] = useState<Record<string, string>>({});
   const endRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { loadScripts(); }, []);
+  useEffect(() => {
+    loadScripts();
+    // Restore last-used script ID
+    (async () => {
+      try {
+        const lastId = await window.electronAPI.getSetting('discuss_last_script');
+        if (lastId) setTargetScriptId(lastId);
+      } catch {}
+    })();
+  }, []);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   // Persist messages on change
@@ -269,7 +278,7 @@ ${JSON.stringify(getFields(), null, 2)}`;
       <div className="flex-shrink-0 bg-gray-900 border-b border-gray-800 px-4 py-3 flex items-center gap-3">
         <h2 className="text-lg font-bold text-gray-100">💬 AI 剧本讨论</h2>
         <div className="flex gap-2 ml-4">
-          <select value={targetScriptId} onChange={e => setTargetScriptId(e.target.value)}
+          <select value={targetScriptId} onChange={e => { setTargetScriptId(e.target.value); window.electronAPI.setSetting('discuss_last_script', e.target.value); }}
             className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-xs text-gray-200">
             <option value="">新建剧本讨论</option>
             {scripts.map(s => (<option key={s.id} value={s.id}>{s.title}</option>))}

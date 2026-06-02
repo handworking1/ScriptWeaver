@@ -139,24 +139,28 @@ export function ScriptsPage() {
       strictMode, workflowMode, recapMode, periodicSummary, ruleSelfCheck, banghuiEnabled,
     };
 
-    if (editingScript) {
-      await editScript(editingScript.id, {
-        title: title.trim(), worldSetting: worldSetting.trim(), background: background.trim(),
-        extraData,
-      });
-    } else {
-      const now = Date.now();
-      await addScript({
-        id: generateId(),
-        title: title.trim(),
-        worldSetting: worldSetting.trim(),
-        background: background.trim(),
-        extraData,
-        createdAt: now,
-        updatedAt: now,
-      });
+    try {
+      if (editingScript) {
+        await editScript(editingScript.id, {
+          title: title.trim(), worldSetting: worldSetting.trim(), background: background.trim(),
+          extraData,
+        });
+      } else {
+        const now = Date.now();
+        await addScript({
+          id: generateId(),
+          title: title.trim(),
+          worldSetting: worldSetting.trim(),
+          background: background.trim(),
+          extraData,
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+      setShowForm(false);
+    } catch (err: any) {
+      alert('保存失败：' + (err.message || String(err)));
     }
-    setShowForm(false);
   };
 
   const handleDelete = async (id: string) => {
