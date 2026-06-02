@@ -41,6 +41,8 @@ export function AIDiscussPage() {
   const [newTitle, setNewTitle] = useState('');
   /** Collapsible character panel / 可折叠角色面板 */
   const [charPanelCollapsed, setCharPanelCollapsed] = useState(false);
+  /** Collapsible script settings panel / 可折叠剧本设置面板 */
+  const [scriptPanelCollapsed, setScriptPanelCollapsed] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -447,10 +449,22 @@ ${JSON.stringify(getFields(), null, 2)}`;
         />
       )}
 
-      {/* Inline manage panel — extracted to sub-component for maintainability / 内联管理面板已抽取为子组件 */}
+      {/* Inline manage panel — collapsible / 内联管理面板可折叠 */}
       {selectedScript && (
-        <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700 px-4 py-3 max-h-52 overflow-y-auto">
-          <DiscussManagePanel editFields={editFields} setEditFields={setEditFields} onSave={handleSaveManual} saved={savedMsg} />
+        <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700">
+          <button
+            onClick={() => setScriptPanelCollapsed(v => !v)}
+            className="w-full px-4 py-1.5 flex items-center gap-2 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-750 transition-colors"
+          >
+            <span className={`transform transition-transform ${scriptPanelCollapsed ? '' : 'rotate-90'}`}>▶</span>
+            <span>📜 剧本设置</span>
+            <span className="text-gray-600">{selectedScript.title}</span>
+          </button>
+          {!scriptPanelCollapsed && (
+            <div className="px-4 py-3 max-h-52 overflow-y-auto">
+              <DiscussManagePanel editFields={editFields} setEditFields={setEditFields} onSave={handleSaveManual} saved={savedMsg} />
+            </div>
+          )}
         </div>
       )}
 
