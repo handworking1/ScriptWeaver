@@ -81,7 +81,7 @@ export function AIDiscussPage() {
 
   const selectedScript = scripts.find((s) => s.id === targetScriptId);
 
-  // Tab management
+  /** Add a script tab + persist; when generating a new script, the caller adds it here. */
   const openScript = (id: string) => {
     setTargetScriptId(id);
     window.electronAPI.setSetting('discuss_last_script', id);
@@ -89,6 +89,7 @@ export function AIDiscussPage() {
     setOpenScriptIds(updated);
     window.electronAPI.setSetting('discuss_open_tabs', JSON.stringify(updated));
   };
+  /** Close a script tab; if it was active, switch to the last remaining one. */
   const closeScript = (id: string) => {
     const updated = openScriptIds.filter(s => s !== id);
     setOpenScriptIds(updated);

@@ -56,6 +56,7 @@ export function exportConversationToJSON(
  *  Only handles headings, horizontal rules, and line breaks.
  *  Safe — won't misinterpret # in code contexts since we
  *  only match at line start after stripping code blocks. */
+/** Convert Markdown → HTML for PDF export. Code blocks are escaped first for safety. */
 export function markdownToHtml(md: string): string {
   // Strip code blocks first to avoid #/--- misinterpretation
   const stripped = md.replace(/```[\s\S]*?```/g, (match) => match.replace(/[#]/g, '&#35;').replace(/---/g, '&#45;&#45;&#45;'));

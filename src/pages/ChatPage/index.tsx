@@ -56,6 +56,7 @@ export function ChatPage() {
 
   useEffect(() => { loadConfigs(); loadTemplates(); (async () => { try { const d = await window.electronAPI.getSetting('chat_shortcuts'); if (d) setShortcutBar(JSON.parse(d)); } catch (err) { console.error('[ChatPage] loadShortcuts:', err); } })(); }, []);
   useEffect(() => { setShowSetup(true); }, []);
+  /** Resume a conversation from history: load messages, skip setup, show tab */
   useEffect(() => {
     if (!resumeConversationId || !activeConfigId) return;
     (async () => {
@@ -88,7 +89,7 @@ export function ChatPage() {
       const prompt = await buildWorldPrompt();
       await window.electronAPI.createMessage({ id: generateId(), conversationId: conv.id, role: 'system', content: prompt, timestamp: Date.now() });
       setShowSetup(false); await loadMessages(conv.id);
-      // Fire-and-forget AI intro (non-blocking)
+      /** Fire-and-forget: AI generates world intro in background so UI isn't blocked */
       (async () => {
         try {
           const introResult = await window.electronAPI.discussSettings(activeConfigId, 'script',

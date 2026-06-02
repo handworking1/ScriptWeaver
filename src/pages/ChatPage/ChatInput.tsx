@@ -28,7 +28,7 @@ export function ChatInput({
   const [mentionChars, setMentionChars] = useState<{ id: string; name: string }[]>([]);
   const [showMention, setShowMention] = useState(false);
 
-  // Detect @ in input and load matching characters
+  /** Watch input for '@' — load matching characters from the script roster for autocomplete */
   useEffect(() => {
     if (chatMode !== 'world' || !scriptId) return;
     const atIdx = inputValue.lastIndexOf('@');
@@ -52,7 +52,7 @@ export function ChatInput({
   const handleSend = () => {
     let c = inputValue.trim();
     if (!c || isStreaming || !activeConfigId) return;
-    // Inject private chat instruction for @mention in world mode
+    // ⚡ @私聊: wrap message as a private-chat instruction for that NPC
     if (chatMode === 'world') {
       const atMatch = c.match(/@(\S+)/);
       if (atMatch) {

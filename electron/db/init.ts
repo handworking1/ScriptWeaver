@@ -45,7 +45,8 @@ export async function initDatabase(): Promise<void> {
   db.run('CREATE INDEX IF NOT EXISTS idx_conversations_character_id ON conversations(character_id)');
   db.run('CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id)');
 
-  // Always ensure legacy columns exist (safe idempotent migration)
+  /** Idempotent migration: always try to add legacy columns, regardless of user_version.
+   *  try/catch silently skips if column already exists — safe to run every startup. */
   try { db.run('ALTER TABLE conversations ADD COLUMN parent_id TEXT DEFAULT NULL'); } catch (_) { /* exists */ }
   try { db.run('ALTER TABLE scripts ADD COLUMN extra_data TEXT DEFAULT \'{}\''); } catch (_) { /* exists */ }
 

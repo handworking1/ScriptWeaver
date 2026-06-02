@@ -139,6 +139,7 @@ export function ScriptsPage() {
       strictMode, workflowMode, recapMode, periodicSummary, ruleSelfCheck, banghuiEnabled,
     };
 
+    /** Try/catch guards against missing DB columns or constraint violations */
     try {
       if (editingScript) {
         await editScript(editingScript.id, {
