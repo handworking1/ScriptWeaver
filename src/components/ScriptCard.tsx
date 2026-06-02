@@ -27,11 +27,12 @@ export function ScriptCard({ script, onEdit, onDelete, onSelect, isSelected }: S
               try {
                 const data = await window.electronAPI.exportScript(script.id);
                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
+                a.href = url;
                 a.download = `${script.title}-剧本导出.json`;
                 a.click();
-                URL.revokeObjectURL(a.href);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
               } catch (err: any) { alert('导出失败：' + (err.message || '未知错误')); }
             }}
             className="text-gray-500 hover:text-green-400 p-1 text-xs"

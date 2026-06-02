@@ -48,8 +48,8 @@ export function importScript(data: any) {
       const exists = d.exec('SELECT COUNT(*) as c FROM characters WHERE id = ?', [c.id]);
       const count = exists.length ? (exists[0].values[0] as number[])[0] : 0;
       if (count > 0) {
-        d.run('UPDATE characters SET name=?, personality=?, background=?, speaking_style=?, appearance=?, avatar=? WHERE id=?',
-          [c.name, c.personality ?? '', c.background ?? '', c.speakingStyle ?? c.speaking_style ?? '', c.appearance ?? '', c.avatar ?? '', c.id]);
+        d.run('UPDATE characters SET script_id=?, name=?, personality=?, background=?, speaking_style=?, appearance=?, avatar=? WHERE id=?',
+          [s.id, c.name, c.personality ?? '', c.background ?? '', c.speakingStyle ?? c.speaking_style ?? '', c.appearance ?? '', c.avatar ?? '', c.id]);
       } else {
         d.run('INSERT INTO characters (id, script_id, name, personality, background, speaking_style, appearance, avatar, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
           [c.id, s.id, c.name, c.personality ?? '', c.background ?? '', c.speakingStyle ?? c.speaking_style ?? '', c.appearance ?? '', c.avatar ?? '', c.created_at || Date.now()]);
