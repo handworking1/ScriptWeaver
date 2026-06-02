@@ -105,6 +105,7 @@ export function ChatPage() {
    *  启动1v1角色对话：创建对话→注入 system prompt→加载消息。 */
   const start1v1Chat = async () => {
     if (!selectedScriptId || !selectedCharacterId || !activeConfigId) return;
+    try {
     const char = await window.electronAPI.getCharacter(selectedCharacterId);
     if (!char) return;
     const conv = await createConversation(generateId(), selectedScriptId, selectedCharacterId, `与${char.name}的对话`);
@@ -113,6 +114,10 @@ export function ChatPage() {
     await window.electronAPI.createMessage({ id: generateId(), conversationId: conv.id, role: 'system', content: prompt, timestamp: Date.now() });
     setShowSetup(false);
     await loadMessages(conv.id);
+    } catch (err) {
+      console.error('[ChatPage] start1v1Chat failed:', err);
+      useChatStore.getState().setStreamError('启动对话失败：' + (err as Error).message);
+    }
   };
 
   /** Start a world-mode chat — create conversation, inject GM prompt, generate AI intro.
