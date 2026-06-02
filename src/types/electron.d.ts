@@ -37,7 +37,8 @@ export interface ElectronAPI {
   updatePromptTemplate: (id: string, data: Partial<PromptTemplate>) => Promise<PromptTemplate | null>;
   deletePromptTemplate: (id: string) => Promise<void>;
 
-  chatSend: (configId: string, messages: ChatMessage[], failoverConfigId?: string) => Promise<void>;
+  /** en: 发送聊天消息（单向，完成通过 onChatDone/onChatError 事件获取） / Fire-and-forget; completion via onChatDone/onChatError */
+  chatSend: (configId: string, messages: ChatMessage[], failoverConfigId?: string) => void;
   chatStop: () => Promise<void>;
   chatSummary: (configId: string, messages: ChatMessage[], characterName: string) => Promise<void>;
   onChatToken: (callback: (data: { token: string; conversationId: string }) => void) => () => void;

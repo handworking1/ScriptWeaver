@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, safeStorage } from 'electron';
 import path from 'path';
-import { initDatabase } from './db';
+import { initDatabase, saveDbSync } from './db';
 import { registerIpcHandlers } from './ipc-handlers';
 
 let mainWindow: BrowserWindow | null = null;
@@ -37,6 +37,12 @@ app.whenReady().then(async () => {
       createWindow();
     }
   });
+});
+
+/** Force sync DB save before quit to avoid losing last 500ms of writes.
+ *  退出前强制同步保存数据库，防止丢失最后 500ms 的写入。 */
+app.on('before-quit', () => {
+  saveDbSync();
 });
 
 app.on('window-all-closed', () => {

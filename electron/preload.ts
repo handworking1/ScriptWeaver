@@ -46,9 +46,11 @@ const electronAPI = {
   updatePromptTemplate: (id: string, data: any) => ipcRenderer.invoke('template:update', id, data),
   deletePromptTemplate: (id: string) => ipcRenderer.invoke('template:delete', id),
 
-  // Chat streaming
-  chatSend: (configId: string, messages: { role: string; content: string; _conversationId?: string }[], failoverConfigId?: string) =>
-    ipcRenderer.invoke('chat:send', configId, messages, failoverConfigId),
+  // Chat streaming — fire-and-forget; completion via onChatDone/onChatError events
+  // en: 聊天流式传输 — 单向发送；完成状态通过 onChatDone/onChatError 事件获取
+  chatSend: (configId: string, messages: { role: string; content: string; _conversationId?: string }[], failoverConfigId?: string) => {
+    ipcRenderer.send('chat:send', configId, messages, failoverConfigId);
+  },
   chatStop: () => ipcRenderer.invoke('chat:stop'),
   chatSummary: (configId: string, messages: { role: string; content: string }[], characterName: string) =>
     ipcRenderer.invoke('chat:summary', configId, messages, characterName),

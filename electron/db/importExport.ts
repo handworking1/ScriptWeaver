@@ -11,9 +11,36 @@ export function exportAllData() {
   };
 }
 
+/** Field-level validation for imported data / 导入数据字段级校验 */
+function validateField(row: any, field: string, type: string, idx: number, table: string): void {
+  if (row[field] === undefined || row[field] === null) {
+    throw new Error(`导入数据无效: ${table}[${idx}].${field} 缺少必填字段 (type: ${type})`);
+  }
+  if (type === 'string' && typeof row[field] !== 'string') {
+    throw new Error(`导入数据无效: ${table}[${idx}].${field} 应为字符串，实际为 ${typeof row[field]}`);
+  }
+  if (type === 'number') {
+    if (typeof row[field] !== 'number' || Number.isNaN(row[field])) {
+      throw new Error(`导入数据无效: ${table}[${idx}].${field} 应为有效数字，实际为 ${typeof row[field]}${Number.isNaN(row[field]) ? ' (NaN)' : ''}`);
+    }
+  }
+}
+
+/** Validates role is one of user/assistant/system / 校验角色枚举值 */
+const VALID_ROLES = ['user', 'assistant', 'system'];
+
 export function importAllData(data: { scripts: any[]; characters: any[]; conversations: any[]; messages: any[]; aiConfigs: any[]; promptTemplates?: any[] }) {
   if (!Array.isArray(data.scripts) || !Array.isArray(data.characters) || !Array.isArray(data.conversations) || !Array.isArray(data.messages) || !Array.isArray(data.aiConfigs)) {
     throw new Error('导入数据格式无效：缺少必要的数据表');
+  }
+  // en: 逐行校验必填字段+类型 / Validate required fields + types row by row
+  data.scripts.forEach((s, i) => { validateField(s, 'id', 'string', i, 'scripts'); validateField(s, 'title', 'string', i, 'scripts'); validateField(s, 'created_at', 'number', i, 'scripts'); validateField(s, 'updated_at', 'number', i, 'scripts'); });
+  data.characters.forEach((c, i) => { validateField(c, 'id', 'string', i, 'characters'); validateField(c, 'script_id', 'string', i, 'characters'); validateField(c, 'name', 'string', i, 'characters'); validateField(c, 'created_at', 'number', i, 'characters'); });
+  data.conversations.forEach((c, i) => { validateField(c, 'id', 'string', i, 'conversations'); validateField(c, 'script_id', 'string', i, 'conversations'); validateField(c, 'character_id', 'string', i, 'conversations'); validateField(c, 'created_at', 'number', i, 'conversations'); validateField(c, 'updated_at', 'number', i, 'conversations'); });
+  data.messages.forEach((m, i) => { validateField(m, 'id', 'string', i, 'messages'); validateField(m, 'conversation_id', 'string', i, 'messages'); validateField(m, 'role', 'string', i, 'messages'); validateField(m, 'content', 'string', i, 'messages'); validateField(m, 'timestamp', 'number', i, 'messages'); if (!VALID_ROLES.includes(m.role)) throw new Error(`导入数据无效: messages[${i}].role 值 "${m.role}" 不在允许范围 [${VALID_ROLES.join(', ')}]`); });
+  data.aiConfigs.forEach((c, i) => { validateField(c, 'id', 'string', i, 'aiConfigs'); validateField(c, 'name', 'string', i, 'aiConfigs'); validateField(c, 'api_url', 'string', i, 'aiConfigs'); validateField(c, 'model', 'string', i, 'aiConfigs'); });
+  if (data.promptTemplates) {
+    data.promptTemplates.forEach((t, i) => { validateField(t, 'id', 'string', i, 'promptTemplates'); validateField(t, 'name', 'string', i, 'promptTemplates'); if (t.system_prompt === undefined && t.systemPrompt === undefined) throw new Error(`导入数据无效: promptTemplates[${i}].system_prompt 缺少必填字段`); });
   }
   const d = getDb();
   try {

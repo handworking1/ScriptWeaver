@@ -11,7 +11,7 @@ const mockIpc = {
   getMessages: jest.fn(),
   createConversation: jest.fn(),
   updateConversation: jest.fn(),
-  chatSend: jest.fn().mockResolvedValue(undefined),
+  chatSend: jest.fn(),
   chatStop: jest.fn(),
   chatSummary: jest.fn(),
   getSetting: jest.fn(),

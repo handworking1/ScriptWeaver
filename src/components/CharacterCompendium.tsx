@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface CharEntry {
   id: string;
@@ -26,8 +26,10 @@ export function CharacterCompendium({ scriptId, conversationId, configId, onClos
   const [chars, setChars] = useState<CharEntry[]>([]);
   const [saved, setSaved] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
+  /** Cleanup timer ref / 清理定时器引用 */
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); return () => clearTimeout(savedTimerRef.current); }, []);
 
   const load = async () => {
     try {
@@ -36,17 +38,33 @@ export function CharacterCompendium({ scriptId, conversationId, configId, onClos
     } catch (err) { console.error('[compendium] load:', err); }
   };
 
-  const save = async (updated: CharEntry[]) => {
-    setChars(updated);
+  /** Persist to IPC and show saved indicator / 持久化到IPC并显示已保存指示 */
+  const persist = async (updated: CharEntry[]) => {
     await window.electronAPI.setSetting(`compendium_${scriptId}`, JSON.stringify(updated));
     setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
+    clearTimeout(savedTimerRef.current);
+    savedTimerRef.current = setTimeout(() => setSaved(false), 1500);
   };
 
-  const addChar = () => save([...chars, defaultChar(Date.now().toString())]);
-  const removeChar = (id: string) => save(chars.filter((c) => c.id !== id));
-  const updateChar = (id: string, patch: Partial<CharEntry>) =>
-    save(chars.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+  /** Track user-initiated edits for deferred persistence / 追踪用户编辑以延迟持久化 */
+  const dirtyRef = useRef(false);
+  useEffect(() => {
+    if (dirtyRef.current) { persist(chars); dirtyRef.current = false; }
+  }, [chars]);
+
+  /** Atomic char update: func updater prevents stale-closure; persist via useEffect / 函数式更新防闭包陈旧；通过 useEffect 持久化 */
+  const addChar = () => {
+    dirtyRef.current = true;
+    setChars(prev => [...prev, defaultChar(Date.now().toString())]);
+  };
+  const removeChar = (id: string) => {
+    dirtyRef.current = true;
+    setChars(prev => prev.filter(c => c.id !== id));
+  };
+  const updateChar = (id: string, patch: Partial<CharEntry>) => {
+    dirtyRef.current = true;
+    setChars(prev => prev.map(c => c.id === id ? { ...c, ...patch } : c));
+  };
 
   // ── AI analysis ─────────────────────────────────────
   const handleAIAnalyze = async () => {
@@ -70,6 +88,7 @@ ${chatContent.slice(0, 8000)}`;
         if (match) {
           try {
             const analyzed: Partial<CharEntry>[] = JSON.parse(match[0]);
+            // en: 基于当前 chars 快照构建合并结果，无竞态风险（analyzing 守卫保证单次执行）
             const merged = [...chars];
             for (const a of analyzed) {
               const existing = merged.find(c => c.name === a.name);
@@ -79,7 +98,8 @@ ${chatContent.slice(0, 8000)}`;
                 merged.push({ id: Date.now().toString() + Math.random().toString(36).slice(2), name: a.name, personality: a.personality || '', favorability: a.favorability ?? 50, bodyType: a.bodyType || '', kinks: a.kinks || '', status: a.status || '', notes: a.notes || '' });
               }
             }
-            save(merged);
+            setChars(merged);
+            persist(merged);
           } catch (err) { console.error('[compendium] parse:', err); }
         }
       }

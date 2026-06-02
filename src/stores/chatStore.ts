@@ -141,9 +141,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       _conversationId: m.conversationId,
     }));
 
-    window.electronAPI.chatSend(configId, apiMessages, failoverConfigId).catch((err) => {
-      set({ error: err.message, isStreaming: false });
-    });
+    // en: 单向发送，错误通过 onChatError 事件获取 / Fire-and-forget; errors via onChatError event
+    window.electronAPI.chatSend(configId, apiMessages, failoverConfigId);
   },
 
   stopStreaming: () => {
@@ -195,9 +194,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       _conversationId: m.conversationId,
     }));
 
-    window.electronAPI.chatSend(configId, apiMessages, failoverConfigId).catch((err) => {
-      set({ error: err.message, isStreaming: false });
-    });
+    // en: 单向发送，错误通过 onChatError 事件获取 / Fire-and-forget; errors via onChatError event
+    window.electronAPI.chatSend(configId, apiMessages, failoverConfigId);
   },
 
   branchConversation: async (scriptId, characterId) => {

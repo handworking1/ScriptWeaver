@@ -42,6 +42,11 @@ export function ChatPage() {
   const [shortcutBar, setShortcutBar] = useState<string[]>([]);
   const [shortcutsExpanded, setShortcutsExpanded] = useState(true);
   const [showCompendium, setShowCompendium] = useState(false);
+  /** Loading state for world intro generation / 世界介绍生成中的加载状态 */
+  const [worldIntroLoading, setWorldIntroLoading] = useState(false);
+  /** Prevent setState on unmounted component during async world intro / 防止组件卸载后异步回调setState */
+  const mountedRef = useRef(true);
+  useEffect(() => { return () => { mountedRef.current = false; }; }, []);
   const [showConvList, setShowConvList] = useState(false);
   const [convList, setConvList] = useState<any[]>([]);
   const [openConvIds, setOpenConvIds] = useState<string[]>([]);
@@ -93,6 +98,8 @@ export function ChatPage() {
       addOpenConv(conv.id, conv.title || `世界：${script?.title || '未知'}`);
       const prompt = await buildWorldPrompt();
       await window.electronAPI.createMessage({ id: generateId(), conversationId: conv.id, role: 'system', content: prompt, timestamp: Date.now() });
+      /** Show loading immediately to cover loadMessages gap / 立即显示加载指示器覆盖空白期 */
+      setWorldIntroLoading(true);
       setShowSetup(false); await loadMessages(conv.id);
       /** Fire-and-forget: AI generates world intro in background so UI isn't blocked.
        *  异步非阻塞：AI在后台生成世界开场白，UI立即可用。 */
@@ -101,11 +108,12 @@ export function ChatPage() {
           const introResult = await window.electronAPI.discussSettings(activeConfigId, 'script',
             { title: script?.title, worldSetting: script?.worldSetting, background: script?.background, mainQuests: '', sideQuests: '', environment: '', map: '', data: '' },
             [{ role: 'system', content: `请以GM身份，用2-3段话生动介绍以下世界。只描述世界观概况、当前氛围和玩家初始处境，使用第二人称叙述。不要提任何工作流或下一步指引，不要用【】标注。\n标题：${script?.title}\n世界观：${script?.worldSetting}\n背景：${script?.background}` }]);
-          if (introResult.reply) {
+          if (introResult.reply && mountedRef.current) {
             await window.electronAPI.createMessage({ id: generateId(), conversationId: conv.id, role: 'assistant', content: introResult.reply, timestamp: Date.now() + 1 });
             await loadMessages(conv.id);
           }
         } catch (err) { console.error('[ChatPage] world intro:', err); }
+        finally { if (mountedRef.current) setWorldIntroLoading(false); }
       })();
     }
   };
@@ -163,6 +171,13 @@ export function ChatPage() {
       <ChatHeader characterName={character?.name} characterAvatar={character?.avatar} scriptTitle={script?.title} chatMode={chatMode} isStreaming={isStreaming} displayMessagesLen={displayMessages.length} onBack={() => setShowSetup(true)} onStop={stopStreaming} onSummary={() => { if (activeConfigId && activeConversationId) { const name = character?.name || script?.title || '当前剧情'; requestSummary(activeConfigId, name); } }} onBranch={async () => { if (selectedScriptId && selectedCharacterId) await branchConversation(selectedScriptId, selectedCharacterId); }} onRegenerate={async () => { if (activeConfigId) await regenerateLast(activeConfigId, failoverConfigId ?? undefined); }} onConvList={loadConvList} onCompendium={() => setShowCompendium(!showCompendium)} showCompendium={showCompendium} selectedScriptId={selectedScriptId} />
       <TokenBar used={tokenCount} limit={1048576} totalInSession={totalTokensSession} estimatedCost={estimatedCost} />
 
+      {/* World intro loading indicator / 世界介绍生成中指示器 */}
+      {worldIntroLoading && (
+        <div className="flex-shrink-0 bg-purple-900/30 border-b border-purple-800/50 px-4 py-2 flex items-center gap-2">
+          <span className="inline-block w-3 h-3 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm text-purple-300">🌍 正在生成世界介绍...</span>
+        </div>
+      )}
       <ChatMessages displayMessages={displayMessages} streamingContent={streamingContent} isStreaming={isStreaming} error={error} suggestions={suggestions} showSummary={showSummary} summaryContent={summaryContent} summaryLoading={summaryLoading} summaryError={summaryError} characterName={character?.name} characterAvatar={character?.avatar} editingMessageId={editingMessageId} editContent={editContent} setEditContent={setEditContent} onEditSave={handleEditMessage} onEditCancel={() => setEditingMessageId(null)} onEditStart={(msg) => { setEditingMessageId(msg.id); setEditContent(msg.content); }} onQuickReply={(t) => { if (activeConfigId) sendMessage(activeConfigId, t, failoverConfigId ?? undefined); }} onDismissSummary={dismissSummary} onCopySummary={() => navigator.clipboard.writeText(summaryContent)} />
       <ChatInput inputValue={inputValue} setInputValue={setInputValue} isStreaming={isStreaming} shortcutBar={shortcutBar} shortcutsExpanded={shortcutsExpanded} setShortcutsExpanded={setShortcutsExpanded} activeConfigId={activeConfigId} failoverConfigId={failoverConfigId} sendMessage={(cid, t, fid) => sendMessage(cid, t, fid)} recentMessages={displayMessages.slice(-6)} characterName={character?.name} banghuiEnabled={script?.extraData?.banghuiEnabled === 'Y'} chatMode={chatMode} scriptId={selectedScriptId ?? undefined} />
       {showConvList && (

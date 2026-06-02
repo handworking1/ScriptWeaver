@@ -288,11 +288,14 @@ export function registerIpcHandlers(): void {
     }
   });
 
-  // ─── Chat (SSE streaming) ───────────────────────────────
-  ipcMain.handle('chat:send', async (event, configId: string, messages: any[], failoverConfigId?: string) => {
-    const win = BrowserWindow.fromWebContents(event.sender);
-    if (!win) throw new Error('No window');
+  // ─── Chat (SSE streaming - pure event, no handle blocking) ───
+  // en: 使用 ipcMain.on 代替 handle，避免长时间阻塞主进程 / Use .on instead of .handle to avoid blocking main process
+  ipcMain.on('chat:send', (_event, configId: string, messages: any[], failoverConfigId?: string) => {
+    const win = BrowserWindow.fromWebContents(_event.sender);
+    if (!win) return;
 
+    // en: 中止前一个请求以避免并发污染 / Abort previous request to prevent concurrent pollution
+    if (activeAbortController) { activeAbortController.abort(); }
     const abortController = new AbortController();
     activeAbortController = abortController;
 
@@ -301,6 +304,8 @@ export function registerIpcHandlers(): void {
     const convMsg = messages.find(m => (m as any)._conversationId);
     if (convMsg) conversationId = (convMsg as any)._conversationId;
 
+    /** en: 异步发起 SSE 请求，避免阻塞主进程 / Async SSE request, non-blocking */
+    (async () => {
     // Try primary config, then failover
     const configIds = [configId];
     if (failoverConfigId && failoverConfigId !== configId) {
@@ -390,8 +395,9 @@ export function registerIpcHandlers(): void {
       }
     }
 
-    // All configs failed
-    win.webContents.send('chat:error', { error: lastError || 'Unknown error', conversationId });
+    // All configs failed / 所有配置均失败
+    try { win.webContents.send('chat:error', { error: lastError || 'Unknown error', conversationId }); } catch { /* window gone */ }
+    })();
   });
 
   ipcMain.handle('chat:stop', () => {
