@@ -3,6 +3,7 @@
  * 角色管理弹窗 — 完整的角色增删改查，与角色管理页功能一致。
  */
 import { useEffect, useState } from 'react';
+import { useCharacterStore } from '@/stores/characterStore';
 import { generateId } from '@/lib/id';
 
 interface Character {
@@ -105,8 +106,11 @@ export function CharacterModal({ scriptId, configId, onClose }: Props) {
     };
     if (editingId) {
       await window.electronAPI.updateCharacter(editingId, data);
+      // en: 同步 charactersStore / Sync characters store
+      useCharacterStore.getState().loadCharacters(scriptId);
     } else {
       await window.electronAPI.createCharacter(data as any);
+      useCharacterStore.getState().loadCharacters(scriptId);
     }
     resetForm();
     load();
@@ -115,6 +119,7 @@ export function CharacterModal({ scriptId, configId, onClose }: Props) {
   const handleDelete = async (id: string) => {
     if (!confirm('确定删除这个角色？')) return;
     await window.electronAPI.deleteCharacter(id);
+    useCharacterStore.getState().loadCharacters(scriptId);
     if (editingId === id) resetForm();
     load();
   };
