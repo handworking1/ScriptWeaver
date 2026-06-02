@@ -241,8 +241,8 @@ export function AIConfigPage() {
 
         {/* Form Modal */}
         {showForm && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setShowForm(false)}>
-            <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
               <h3 className="text-lg font-semibold text-gray-100 mb-4">
                 {editingConfig ? '编辑配置' : '添加配置'}
               </h3>
@@ -361,7 +361,7 @@ export function AIConfigPage() {
                       step="0.1"
                       value={form.temperature}
                       onChange={(e) => setForm({ ...form, temperature: parseFloat(e.target.value) })}
-                      className="w-full"
+                      className="w-full accent-purple-500"
                     />
                     <div className="flex justify-between text-xs text-gray-600 mt-0.5">
                       <span>0 稳定</span><span>1 平衡</span><span>2 随机</span>

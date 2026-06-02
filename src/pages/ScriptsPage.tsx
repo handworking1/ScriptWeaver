@@ -194,8 +194,8 @@ export function ScriptsPage() {
 
         {/* Form Modal */}
         {showForm && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setShowForm(false)}>
-            <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
               <h3 className="text-lg font-semibold text-gray-100 mb-4">
                 {editingScript ? '编辑剧本' : '新建剧本'}
               </h3>
@@ -281,8 +281,8 @@ export function ScriptsPage() {
                                 onClick={() => setSelectedTags(isSelected ? selectedTags.filter((t) => t !== tag) : [...selectedTags, tag])}
                                 className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
                                   isSelected
-                                    ? 'bg-purple-900/50 text-purple-300 border-purple-500/50'
-                                    : 'bg-gray-800 text-gray-500 border-gray-700 hover:border-gray-500 hover:text-gray-300'
+                                    ? 'bg-purple-900/60 text-purple-300 border-purple-500/60'
+                                    : 'bg-gray-700 text-gray-400 border-gray-600 hover:border-gray-400 hover:text-gray-200'
                                 }`}
                               >
                                 {tag}
