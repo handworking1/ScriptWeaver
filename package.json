@@ -72,7 +72,7 @@
       "signAndEditExecutable": false
     },
     "zip": {
-      "artifactName": "${productName}-${version}-portable.${ext}"
+      "artifactName": "${productName}-v${version}-免安装版.${ext}"
     },
     "nsis": {
       "oneClick": false,
