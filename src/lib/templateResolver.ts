@@ -26,11 +26,13 @@ export function resolveTemplatePreview(template: PromptTemplate): string {
 }
 
 export function extractSuggestions(content: string): string[] {
-  const match = content.match(/\[SUGGESTIONS:\s*(.+?)\]/);
+  // Support | / 、separators, numbered prefixes, newlines inside brackets
+  const match = content.match(/\[SUGGESTIONS:\s*([\s\S]+?)\]/);
   if (!match) return [];
-  return match[1].split('|').map((s) => s.trim()).filter(Boolean).slice(0, 3);
+  const items = match[1].split(/[|、]/).map(s => s.replace(/^\s*\d+[\.\、\)）]\s*/, '').trim()).filter(Boolean);
+  return items.slice(0, 3);
 }
 
 export function stripSuggestions(content: string): string {
-  return content.replace(/\s*\[SUGGESTIONS:\s*.+?\]/g, '');
+  return content.replace(/\s*\[SUGGESTIONS:\s*[\s\S]+?\]/g, '');
 }
