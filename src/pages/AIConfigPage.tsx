@@ -4,6 +4,7 @@ import { useTemplateStore } from '@/stores/templateStore';
 import { useNavStore } from '@/stores/navStore';
 import { generateId } from '@/lib/id';
 import { resolveTemplatePreview } from '@/lib/templateResolver';
+import { MessageTemplateEditor } from '@/components/MessageTemplateEditor';
 import type { AIConfig } from '@/types';
 
 const defaultConfig = {
@@ -717,7 +718,7 @@ export function AIConfigPage() {
         )}
 
         {/* Chat Shortcuts */}
-        {activeTab === 'shortcuts' && (
+        {activeTab === 'shortcuts' && (<>
           <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -742,7 +743,9 @@ export function AIConfigPage() {
               ))}
             </div>
           </div>
-        )}
+          {/* Message templates / 消息模板 */}
+          <MessageTemplateEditor />
+        </>)}
 
         {/* Protagonist Settings */}
         {activeTab === 'protagonist' && (

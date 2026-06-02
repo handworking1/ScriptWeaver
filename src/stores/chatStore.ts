@@ -341,6 +341,22 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         totalTokensSession: newTotal,
         estimatedCost: estimateCost(newTotal, 0, getActiveModelInfo().model),
       });
+
+      /** Auto-summary every 30 non-system messages (~15 turns) / 每15轮自动摘要 */
+      const nonSysLen = newMessages.filter(m => m.role !== 'system').length;
+      if (nonSysLen > 0 && nonSysLen % 30 === 0) {
+        try {
+          const { activeConfigId: cid } = useConfigStore.getState();
+          if (!cid) return;
+          const r = await window.electronAPI.discussSettings(cid, 'script', { title:'', worldSetting:'', background:'', mainQuests:'', sideQuests:'', environment:'', map:'', data:'' },
+            [{ role:'system', content:`用1-2句话总结对话剧情进展：\n${newMessages.slice(-20).map(m=>`[${m.role}]: ${m.content.slice(0,800)}`).join('\n')}` }]);
+          if (r.reply) {
+            const raw = await window.electronAPI.getSetting('auto_summaries_' + convId);
+            (JSON.parse(raw||'[]') as any[]).push({ text: r.reply, at: Date.now() });
+            await window.electronAPI.setSetting('auto_summaries_' + convId, JSON.stringify((JSON.parse(raw||'[]') as any[]).slice(-20)));
+          }
+        } catch { /* best-effort */ }
+      }
     } catch (err) {
       // DB write failed — keep streamingContent visible so user can copy it.
       // DB 写入失败——保留流式内容，用户仍可复制。

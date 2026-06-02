@@ -29,9 +29,22 @@ export const ChatInput = memo(function ChatInput({
   const [mentionChars, setMentionChars] = useState<{ id: string; name: string }[]>([]);
   const [showMention, setShowMention] = useState(false);
 
-  /** Debounce timer for @mention query to avoid excessive DB reads on fast typing.
-   *  防抖定时器——快速输入时减少数据库查询次数。 */
+  /** Debounce timer for @mention query / 防抖定时器 */
   const mentionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Message templates / 消息模板 */
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [templates, setTemplates] = useState<string[]>([]);
+
+  useEffect(() => {
+    window.electronAPI.getSetting('msg_templates').then(d => {
+      if (d) setTemplates(JSON.parse(d));
+    }).catch(() => {});
+  }, []);
+
+  const applyTemplate = (text: string) => {
+    setInputValue(inputValue + text);
+    setShowTemplates(false);
+  };
 
   /** Watch input for '@' — load matching characters from the script roster for autocomplete.
    *  监听输入中的@符号，从剧本角色列表加载匹配角色名供补全。
@@ -180,6 +193,21 @@ export const ChatInput = memo(function ChatInput({
             placeholder={banghuiEnabled ? '输入消息或帮回指令...' : '输入消息... (Enter 发送)'}
             className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-100 focus:outline-none focus:border-purple-500 resize-none h-12"
             rows={1} disabled={isStreaming} />
+          <div className="relative">
+            <button onClick={() => setShowTemplates(v => !v)} disabled={isStreaming}
+              className="w-12 h-12 bg-teal-700 hover:bg-teal-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl flex items-center justify-center flex-shrink-0 transition-colors" title="消息模板">
+              <span className="text-sm">📋</span>
+            </button>
+            {showTemplates && (
+              <div className="absolute bottom-full right-0 mb-2 w-64 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto">
+                {templates.length === 0 ? (
+                  <div className="p-3 text-xs text-gray-500">暂无模板，在设置中添加</div>
+                ) : templates.map((t, i) => (
+                  <button key={i} onClick={() => applyTemplate(t)} className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-700 border-b border-gray-700/50 last:border-0">{t}</button>
+                ))}
+              </div>
+            )}
+          </div>
           <button onClick={handleAIGenerate} disabled={replyLoading || isStreaming || !activeConfigId || recentMessages.length < 2}
             className="w-12 h-12 bg-amber-700 hover:bg-amber-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl flex items-center justify-center flex-shrink-0 transition-colors" title="AI 写回复">
             <span className="text-sm">{replyLoading ? '⏳' : '✨'}</span>

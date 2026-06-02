@@ -33,6 +33,8 @@ export function HistoryPage() {
   const [filterCharacterId, setFilterCharacterId] = useState<string | undefined>();
   const [characters, setCharacters] = useState<any[]>([]);
   const [viewMode, setViewMode] = useState<'chat' | 'raw'>('chat');
+  const [showStats, setShowStats] = useState(false);
+  const [stats, setStats] = useState<{ totalConvs: number; totalMessages: number; totalWords: number; totalTokens: number } | null>(null);
 
   useEffect(() => {
     loadScripts();
@@ -117,8 +119,52 @@ export function HistoryPage() {
     <div className="flex-1 flex h-full">
       {/* Left: Conversation List */}
       <div className="w-80 border-r border-gray-800 overflow-y-auto p-4 flex-shrink-0">
-        <h2 className="text-lg font-bold text-gray-100 mb-4">📋 历史记录</h2>
+        <h2 className="text-lg font-bold text-gray-100 mb-4">
+          {showStats ? '📊 统计' : '📋 历史记录'}
+        </h2>
+        <button onClick={async () => {
+          if (!showStats) {
+            const convs = filterScriptId
+              ? await window.electronAPI.getConversations(filterScriptId)
+              : conversations;
+            let totalMsgs = 0, totalWords = 0, totalTokens = 0;
+            for (const c of convs) {
+              const msgs = await window.electronAPI.getMessages(c.id);
+              totalMsgs += msgs.length;
+              totalWords += msgs.reduce((s,m) => s + m.content.length, 0);
+            }
+            totalTokens = Math.round(totalWords / 2);
+            setStats({ totalConvs: convs.length, totalMessages: totalMsgs, totalWords, totalTokens });
+          }
+          setShowStats(!showStats);
+        }} className="mb-4 px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg">
+          {showStats ? '← 返回列表' : '📊 查看统计'}
+        </button>
 
+        {showStats && stats && (
+          <div className="space-y-3 mb-4">
+            <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+              <div className="text-xs text-gray-500">总对话数</div>
+              <div className="text-lg font-bold text-purple-400">{stats.totalConvs}</div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                <div className="text-xs text-gray-500">总消息</div>
+                <div className="text-sm font-bold text-gray-200">{stats.totalMessages.toLocaleString()}</div>
+              </div>
+              <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                <div className="text-xs text-gray-500">总字数</div>
+                <div className="text-sm font-bold text-gray-200">{stats.totalWords.toLocaleString()}</div>
+              </div>
+            </div>
+            <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+              <div className="text-xs text-gray-500">估算 Token</div>
+              <div className="text-sm font-bold text-amber-400">{stats.totalTokens.toLocaleString()}</div>
+            </div>
+          </div>
+        )}
+
+        {!showStats && (<>
         {/* Filters */}
         <div className="space-y-2 mb-4">
           <select
@@ -151,6 +197,7 @@ export function HistoryPage() {
           onDelete={handleDelete}
           selectedId={selectedConv?.id}
         />
+        </>)}
       </div>
 
       {/* Right: Detail */}
