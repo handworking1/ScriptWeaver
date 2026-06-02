@@ -67,11 +67,20 @@ export function AIDiscussPage() {
   }, []);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
-  // Persist messages on change (key computed from live targetScriptId, not dep) / 消息持久化
+  // Persist messages on change + save on tab switch unmount / 消息持久化+切标签时保存
   useEffect(() => {
     const key = DISCUSS_KEY_PREFIX + (targetScriptId || '_new_');
-    window.electronAPI.setSetting(key, JSON.stringify({ title: targetTitle, msgs: messages }));
-  }, [messages, targetTitle]);
+    const data = JSON.stringify({ title: targetTitle, msgs: messages });
+    let cancelled = false;
+    // Defer save to avoid writing old msgs to new key on tab switch
+    const timer = setTimeout(() => { if (!cancelled) window.electronAPI.setSetting(key, data); }, 100);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      // On unmount/tab switch, save immediately to current key / 卸载/切标签时立即保存
+      window.electronAPI.setSetting(key, data);
+    };
+  }, [messages, targetTitle, targetScriptId]);
 
   // Load messages when switching scripts
   useEffect(() => {
