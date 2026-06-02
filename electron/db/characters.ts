@@ -22,4 +22,10 @@ export function updateCharacter(id: string, data: { name?: string; personality?:
   return getCharacter(id);
 }
 
-export function deleteCharacter(id: string) { run('DELETE FROM characters WHERE id = ?', [id]); }
+export function deleteCharacter(id: string) {
+  // en: 级联清理该角色的对话 / Cascade cleanup conversations for this character
+  const convs = execAll<{ id: string }>('SELECT id FROM conversations WHERE character_id = ?', [id]);
+  for (const c of convs) run('DELETE FROM messages WHERE conversation_id = ?', [c.id]);
+  run('DELETE FROM conversations WHERE character_id = ?', [id]);
+  run('DELETE FROM characters WHERE id = ?', [id]);
+}

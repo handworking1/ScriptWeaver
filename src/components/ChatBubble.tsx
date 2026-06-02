@@ -6,9 +6,17 @@ interface ChatBubbleProps {
   timestamp?: number;
   characterName?: string;
   characterAvatar?: string;
+  /** Search query for highlighting / 搜索高亮 */
+  searchQuery?: string;
 }
 
-export function ChatBubble({ role, content, timestamp, characterName, characterAvatar }: ChatBubbleProps) {
+function highlightText(text: string, query: string): string {
+  if (!query) return text;
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="bg-yellow-500/30 text-yellow-200 rounded px-0.5">$1</mark>');
+}
+
+export function ChatBubble({ role, content, timestamp, characterName, characterAvatar, searchQuery }: ChatBubbleProps) {
   if (role === 'system') return null;
 
   const isUser = role === 'user';

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 
 interface Props {
   inputValue: string;
@@ -17,7 +17,7 @@ interface Props {
   scriptId?: string;
 }
 
-export function ChatInput({
+export const ChatInput = memo(function ChatInput({
   inputValue, setInputValue, isStreaming, shortcutBar, shortcutsExpanded,
   setShortcutsExpanded, activeConfigId, failoverConfigId, sendMessage,
   recentMessages, characterName, banghuiEnabled, chatMode, scriptId,
@@ -190,4 +190,4 @@ export function ChatInput({
       </div>
     </>
   );
-}
+});

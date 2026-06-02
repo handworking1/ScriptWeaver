@@ -20,4 +20,11 @@ export function updateScript(id: string, data: { title?: string; worldSetting?: 
   return getScript(id);
 }
 
-export function deleteScript(id: string) { run('DELETE FROM scripts WHERE id = ?', [id]); }
+export function deleteScript(id: string) {
+  // en: 级联清理关联数据 / Cascade cleanup related data
+  const convs = execAll<{ id: string }>('SELECT id FROM conversations WHERE script_id = ?', [id]);
+  for (const c of convs) run('DELETE FROM messages WHERE conversation_id = ?', [c.id]);
+  run('DELETE FROM conversations WHERE script_id = ?', [id]);
+  run('DELETE FROM characters WHERE script_id = ?', [id]);
+  run('DELETE FROM scripts WHERE id = ?', [id]);
+}
