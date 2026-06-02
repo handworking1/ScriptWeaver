@@ -20,6 +20,7 @@ interface Props {
   setEditContent: (v: string) => void;
   onEditSave: (msg: Message) => void;
   onEditCancel: () => void;
+  onEditStart: (msg: Message) => void;
   onQuickReply: (text: string) => void;
   onDismissSummary: () => void;
   onCopySummary: () => void;
@@ -29,7 +30,7 @@ export function ChatMessages({
   displayMessages, streamingContent, isStreaming, error, suggestions,
   showSummary, summaryContent, summaryLoading, summaryError,
   characterName, characterAvatar,
-  editingMessageId, editContent, setEditContent, onEditSave, onEditCancel,
+  editingMessageId, editContent, setEditContent, onEditSave, onEditCancel, onEditStart,
   onQuickReply, onDismissSummary, onCopySummary,
 }: Props) {
   return (
@@ -52,7 +53,7 @@ export function ChatMessages({
               <div>
                 <ChatBubble role={msg.role} content={msg.content} timestamp={msg.timestamp} characterName={characterName} characterAvatar={characterAvatar} />
                 <div className={`flex gap-1 mb-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'} opacity-0 group-hover:opacity-100 transition-opacity`}>
-                  {msg.role === 'user' && <button onClick={() => {}} className="text-xs text-gray-600 hover:text-gray-400 px-1">✏️</button>}
+                  {msg.role === 'user' && <button onClick={() => onEditStart(msg)} className="text-xs text-gray-600 hover:text-gray-400 px-1">✏️</button>}
                 </div>
               </div>
             )}
