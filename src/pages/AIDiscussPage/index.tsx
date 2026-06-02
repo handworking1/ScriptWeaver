@@ -6,7 +6,7 @@ import { useNavStore } from '@/stores/navStore';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { DiscussManagePanel } from './DiscussManagePanel';
 import { DiscussActionBar } from './DiscussActionBar';
-import { DiscussCharacterPanel } from './DiscussCharacterPanel';
+import { CharacterModal } from './CharacterModal';
 import { generateId } from '@/lib/id';
 
 interface Message {
@@ -39,8 +39,8 @@ export function AIDiscussPage() {
   /** Inline name input for new discussion / 新建讨论的内联名称输入 */
   const [showNewName, setShowNewName] = useState(false);
   const [newTitle, setNewTitle] = useState('');
-  /** Collapsible character panel / 可折叠角色面板 */
-  const [charPanelCollapsed, setCharPanelCollapsed] = useState(false);
+  /** Character modal open state / 角色管理弹窗开关 */
+  const [showCharModal, setShowCharModal] = useState(false);
   /** Collapsible script settings panel / 可折叠剧本设置面板 */
   const [scriptPanelCollapsed, setScriptPanelCollapsed] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
@@ -440,12 +440,25 @@ ${JSON.stringify(getFields(), null, 2)}`;
         </div>
       </div>
 
-      {/* Collapsible character settings panel / 可折叠角色设置面板 */}
+      {/* Character management button → modal / 角色管理按钮→弹窗 */}
       {targetScriptId && (
-        <DiscussCharacterPanel
+        <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700 px-4 py-1.5">
+          <button
+            onClick={() => setShowCharModal(true)}
+            className="text-xs text-gray-400 hover:text-gray-200 flex items-center gap-1.5 transition-colors"
+          >
+            <span className={`transform transition-transform`}>▶</span>
+            🎭 角色管理
+          </button>
+        </div>
+      )}
+
+      {/* Character modal / 角色管理弹窗 */}
+      {showCharModal && targetScriptId && (
+        <CharacterModal
           scriptId={targetScriptId}
-          collapsed={charPanelCollapsed}
-          onToggle={() => setCharPanelCollapsed(v => !v)}
+          configId={activeConfigId}
+          onClose={() => setShowCharModal(false)}
         />
       )}
 
