@@ -9,6 +9,8 @@ interface Quest {
   text: string;
   type: 'main' | 'side';
   status: 'pending' | 'active' | 'done';
+  /** AI-generated detail from conversation analysis / AI分析生成的详情 */
+  detail?: string;
 }
 
 interface Props {
@@ -52,8 +54,9 @@ const STORAGE_KEY_PREFIX = 'quest_state_';
 
 export function QuestPanel({ scriptId, conversationId, configId, mainQuests, sideQuests, onClose }: Props) {
   const [quests, setQuests] = useState<Quest[]>([]);
+  const [selectedQuest, setSelectedQuest] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const savedRef = useRef(false); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const savedRef = useRef(false); // eslint-disable-line
 
   useEffect(() => {
     // Parse quests from script data + merge saved state
@@ -68,8 +71,17 @@ export function QuestPanel({ scriptId, conversationId, configId, mainQuests, sid
         const key = STORAGE_KEY_PREFIX + scriptId + suffix;
         const raw = await window.electronAPI.getSetting(key);
         if (raw) {
-          const saved: Record<string, Quest['status']> = JSON.parse(raw);
-          all.forEach(q => { if (saved[q.id]) q.status = saved[q.id]; });
+          const saved = JSON.parse(raw);
+          all.forEach(q => {
+            const entry = saved[q.id];
+            if (typeof entry === 'object' && entry !== null) {
+              const s = entry.status;
+              if (s === 'pending' || s === 'active' || s === 'done') q.status = s;
+              if (typeof entry.detail === 'string') q.detail = entry.detail;
+            } else if (typeof entry === 'string') {
+              if (entry === 'pending' || entry === 'active' || entry === 'done') q.status = entry;
+            }
+          });
         }
         setQuests(all);
       } catch {
@@ -80,10 +92,10 @@ export function QuestPanel({ scriptId, conversationId, configId, mainQuests, sid
 
   /** Persist quest state to DB / 持久化任务状态 */
   const persist = async (updated: Quest[]) => {
-    const map: Record<string, Quest['status']> = {};
-    updated.forEach(q => { map[q.id] = q.status; });
+    const data: Record<string, { status: Quest['status']; detail?: string }> = {};
+    updated.forEach(q => { data[q.id] = { status: q.status, detail: q.detail }; });
     const suffix = conversationId ? `_${conversationId}` : '';
-    await window.electronAPI.setSetting(STORAGE_KEY_PREFIX + scriptId + suffix, JSON.stringify(map));
+    await window.electronAPI.setSetting(STORAGE_KEY_PREFIX + scriptId + suffix, JSON.stringify(data));
   };
 
   /** Toggle quest status: pending → active → done → pending / 切换任务状态 */
@@ -112,7 +124,10 @@ export function QuestPanel({ scriptId, conversationId, configId, mainQuests, sid
         .join('\n');
 
       const questList = quests.map(q => `- [${q.id}] ${q.text}`).join('\n');
-      const prompt = `根据以下对话内容，判断每个任务的状态。返回严格JSON对象（键为任务id，值为 "pending"/"active"/"done"）：
+      const prompt = `根据以下对话内容，判断每个任务的状态并生成简短进度说明。返回严格JSON对象，每个任务包含status和detail字段：
+{
+  "task_id": {"status": "pending/active/done", "detail": "从对话中分析到的任务进度说明（20-50字）"}
+}
 
 任务列表：
 ${questList}
@@ -135,12 +150,18 @@ ${chatContent.slice(0, 6000)}
         const match = result.reply.match(/\{[\s\S]*\}/);
         if (match) {
           try {
-            const updates: Record<string, Quest['status']> = JSON.parse(match[0]);
+            const updates: Record<string, { status?: Quest['status']; detail?: string }> = JSON.parse(match[0]);
             setQuests(prev => {
-              const next = prev.map(q => ({
-                ...q,
-                status: updates[q.id] || q.status,
-              }));
+              const next = prev.map(q => {
+                const u = updates[q.id];
+                if (typeof u === 'object' && u !== null) {
+                  return { ...q, status: (u.status as Quest['status']) || q.status, detail: u.detail || q.detail };
+                }
+                if (typeof u === 'string' && (u === 'pending' || u === 'active' || u === 'done')) {
+                  return { ...q, status: u };
+                }
+                return q;
+              });
               persist(next);
               return next;
             });
@@ -188,17 +209,33 @@ ${chatContent.slice(0, 6000)}
             <div className="text-xs font-medium text-amber-400 mb-2">🎯 主线任务</div>
             <div className="space-y-1.5">
               {main.map(q => (
-                <button
-                  key={q.id}
-                  onClick={() => toggleStatus(q.id)}
-                  className={`w-full text-left p-2 rounded-lg text-xs transition-colors border border-transparent hover:border-gray-600 ${
-                    q.status === 'done' ? 'bg-green-900/20' :
-                    q.status === 'active' ? 'bg-yellow-900/20' : 'bg-gray-800'
-                  }`}
-                >
-                  <div className={STATUS_COLORS[q.status]}>{q.text}</div>
-                  <div className="text-gray-600 mt-0.5">{STATUS_LABELS[q.status]}</div>
-                </button>
+                <div key={q.id}>
+                  <button
+                    onClick={() => setSelectedQuest(selectedQuest === q.id ? null : q.id)}
+                    className={`w-full text-left p-2 rounded-lg text-xs transition-colors border ${
+                      selectedQuest === q.id ? 'border-purple-500/50' : 'border-transparent hover:border-gray-600'
+                    } ${
+                      q.status === 'done' ? 'bg-green-900/20' :
+                      q.status === 'active' ? 'bg-yellow-900/20' : 'bg-gray-800'
+                    }`}
+                  >
+                    <div className={STATUS_COLORS[q.status]}>{q.text}</div>
+                    <div className="text-gray-600 mt-0.5">{STATUS_LABELS[q.status]}</div>
+                  </button>
+                  {selectedQuest === q.id && (
+                    <div className="ml-2 mt-1 mb-2 p-2 bg-gray-800/50 rounded border border-gray-700/50">
+                      {q.detail ? (
+                        <p className="text-xs text-gray-400 leading-relaxed">{q.detail}</p>
+                      ) : (
+                        <p className="text-xs text-gray-600">暂无详情，点击 🤖 分析让 AI 自动识别</p>
+                      )}
+                      <div className="flex gap-2 mt-2">
+                        <button onClick={() => toggleStatus(q.id)}
+                          className="text-xs text-purple-400 hover:text-purple-300">切换状态</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
@@ -210,17 +247,33 @@ ${chatContent.slice(0, 6000)}
             <div className="text-xs font-medium text-blue-400 mb-2">📌 支线任务</div>
             <div className="space-y-1.5">
               {side.map(q => (
-                <button
-                  key={q.id}
-                  onClick={() => toggleStatus(q.id)}
-                  className={`w-full text-left p-2 rounded-lg text-xs transition-colors border border-transparent hover:border-gray-600 ${
-                    q.status === 'done' ? 'bg-green-900/20' :
-                    q.status === 'active' ? 'bg-yellow-900/20' : 'bg-gray-800'
-                  }`}
-                >
-                  <div className={STATUS_COLORS[q.status]}>{q.text}</div>
-                  <div className="text-gray-600 mt-0.5">{STATUS_LABELS[q.status]}</div>
-                </button>
+                <div key={q.id}>
+                  <button
+                    onClick={() => setSelectedQuest(selectedQuest === q.id ? null : q.id)}
+                    className={`w-full text-left p-2 rounded-lg text-xs transition-colors border ${
+                      selectedQuest === q.id ? 'border-purple-500/50' : 'border-transparent hover:border-gray-600'
+                    } ${
+                      q.status === 'done' ? 'bg-green-900/20' :
+                      q.status === 'active' ? 'bg-yellow-900/20' : 'bg-gray-800'
+                    }`}
+                  >
+                    <div className={STATUS_COLORS[q.status]}>{q.text}</div>
+                    <div className="text-gray-600 mt-0.5">{STATUS_LABELS[q.status]}</div>
+                  </button>
+                  {selectedQuest === q.id && (
+                    <div className="ml-2 mt-1 mb-2 p-2 bg-gray-800/50 rounded border border-gray-700/50">
+                      {q.detail ? (
+                        <p className="text-xs text-gray-400 leading-relaxed">{q.detail}</p>
+                      ) : (
+                        <p className="text-xs text-gray-600">暂无详情，点击 🤖 分析让 AI 自动识别</p>
+                      )}
+                      <div className="flex gap-2 mt-2">
+                        <button onClick={() => toggleStatus(q.id)}
+                          className="text-xs text-purple-400 hover:text-purple-300">切换状态</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
