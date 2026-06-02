@@ -173,7 +173,8 @@ ${chatContent.slice(0, 6000)}
   };
 
   const main = quests.filter(q => q.type === 'main');
-  const side = quests.filter(q => q.type === 'side');
+  /** Side quests only show when triggered (not pending) / 支线仅触发后显示 */
+  const side = quests.filter(q => q.type === 'side' && q.status !== 'pending');
 
   return (
     <div className="fixed inset-y-0 right-0 w-80 bg-gray-900 border-l border-gray-700 flex flex-col z-[60] shadow-2xl">
@@ -241,41 +242,45 @@ ${chatContent.slice(0, 6000)}
           </div>
         )}
 
-        {/* Side quests / 支线任务 */}
-        {side.length > 0 && (
+        {/* Side quests / 支线任务（仅触发后显示） */}
+        {quests.filter(q => q.type === 'side').length > 0 && (
           <div>
             <div className="text-xs font-medium text-blue-400 mb-2">📌 支线任务</div>
-            <div className="space-y-1.5">
-              {side.map(q => (
-                <div key={q.id}>
-                  <button
-                    onClick={() => setSelectedQuest(selectedQuest === q.id ? null : q.id)}
-                    className={`w-full text-left p-2 rounded-lg text-xs transition-colors border ${
-                      selectedQuest === q.id ? 'border-purple-500/50' : 'border-transparent hover:border-gray-600'
-                    } ${
-                      q.status === 'done' ? 'bg-green-900/20' :
-                      q.status === 'active' ? 'bg-yellow-900/20' : 'bg-gray-800'
-                    }`}
-                  >
-                    <div className={STATUS_COLORS[q.status]}>{q.text}</div>
-                    <div className="text-gray-600 mt-0.5">{STATUS_LABELS[q.status]}</div>
-                  </button>
-                  {selectedQuest === q.id && (
-                    <div className="ml-2 mt-1 mb-2 p-2 bg-gray-800/50 rounded border border-gray-700/50">
-                      {q.detail ? (
-                        <p className="text-xs text-gray-400 leading-relaxed">{q.detail}</p>
-                      ) : (
-                        <p className="text-xs text-gray-600">暂无详情，点击 🤖 分析让 AI 自动识别</p>
-                      )}
-                      <div className="flex gap-2 mt-2">
-                        <button onClick={() => toggleStatus(q.id)}
-                          className="text-xs text-purple-400 hover:text-purple-300">切换状态</button>
+            {side.length === 0 ? (
+              <div className="text-xs text-gray-600">支线任务尚未触发，请在对话中推进</div>
+            ) : (
+              <div className="space-y-1.5">
+                {side.map(q => (
+                  <div key={q.id}>
+                    <button
+                      onClick={() => setSelectedQuest(selectedQuest === q.id ? null : q.id)}
+                      className={`w-full text-left p-2 rounded-lg text-xs transition-colors border ${
+                        selectedQuest === q.id ? 'border-purple-500/50' : 'border-transparent hover:border-gray-600'
+                      } ${
+                        q.status === 'done' ? 'bg-green-900/20' :
+                        q.status === 'active' ? 'bg-yellow-900/20' : 'bg-gray-800'
+                      }`}
+                    >
+                      <div className={STATUS_COLORS[q.status]}>{q.text}</div>
+                      <div className="text-gray-600 mt-0.5">{STATUS_LABELS[q.status]}</div>
+                    </button>
+                    {selectedQuest === q.id && (
+                      <div className="ml-2 mt-1 mb-2 p-2 bg-gray-800/50 rounded border border-gray-700/50">
+                        {q.detail ? (
+                          <p className="text-xs text-gray-400 leading-relaxed">{q.detail}</p>
+                        ) : (
+                          <p className="text-xs text-gray-600">暂无详情，点击 🤖 分析让 AI 自动识别</p>
+                        )}
+                        <div className="flex gap-2 mt-2">
+                          <button onClick={() => toggleStatus(q.id)}
+                            className="text-xs text-purple-400 hover:text-purple-300">切换状态</button>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
