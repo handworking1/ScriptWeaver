@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavStore } from '@/stores/navStore';
 import { Sidebar } from '@/components/Sidebar';
 import { ScriptsPage } from '@/pages/ScriptsPage';
@@ -17,10 +18,17 @@ const pages = {
   aiDiscuss: AIDiscussPage,
 };
 
+const FONT_SIZES: Record<string, string> = { small: '14px', normal: '16px', large: '18px' };
+
 export function App() {
   const currentPage = useNavStore((s) => s.currentPage);
   const theme = useNavStore((s) => s.theme);
+  const fontSize = useNavStore((s) => s.fontSize);
   const PageComponent = pages[currentPage];
+
+  useEffect(() => {
+    document.documentElement.style.fontSize = FONT_SIZES[fontSize] || '16px';
+  }, [fontSize]);
 
   return (
     <div className={`h-screen flex ${theme === 'dark' ? 'bg-gray-950 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>

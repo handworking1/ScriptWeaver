@@ -22,6 +22,8 @@ export function Sidebar() {
   const setActiveConfig = useConfigStore((s) => s.setActiveConfig);
   const { configs, activeConfigId } = useConfigStore();
   const { tokenCount, totalTokensSession, estimatedCost, tokenLimit, refreshTokenLimit } = useChatStore();
+  const fontSize = useNavStore((s) => s.fontSize);
+  const setFontSize = useNavStore((s) => s.setFontSize);
   const [showModelPicker, setShowModelPicker] = useState(false);
 
   /** en: Sync token bar limit when active config changes / zh: 切换配置时同步 token 条上限 */
@@ -82,6 +84,19 @@ export function Sidebar() {
         }`}>
         {isDark ? '☀️ 亮色模式' : '🌙 暗色模式'}
       </button>
+      {/* Font size selector / 文字大小 */}
+      <div className="mx-4 mb-2 flex gap-1">
+        {(['small', 'normal', 'large'] as const).map(s => (
+          <button key={s} onClick={() => setFontSize(s)}
+            className={`flex-1 py-1 text-xs rounded-lg transition-colors ${
+              fontSize === s
+                ? (isDark ? 'bg-purple-900/40 text-purple-300' : 'bg-purple-100 text-purple-600')
+                : (isDark ? 'bg-gray-800 text-gray-500 hover:bg-gray-700' : 'bg-gray-100 text-gray-400 hover:bg-gray-200')
+            }`}>
+            {s === 'small' ? '小' : s === 'normal' ? '中' : '大'}
+          </button>
+        ))}
+      </div>
       <div className={`p-4 border-t ${isDark ? 'border-gray-800 text-gray-600' : 'border-gray-200 text-gray-400'} text-xs`}>
         v1.3.0
       </div>
