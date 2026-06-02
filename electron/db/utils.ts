@@ -2,7 +2,7 @@ import { Database as SqlJsDatabase } from 'sql.js';
 import fs from 'fs';
 
 let db: SqlJsDatabase | null = null;
-let dbPath: string;
+let dbPath: string | undefined;
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function setDb(d: SqlJsDatabase, path: string): void {

@@ -332,7 +332,7 @@ npm run build:linux  # 打包 Linux
 ├── electron/          # 主进程
 │   ├── main.ts        # 窗口、生命周期
 │   ├── preload.ts     # 安全 IPC 桥
-│   ├── database.ts    # SQLite CRUD
+│   ├── db/            # SQLite CRUD（按实体拆分，11 个模块）
 │   ├── safe-storage.ts # 密钥加密
 │   └── ipc-handlers.ts # IPC + SSE 流式
 ├── src/
@@ -340,7 +340,9 @@ npm run build:linux  # 打包 Linux
 │   ├── components/    # 14 个组件
 │   ├── stores/        # 6 个 Zustand store
 │   ├── lib/           # 工具函数
-│   └── types/         # TS 类型
+│   ├── types/         # TS 类型
+│   └── __tests__/     # 单元测试
+├── .github/workflows/ # CI/CD
 └── package.json
 ```
 
