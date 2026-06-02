@@ -181,8 +181,9 @@ export function CharactersPage() {
               const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
               input.onchange = async (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) return;
                 try { const d = JSON.parse(await f.text());
-                  await window.electronAPI.createCharacter({ id: generateId(), scriptId: selectedScriptId!, name: d.name||'导入角色', personality: d.personality||'', background: d.background||'', speakingStyle: d.speakingStyle||'', appearance: d.appearance||'', avatar: d.avatar||'', createdAt: Date.now() } as any);
-                  loadCharacters(selectedScriptId!); alert('导入成功！');
+                  if (typeof d !== 'object' || !d.name) throw new Error('无效的角色卡：缺少角色名');
+                  await addCharacter({ id: generateId(), scriptId: selectedScriptId!, name: String(d.name), personality: String(d.personality||''), background: String(d.background||''), speakingStyle: String(d.speakingStyle||''), appearance: String(d.appearance||''), avatar: String(d.avatar||''), createdAt: Date.now() });
+                  alert('导入成功！');
                 } catch (err: any) { alert('导入失败：'+err.message); } }; input.click();
             }} disabled={!selectedScriptId}
               className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-gray-300 rounded-lg text-xs font-medium">📥 导入角色卡</button>

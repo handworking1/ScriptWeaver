@@ -370,6 +370,8 @@ ${JSON.stringify(getFields(), null, 2)}`;
             setMessages(prev => [...prev, { role: 'assistant', content: `✅ 已生成 ${items.length} 条世界信息并保存到剧本。可在剧本管理中查看。` }]);
           } catch { setMessages(prev => [...prev, { role: 'assistant', content: '❌ AI返回格式异常，请重试' }]); }
         } else { setMessages(prev => [...prev, { role: 'assistant', content: '❌ 未识别到JSON' }]); }
+      } else {
+        setMessages(prev => [...prev, { role: 'assistant', content: '❌ AI 无回复，请重试' }]);
       }
     } catch (err: any) { setMessages(prev => [...prev, { role: 'assistant', content: '❌ ' + err.message }]); }
     finally { setLorebookLoading(false); }

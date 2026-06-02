@@ -425,7 +425,7 @@ export function registerIpcHandlers(): void {
                   matched.push(entry.content);
                 }
               }
-              if (matched.length > 0) {
+              if (matched.length > 0 && sendMessages.length > 0) {
                 const lore = `\n\n【世界信息】${matched.join('\n')}`;
                 sendMessages[sendMessages.length - 1] = {
                   ...sendMessages[sendMessages.length - 1],
@@ -438,6 +438,7 @@ export function registerIpcHandlers(): void {
         } catch { /* lorebook injection is best-effort */ }
 
         /** Author's Note injection / 作者注记注入 */
+        if (sendMessages.length > 0) {
         try {
           const note = getSetting('author_note_' + conversationId);
           if (note) {
@@ -448,6 +449,7 @@ export function registerIpcHandlers(): void {
             };
           }
         } catch { /* best-effort */ }
+        }
       }
 
       const body: any = {
