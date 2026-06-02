@@ -13,7 +13,7 @@ export function getConversation(id: string): ConversationRow | null { return exe
 /** Create a conversation. World-mode (no character) passes empty string for characterId → stored as NULL.
  *  创建对话。世界模式（无角色）传入空字符串 characterId → 存储为 NULL。 */
 export function createConversation(data: { id: string; scriptId: string; characterId: string; parentId?: string | null; title?: string; createdAt: number; updatedAt: number }) {
-  const cid = data.characterId || null; // world mode '' → NULL
+  const cid = data.characterId; // world mode passes '', keep as-is
   run('INSERT INTO conversations (id, script_id, character_id, parent_id, title, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
     [data.id, data.scriptId, cid, data.parentId ?? null, data.title ?? '', data.createdAt, data.updatedAt]);
   return getConversation(data.id);
