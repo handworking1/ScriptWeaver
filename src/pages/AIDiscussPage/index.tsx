@@ -5,6 +5,7 @@ import { useNavStore } from '@/stores/navStore';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { DiscussManagePanel } from './DiscussManagePanel';
 import { DiscussActionBar } from './DiscussActionBar';
+import { DiscussCharacterPanel } from './DiscussCharacterPanel';
 import { generateId } from '@/lib/id';
 
 interface Message {
@@ -31,12 +32,12 @@ export function AIDiscussPage() {
   const [openScriptIds, setOpenScriptIds] = useState<string[]>([]);
   /** Map of discussion id → display title for new_* discussions / 新建讨论的 id→标题映射 */
   const [tabTitles, setTabTitles] = useState<Record<string, string>>({});
-  const [charName, setCharName] = useState('');
-  const [charPersonality, setCharPersonality] = useState('');
   const [editFields, setEditFields] = useState<Record<string, string>>({});
   /** Inline name input for new discussion / 新建讨论的内联名称输入 */
   const [showNewName, setShowNewName] = useState(false);
   const [newTitle, setNewTitle] = useState('');
+  /** Collapsible character panel / 可折叠角色面板 */
+  const [charPanelCollapsed, setCharPanelCollapsed] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -404,20 +405,13 @@ ${JSON.stringify(getFields(), null, 2)}`;
         </div>
       </div>
 
-      {/* Always-visible character quick-create */}
+      {/* Collapsible character settings panel / 可折叠角色设置面板 */}
       {targetScriptId && (
-        <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700 px-4 py-2">
-          <div className="max-w-3xl mx-auto flex gap-2 items-center">
-            <span className="text-xs text-gray-500 flex-shrink-0">🎭 角色:</span>
-            <input value={charName} onChange={e => setCharName(e.target.value)} placeholder="名称" className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 w-20" />
-            <input value={charPersonality} onChange={e => setCharPersonality(e.target.value)} placeholder="性格" className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 flex-1" />
-            <button onClick={async () => {
-              if (!charName.trim()) return;
-              await window.electronAPI.createCharacter({ id: generateId(), scriptId: targetScriptId, name: charName.trim(), personality: charPersonality.trim(), background: '', speakingStyle: '', appearance: '', avatar: '', createdAt: Date.now() } as any);
-              setCharName(''); setCharPersonality('');
-            }} className="px-3 py-1 text-xs bg-green-700 hover:bg-green-600 text-white rounded flex-shrink-0">+ 添加</button>
-          </div>
-        </div>
+        <DiscussCharacterPanel
+          scriptId={targetScriptId}
+          collapsed={charPanelCollapsed}
+          onToggle={() => setCharPanelCollapsed(v => !v)}
+        />
       )}
 
       {/* Inline manage panel — extracted to sub-component for maintainability / 内联管理面板已抽取为子组件 */}
