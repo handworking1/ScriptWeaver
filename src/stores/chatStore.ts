@@ -235,8 +235,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       createdAt: now,
       updatedAt: now,
     });
-    // en: 跳过 system prompt——新分支已有自己的 / Skip system messages — new branch has its own
-    for (const m of messages.filter(m => m.role !== 'system')) {
+    // en: 复制全部消息（含最新system prompt）/ Copy all messages including latest system prompt
+    for (const m of messages) {
       await window.electronAPI.createMessage({
         id: nanoid(),
         conversationId: id,

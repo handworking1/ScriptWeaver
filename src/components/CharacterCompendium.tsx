@@ -47,10 +47,16 @@ export function CharacterCompendium({ scriptId, conversationId, configId, onClos
     savedTimerRef.current = setTimeout(() => setSaved(false), 1500);
   };
 
-  /** Track user-initiated edits for deferred persistence / 追踪用户编辑以延迟持久化 */
+  /** Track user-initiated edits with debounce / 追踪编辑并防抖持久化 */
   const dirtyRef = useRef(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   useEffect(() => {
-    if (dirtyRef.current) { persist(chars); dirtyRef.current = false; }
+    if (dirtyRef.current) {
+      dirtyRef.current = false;
+      clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => persist(chars), 800);
+    }
+    return () => clearTimeout(debounceRef.current);
   }, [chars]);
 
   /** Atomic char update: func updater prevents stale-closure; persist via useEffect / 函数式更新防闭包陈旧；通过 useEffect 持久化 */

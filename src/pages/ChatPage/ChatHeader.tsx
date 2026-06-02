@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 interface Props {
   characterName?: string;
   characterAvatar?: string;
@@ -32,7 +34,7 @@ interface Props {
   selectedScriptId: string | null;
 }
 
-export function ChatHeader({
+export const ChatHeader = memo(function ChatHeader({
   characterName, characterAvatar, scriptTitle, chatMode, isStreaming,
   displayMessagesLen, searchQuery, onSearchChange,
   onBack, onStop, onSummary, onBranch, onRegenerate, onUndo,
@@ -108,4 +110,4 @@ export function ChatHeader({
       </div>
     </div>
   );
-}
+});

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo } from 'react';
 import { ChatBubble } from '@/components/ChatBubble';
 import { QuickReplies } from '@/components/QuickReplies';
 import { SummaryCard } from '@/components/SummaryCard';
@@ -27,7 +27,7 @@ interface Props {
   onCopySummary: () => void;
 }
 
-export function ChatMessages({
+export const ChatMessages = memo(function ChatMessages({
   displayMessages, streamingContent, isStreaming, suggestions,
   showSummary, summaryContent, summaryLoading, summaryError,
   characterName, characterAvatar, searchQuery,
@@ -89,4 +89,4 @@ export function ChatMessages({
       </div>
     </div>
   );
-}
+});
