@@ -57,12 +57,16 @@ export function ChatPage() {
   useEffect(() => { loadConfigs(); loadTemplates(); (async () => { try { const d = await window.electronAPI.getSetting('chat_shortcuts'); if (d) setShortcutBar(JSON.parse(d)); } catch (err) { console.error('[ChatPage] loadShortcuts:', err); } })(); }, []);
   useEffect(() => { setShowSetup(true); }, []);
   /** Resume a conversation from history: load messages, skip setup, show tab.
-   *  从历史记录恢复对话：加载消息，跳过设置页，显示标签。 */
+   *  从历史记录恢复对话：加载消息，跳过设置页，显示标签。
+   *  Guards against async race / 防止异步竞态：双重resume只保留最后一次。 */
   useEffect(() => {
     if (!resumeConversationId || !activeConfigId) return;
+    const targetId = resumeConversationId;
     (async () => {
-      const conv = await window.electronAPI.getConversation(resumeConversationId);
+      const conv = await window.electronAPI.getConversation(targetId);
       if (!conv) return;
+      // Stale guard / 过期检查：如果resumeConversationId已变化，放弃本次结果
+      if (useNavStore.getState().resumeConversationId !== targetId) return;
       selectScript(conv.scriptId); selectCharacter(conv.characterId || null);
       setChatMode(conv.characterId ? '1v1' : 'world');
       useChatStore.getState().setActiveConversation(conv.id);
@@ -117,8 +121,15 @@ export function ChatPage() {
       setConvTitles(prev => ({ ...prev, [id]: title }));
     }
   };
+  /** Close a conversation tab; fallback to another tab if active was closed / 关闭对话标签，若关闭的是活跃标签则回退 */
   const closeConv = (id: string) => {
-    setOpenConvIds(prev => prev.filter(x => x !== id));
+    setOpenConvIds(prev => {
+      const updated = prev.filter(x => x !== id);
+      if (activeConversationId === id && updated.length > 0) {
+        switchConv(updated[updated.length - 1]);
+      }
+      return updated;
+    });
   };
   const switchConv = async (id: string) => {
     useChatStore.getState().setActiveConversation(id);

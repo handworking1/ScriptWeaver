@@ -82,24 +82,30 @@ export function AIDiscussPage() {
   const selectedScript = scripts.find((s) => s.id === targetScriptId);
 
   /** Add a script tab + persist; when generating a new script, the caller adds it here.
-   *  打开脚本标签页并持久化；生成新剧本时由调用方添加。 */
+   *  打开脚本标签页并持久化；生成新剧本时由调用方添加。
+   *  Uses functional updater to avoid stale-closure race / 使用函数式更新防止闭包过期。 */
   const openScript = (id: string) => {
     setTargetScriptId(id);
     window.electronAPI.setSetting('discuss_last_script', id);
-    const updated = id && !openScriptIds.includes(id) ? [...openScriptIds, id] : openScriptIds;
-    setOpenScriptIds(updated);
-    window.electronAPI.setSetting('discuss_open_tabs', JSON.stringify(updated));
+    setOpenScriptIds(prev => {
+      const updated = id && !prev.includes(id) ? [...prev, id] : prev;
+      window.electronAPI.setSetting('discuss_open_tabs', JSON.stringify(updated));
+      return updated;
+    });
   };
   /** Close a script tab; if it was active, switch to the last remaining one.
-   *  关闭脚本标签页；如果当前是活跃标签，回退到最后一个剩余标签。 */
+   *  关闭脚本标签页；如果当前是活跃标签，回退到最后一个剩余标签。
+   *  Uses functional updater to avoid stale-closure race / 使用函数式更新防止闭包过期。 */
   const closeScript = (id: string) => {
-    const updated = openScriptIds.filter(s => s !== id);
-    setOpenScriptIds(updated);
-    window.electronAPI.setSetting('discuss_open_tabs', JSON.stringify(updated));
-    if (targetScriptId === id) {
-      const next = updated.length > 0 ? updated[updated.length - 1] : '';
-      setTargetScriptId(next);
-    }
+    setOpenScriptIds(prev => {
+      const updated = prev.filter(s => s !== id);
+      window.electronAPI.setSetting('discuss_open_tabs', JSON.stringify(updated));
+      if (targetScriptId === id) {
+        const next = updated.length > 0 ? updated[updated.length - 1] : '';
+        setTargetScriptId(next);
+      }
+      return updated;
+    });
   };
 
   // Sync editFields when script changes (all extraData fields)

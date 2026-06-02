@@ -29,7 +29,8 @@ export function ChatInput({
   const [showMention, setShowMention] = useState(false);
 
   /** Watch input for '@' — load matching characters from the script roster for autocomplete.
-   *  监听输入中的@符号，从剧本角色列表加载匹配角色名供补全。 */
+   *  监听输入中的@符号，从剧本角色列表加载匹配角色名供补全。
+   *  Stale-query guard / 过期查询防护：只展示最新查询的结果。 */
   useEffect(() => {
     if (chatMode !== 'world' || !scriptId) return;
     const atIdx = inputValue.lastIndexOf('@');
@@ -41,10 +42,11 @@ export function ChatInput({
         try {
           const chars = await window.electronAPI.getCharacters(scriptId);
           const filtered = chars.filter(c => c.name.toLowerCase().includes(q.toLowerCase()));
-          if (filtered.length > 0) {
-            setMentionChars(filtered.slice(0, 5));
-            setShowMention(true);
-          } else { setShowMention(false); }
+          // Only show results if the query hasn't changed / 只在查询未变时展示结果
+          if (inputValue.includes('@' + q)) {
+            if (filtered.length > 0) { setMentionChars(filtered.slice(0, 5)); setShowMention(true); }
+            else { setShowMention(false); }
+          }
         } catch { setShowMention(false); }
       })();
     } else { setShowMention(false); }
@@ -55,10 +57,11 @@ export function ChatInput({
     if (!c || isStreaming || !activeConfigId) return;
     // ⚡ @私聊: wrap message as a private-chat instruction for that NPC / 将消息包装为私聊指令
     if (chatMode === 'world') {
-      const atMatch = c.match(/@(\S+)/);
+      // Support multi-word names (e.g. 上官婉儿) / 支持多字姓名
+      const atMatch = c.match(/@([\p{L}\p{N}_]+(?:[\p{L}\p{N}_\s]*[\p{L}\p{N}_]+)?)/u);
       if (atMatch) {
-        const name = atMatch[1];
-        c = `[私聊] 现在你暂时扮演 ${name}，请以该角色的性格语气回复。\n\n我：${c.replace(/@\S+\s*/, '')}`;
+        const name = atMatch[1].trim();
+        c = `[私聊] 现在你暂时扮演 ${name}，请以该角色的性格语气回复。\n\n我：${c.replace(/@[\p{L}\p{N}_\s]+/u, '').trim()}`;
       }
     }
     setInputValue('');

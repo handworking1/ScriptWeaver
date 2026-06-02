@@ -291,12 +291,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       await window.electronAPI.updateConversation(convId, {});
     } catch (err) { console.error('[finishStreaming] updateConversation failed:', err); }
 
-    // Only count new tokens added in this message
+    // Count new tokens + accumulate session total / 新token计数 + 累计会话总量
     const newTokens = estimateTokens(assistantMsg.content);
+    const newTotal = state.totalTokensSession + newTokens;
     set({
       tokenCount: estimateMessagesTokens(newMessages),
-      totalTokensSession: state.totalTokensSession + newTokens,
-      estimatedCost: estimateCost(0, newTokens),
+      totalTokensSession: newTotal,
+      estimatedCost: estimateCost(newTotal, 0),
     });
   },
 
