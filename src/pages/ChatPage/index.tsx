@@ -120,8 +120,9 @@ export function ChatPage() {
     setShowSetup(false);
     await loadMessages(conv.id);
     } catch (err) {
+      const msg = '启动对话失败：' + ((err as any)?.message || String(err));
       console.error('[ChatPage] start1v1Chat failed:', err);
-      useChatStore.getState().setStreamError('启动对话失败：' + (err as Error).message);
+      useChatStore.getState().setStreamError(msg);
       setShowSetup(true);
     }
   };
@@ -130,8 +131,10 @@ export function ChatPage() {
    *  启动世界模式对话：创建对话→注入 GM prompt→异步生成 AI 开场白。 */
   const startWorldChat = async () => {
     if (!selectedScriptId || !activeConfigId) return;
+    console.log('[startWorldChat] starting', { selectedScriptId, activeConfigId, scriptTitle: script?.title });
     try {
     const conv = await createConversation(generateId(), selectedScriptId, '', `世界：${script?.title || '未知'}`);
+    console.log('[startWorldChat] conversation created', conv.id);
     addOpenConv(conv.id, conv.title || `世界：${script?.title || '未知'}`);
     const prompt = await buildWorldPrompt();
     await window.electronAPI.createMessage({ id: generateId(), conversationId: conv.id, role: 'system', content: prompt, timestamp: Date.now() });
@@ -152,8 +155,10 @@ export function ChatPage() {
       finally { if (mountedRef.current) setWorldIntroLoading(false); }
     })();
     } catch (err) {
+      const msg = '启动世界模式失败：' + ((err as any)?.message || String(err));
       console.error('[ChatPage] startWorldChat failed:', err);
-      useChatStore.getState().setStreamError('启动世界模式失败：' + (err as Error).message);
+      alert(msg);
+      useChatStore.getState().setStreamError(msg);
       setShowSetup(true);
     }
   };
@@ -162,6 +167,7 @@ export function ChatPage() {
    *  zh: 根据聊天模式路由到对应的启动函数。 */
   const handleStartChat = () => {
     if (!selectedScriptId || !activeConfigId) return;
+    console.log('[handleStartChat] mode=', chatMode);
     if (chatMode === '1v1') start1v1Chat();
     else startWorldChat();
   };
