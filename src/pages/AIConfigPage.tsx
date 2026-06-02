@@ -161,9 +161,15 @@ export function AIConfigPage() {
     setTimeout(() => setShortcutsSaved(false), 2000);
   };
 
-  const openCreate = () => {
+  const openCreate = async () => {
     setEditingConfig(null);
-    setForm({ ...defaultConfig });
+    // en: 加载全局 contextWindow / Load global context window
+    let cw = defaultConfig.contextWindow;
+    try {
+      const saved = await window.electronAPI.getSetting('context_window');
+      if (saved) cw = parseInt(saved) || cw;
+    } catch { /* use default */ }
+    setForm({ ...defaultConfig, contextWindow: cw });
     setShowApiKey(false);
     setHasExistingKey(false);
     setShowForm(true);

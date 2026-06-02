@@ -13,35 +13,35 @@ const MAX_SYSTEM_TOKENS = 6000;
  *  zh: 系统提示超长时逐级截断。Priority: keep core, trim banghui > protagonist > globalRules. */
 function truncateSystemPrompt(prompt: string): string {
   if (roughTokens(prompt) <= MAX_SYSTEM_TOKENS) return prompt;
+  /** Helper: find block end, falling back to end of prompt if it's the last block.
+   *  辅助函数：查找区块结束位置，如果是末尾区块则用 prompt 结尾。 */
+  const blockEnd = (start: number): number => {
+    const end = prompt.indexOf('\n\n---\n\n', start);
+    return end > start ? end : prompt.length;
+  };
   // Try removing banghui block
   const bhIdx = prompt.indexOf('【[帮回]核心辅助系统');
   if (bhIdx >= 0) {
-    const bhEnd = prompt.indexOf('\n\n---\n\n', bhIdx);
-    if (bhEnd > bhIdx) {
-      const trimmed = prompt.slice(0, bhIdx) + '\n(系统设定过长，帮回系统已精简)' + prompt.slice(bhEnd);
-      if (roughTokens(trimmed) <= MAX_SYSTEM_TOKENS) return trimmed;
-      prompt = trimmed;
-    }
+    const bhEnd = blockEnd(bhIdx);
+    const trimmed = prompt.slice(0, bhIdx) + '\n(系统设定过长，帮回系统已精简)' + prompt.slice(bhEnd);
+    if (roughTokens(trimmed) <= MAX_SYSTEM_TOKENS) return trimmed;
+    prompt = trimmed;
   }
   // Try removing protagonist block
   const proIdx = prompt.indexOf('【玩家/主角设定】');
   if (proIdx >= 0) {
-    const proEnd = prompt.indexOf('\n\n---\n\n', proIdx);
-    if (proEnd > proIdx) {
-      const trimmed = prompt.slice(0, proIdx) + prompt.slice(proEnd);
-      if (roughTokens(trimmed) <= MAX_SYSTEM_TOKENS) return trimmed;
-      prompt = trimmed;
-    }
+    const proEnd = blockEnd(proIdx);
+    const trimmed = prompt.slice(0, proIdx) + '(主角设定已精简)' + prompt.slice(proEnd);
+    if (roughTokens(trimmed) <= MAX_SYSTEM_TOKENS) return trimmed;
+    prompt = trimmed;
   }
   // Try removing global rules
   const grIdx = prompt.indexOf('【全局规则');
   if (grIdx >= 0) {
-    const grEnd = prompt.indexOf('\n\n---\n\n', grIdx);
-    if (grEnd > grIdx) {
-      const trimmed = prompt.slice(0, grIdx) + prompt.slice(grEnd);
-      if (roughTokens(trimmed) <= MAX_SYSTEM_TOKENS) return trimmed;
-      prompt = trimmed;
-    }
+    const grEnd = blockEnd(grIdx);
+    const trimmed = prompt.slice(0, grIdx) + prompt.slice(grEnd);
+    if (roughTokens(trimmed) <= MAX_SYSTEM_TOKENS) return trimmed;
+    prompt = trimmed;
   }
   // Last resort: truncate to max length
   if (roughTokens(prompt) > MAX_SYSTEM_TOKENS) {

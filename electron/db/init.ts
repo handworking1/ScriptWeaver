@@ -88,8 +88,16 @@ export async function initDatabase(): Promise<void> {
   }
 
   /** Seed built-in demo script on first run / 首次运行时植入内置示例剧本 */
-  const sc = db.exec(`SELECT COUNT(*) as c FROM scripts WHERE id = '${SEED_SCRIPT.id}'`);
-  if (!sc.length || (sc[0].values[0] as number[])[0] === 0) {
+  // en: 参数化查询防注入 / Parameterized query to prevent SQL injection
+  const scStmt = db.prepare('SELECT COUNT(*) as c FROM scripts WHERE id = ?');
+  scStmt.bind([SEED_SCRIPT.id]);
+  let seedScriptExists = false;
+  if (scStmt.step()) {
+    const row = scStmt.getAsObject();
+    seedScriptExists = (row.c as number) > 0;
+  }
+  scStmt.free();
+  if (!seedScriptExists) {
     const s = SEED_SCRIPT;
     db.run(
       'INSERT INTO scripts (id, title, world_setting, background, extra_data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',

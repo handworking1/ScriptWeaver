@@ -93,14 +93,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     const allMessages = await window.electronAPI.getMessages(conversationId);
     const displayMessages = allMessages.filter((m) => m.role !== 'system');
     const tokens = estimateMessagesTokens(allMessages);
-    // en: 保留会话累计，不清零 / Keep session total, don't reset
-    const prev = get().totalTokensSession;
+    // en: 累加会话总 token / Accumulate session total tokens
     set({
       messages: allMessages,
       displayMessages,
       streamingContent: '', isStreaming: false, error: null,
       tokenCount: tokens,
-      totalTokensSession: prev > tokens ? prev : tokens, // at least current conversation's tokens
+      totalTokensSession: get().totalTokensSession + tokens,
       estimatedCost: estimateCost(tokens, 0, getActiveModelInfo().model),
     });
   },
@@ -379,7 +378,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   recalcTokens: () => {
     const { messages, streamingContent } = get();
-    const allContent = [...messages.map((m) => m.content), streamingContent].join('');
+    const allContent = [...messages.map((m) => m.content), streamingContent].join(' ');
     const tokens = estimateTokens(allContent);
     set({
       tokenCount: tokens,
