@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface Props {
   inputValue: string;
@@ -13,21 +13,63 @@ interface Props {
   recentMessages: { role: string; content: string }[];
   characterName?: string;
   banghuiEnabled?: boolean;
+  chatMode?: '1v1' | 'world';
+  scriptId?: string;
 }
 
 export function ChatInput({
   inputValue, setInputValue, isStreaming, shortcutBar, shortcutsExpanded,
   setShortcutsExpanded, activeConfigId, failoverConfigId, sendMessage,
-  recentMessages, characterName, banghuiEnabled,
+  recentMessages, characterName, banghuiEnabled, chatMode, scriptId,
 }: Props) {
   const [aiReplies, setAiReplies] = useState<string[]>([]);
   const [replyLoading, setReplyLoading] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionChars, setMentionChars] = useState<{ id: string; name: string }[]>([]);
+  const [showMention, setShowMention] = useState(false);
+
+  // Detect @ in input and load matching characters
+  useEffect(() => {
+    if (chatMode !== 'world' || !scriptId) return;
+    const atIdx = inputValue.lastIndexOf('@');
+    if (atIdx >= 0) {
+      const q = inputValue.slice(atIdx + 1);
+      if (q.includes(' ')) { setShowMention(false); return; }
+      setMentionQuery(q);
+      (async () => {
+        try {
+          const chars = await window.electronAPI.getCharacters(scriptId);
+          const filtered = chars.filter(c => c.name.toLowerCase().includes(q.toLowerCase()));
+          if (filtered.length > 0) {
+            setMentionChars(filtered.slice(0, 5));
+            setShowMention(true);
+          } else { setShowMention(false); }
+        } catch { setShowMention(false); }
+      })();
+    } else { setShowMention(false); }
+  }, [inputValue, chatMode, scriptId]);
 
   const handleSend = () => {
-    const c = inputValue.trim();
+    let c = inputValue.trim();
     if (!c || isStreaming || !activeConfigId) return;
+    // Inject private chat instruction for @mention in world mode
+    if (chatMode === 'world') {
+      const atMatch = c.match(/@(\S+)/);
+      if (atMatch) {
+        const name = atMatch[1];
+        c = `[私聊] 现在你暂时扮演 ${name}，请以该角色的性格语气回复。\n\n我：${c.replace(/@\S+\s*/, '')}`;
+      }
+    }
     setInputValue('');
     sendMessage(activeConfigId, c, failoverConfigId ?? undefined);
+  };
+
+  const selectMention = (name: string) => {
+    const atIdx = inputValue.lastIndexOf('@');
+    if (atIdx >= 0) {
+      setInputValue(inputValue.slice(0, atIdx) + '@' + name + ' ');
+    }
+    setShowMention(false);
   };
 
   const handleAIGenerate = async () => {
@@ -88,6 +130,20 @@ export function ChatInput({
         </div>
       )}
 
+      {showMention && mentionChars.length > 0 && (
+        <div className="flex-shrink-0 bg-gray-800 border-t border-gray-700">
+          <div className="max-w-3xl mx-auto px-4 pb-2">
+            <div className="flex gap-1.5 flex-wrap">
+              {mentionChars.map(c => (
+                <button key={c.id} onClick={() => selectMention(c.name)}
+                  className="px-2.5 py-1 text-xs bg-gray-700 hover:bg-purple-900/40 border border-gray-600 hover:border-purple-500 text-gray-300 hover:text-purple-300 rounded-full transition-colors">
+                  @{c.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex-shrink-0 bg-gray-900 border-t border-gray-800 p-4">
         <div className="max-w-3xl mx-auto flex gap-3">
           <textarea value={inputValue} onChange={(e) => setInputValue(e.target.value)}
