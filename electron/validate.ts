@@ -3,7 +3,7 @@
 const MAX_ID_LEN = 64;
 const MAX_TITLE_LEN = 200;
 const MAX_URL_LEN = 500;
-const MAX_CONTENT_LEN = 50000;
+const MAX_CONTENT_LEN = 100000;
 const MAX_API_KEY_LEN = 512;
 
 export function validateId(id: unknown, label: string): asserts id is string {

@@ -188,7 +188,7 @@ export function ChatPage() {
     } catch (err) { console.error('[replyLength] update failed:', err); }
   };
 
-  const loadConvList = async () => { if (selectedScriptId) { setConvList(await window.electronAPI.getConversations(selectedScriptId)); setShowConvList(true); } };
+  const loadConvList = async () => { if (selectedScriptId) { try { setConvList(await window.electronAPI.getConversations(selectedScriptId)); setShowConvList(true); } catch (err) { console.error('[loadConvList]', err); } } };
   const addOpenConv = (id: string, title: string) => {
     if (!openConvIds.includes(id)) {
       setOpenConvIds(prev => [...prev, id]);

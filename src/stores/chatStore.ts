@@ -96,13 +96,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     const allMessages = await window.electronAPI.getMessages(conversationId);
     const displayMessages = allMessages.filter((m) => m.role !== 'system');
     const tokens = estimateMessagesTokens(allMessages);
-    // en: 累加会话总 token / Accumulate session total tokens
+    // en: 仅更新当前对话token，会话总量由sendMessage/finishStreaming累加
     set({
       messages: allMessages,
       displayMessages,
       streamingContent: '', isStreaming: false, error: null,
       tokenCount: tokens,
-      totalTokensSession: get().totalTokensSession + tokens,
       estimatedCost: estimateCost(tokens, 0, getActiveModelInfo().model),
     });
   },

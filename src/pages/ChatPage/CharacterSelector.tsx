@@ -9,7 +9,7 @@ interface Props {
 export function CharacterSelector({ scriptId, selectedId }: Props) {
   const [chars, setChars] = useState<any[]>([]);
   const selectCharacter = useNavStore((s) => s.selectCharacter);
-  useEffect(() => { window.electronAPI.getCharacters(scriptId).then(setChars); }, [scriptId]);
+  useEffect(() => { window.electronAPI.getCharacters(scriptId).then(setChars).catch(console.error); }, [scriptId]);
   if (chars.length === 0) return <p className="text-xs text-gray-600">该剧本下暂无角色</p>;
   return (
     <div className="flex gap-2 flex-wrap">
