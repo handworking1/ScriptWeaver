@@ -180,7 +180,7 @@ ${JSON.stringify(getFields(), null, 2)}`;
         const match = result.reply.match(/\{[\s\S]*?\}/);
         if (match) {
           let data: any;
-          try { data = JSON.parse(match[0]); } catch { setApplying(false); return; }
+          try { data = JSON.parse(match[0]); } catch (err) { console.error('[apply] parse error:', err); setApplying(false); return; }
           await editScript(targetScriptId, {
             title: data.title || selectedScript?.title,
             worldSetting: data.worldSetting || selectedScript?.worldSetting,
@@ -215,7 +215,7 @@ ${JSON.stringify(getFields(), null, 2)}`;
         if (match) { try { setDetectedChars(JSON.parse(match[0])); } catch {} }
         else { setMessages(prev => [...prev, { role: 'assistant', content: '❌ 未检测到角色信息' }]); }
       }
-    } catch { /* ignore */ }
+    } catch (err) { console.error('[extractChars]', err); }
     finally { setExtracting(false); }
   };
 
@@ -238,7 +238,7 @@ ${JSON.stringify(getFields(), null, 2)}`;
       if (result.reply) {
         const match = result.reply.match(/\{[\s\S]*?\}/);
         if (match) {
-          let data: any; try { data = JSON.parse(match[0]); } catch { setMessages([...messages, { role: 'assistant', content: '❌ 格式异常，重试' }]); setGenerating(false); return; }
+          let data: any; try { data = JSON.parse(match[0]); } catch (err) { console.error('[generate] parse:', err); setMessages([...messages, { role: 'assistant', content: '❌ 格式异常，重试' }]); setGenerating(false); return; }
           const now = Date.now();
           const script = await addScript({ id: generateId(), title: data.title || targetTitle || 'AI生成', worldSetting: data.worldSetting || '', background: data.background || '', extraData: { mainQuests: data.mainQuests || '', sideQuests: data.sideQuests || '', environment: data.environment || '', map: data.map || '', data: data.data || '', tags: '', referenceWorks: '', eraBackground: '', protagonistDilemma: '', coreCheat: '', ageRule: '', timeline: '', chapters: '', narrativeMode: 'mode3', strictMode: 'strict', workflowMode: 'guided', recapMode: 'N', periodicSummary: 'O', ruleSelfCheck: 'Y' } as any, createdAt: now, updatedAt: now });
           setTargetScriptId(script.id); selectScript(script.id);

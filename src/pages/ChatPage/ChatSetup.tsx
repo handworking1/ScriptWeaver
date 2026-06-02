@@ -1,6 +1,7 @@
 import { useScriptStore } from '@/stores/scriptStore';
 import { useConfigStore } from '@/stores/configStore';
 import { useTemplateStore } from '@/stores/templateStore';
+import { useNavStore } from '@/stores/navStore';
 import { CharacterSelector } from './CharacterSelector';
 
 interface Props {
@@ -24,8 +25,10 @@ export function ChatSetup({
   const { scripts } = useScriptStore();
   const { configs } = useConfigStore();
   const { templates } = useTemplateStore();
-
-  const selectScript = useScriptStore.getState().loadScripts ? (id: string) => useScriptStore.getState().loadScripts : () => {};
+  const selectScript = useNavStore((s) => s.selectScript);
+  const selectCharacter = useNavStore((s) => s.selectCharacter);
+  const setActiveTemplate = useTemplateStore((s) => s.setActiveTemplate);
+  const setActiveConfig = useConfigStore((s) => s.setActiveConfig);
 
   return (
     <div className="flex-1 overflow-y-auto p-6">
@@ -40,7 +43,7 @@ export function ChatSetup({
             <label className="block text-sm text-gray-400 mb-2">选择剧本</label>
             <div className="flex gap-2 flex-wrap">
               {scripts.map((s) => (
-                <button key={s.id} onClick={() => useScriptStore.getState().loadScripts}
+                <button key={s.id} onClick={() => { selectScript(s.id); selectCharacter(null); }}
                   className={`px-3 py-1.5 rounded-lg text-sm ${selectedScriptId === s.id ? 'bg-purple-900/60 text-purple-300 border border-purple-500/50' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>
                   {s.title}
                 </button>
@@ -65,7 +68,7 @@ export function ChatSetup({
               <label className="block text-sm text-gray-400 mb-2">提示词模板</label>
               <div className="flex gap-2 flex-wrap">
                 {templates.map((t) => (
-                  <button key={t.id} onClick={() => useTemplateStore.getState().setActiveTemplate(t.id)}
+                  <button key={t.id} onClick={() => setActiveTemplate(t.id)}
                     className={`px-3 py-1.5 rounded-lg text-sm ${activeTemplateId === t.id ? 'bg-purple-900/60 text-purple-300 border border-purple-500/50' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>
                     {t.name}
                   </button>
@@ -78,7 +81,7 @@ export function ChatSetup({
             <label className="block text-sm text-gray-400 mb-2">AI 配置</label>
             <div className="flex gap-2 flex-wrap">
               {configs.map((c) => (
-                <button key={c.id} onClick={() => useConfigStore.getState().setActiveConfig(c.id)}
+                <button key={c.id} onClick={() => setActiveConfig(c.id)}
                   className={`px-3 py-1.5 rounded-lg text-sm ${activeConfigId === c.id ? 'bg-purple-900/60 text-purple-300 border border-purple-500/50' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>
                   {c.name}
                 </button>

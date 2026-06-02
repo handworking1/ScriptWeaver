@@ -289,7 +289,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     try {
       const now = Date.now();
       await window.electronAPI.updateConversation(convId, {});
-    } catch { /* non-critical */ }
+    } catch (err) { console.error('[finishStreaming] updateConversation failed:', err); }
 
     // Only count new tokens added in this message
     const newTokens = estimateTokens(assistantMsg.content);
