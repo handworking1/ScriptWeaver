@@ -18,6 +18,7 @@ export interface ScriptExtra {
   ruleSelfCheck: string;
   timeline: string;
   chapters: string;
+  banghuiEnabled: string;
 }
 
 export interface Script {

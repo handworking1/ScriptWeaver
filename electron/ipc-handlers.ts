@@ -22,7 +22,7 @@ function rowToScript(row: ScriptRow) {
     mainQuests: '', sideQuests: '', environment: '', map: '', data: '',
     tags: '', referenceWorks: '', eraBackground: '', protagonistDilemma: '',
     coreCheat: '', ageRule: '', timeline: '', chapters: '', narrativeMode: 'mode3', strictMode: 'strict',
-    workflowMode: 'guided', recapMode: 'N', periodicSummary: 'O', ruleSelfCheck: 'Y',
+    workflowMode: 'guided', recapMode: 'N', periodicSummary: 'O', ruleSelfCheck: 'Y', banghuiEnabled: 'N',
   };
   let extraData = { ...fallback };
   try { if (row.extra_data) extraData = { ...fallback, ...JSON.parse(row.extra_data) }; } catch (err) { console.error('[rowToScript] JSON parse error:', err); }

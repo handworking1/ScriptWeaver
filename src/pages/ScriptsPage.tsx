@@ -32,6 +32,7 @@ export function ScriptsPage() {
   const [recapMode, setRecapMode] = useState('N');
   const [periodicSummary, setPeriodicSummary] = useState('O');
   const [ruleSelfCheck, setRuleSelfCheck] = useState('Y');
+  const [banghuiEnabled, setBanghuiEnabled] = useState('N');
   const [referenceWorks, setReferenceWorks] = useState('');
   const [eraBackground, setEraBackground] = useState('');
   const [protagonistDilemma, setProtagonistDilemma] = useState('');
@@ -81,7 +82,7 @@ export function ScriptsPage() {
     setMainQuests(''); setSideQuests(''); setEnvironment(''); setMap(''); setExtraDataText('');
     setNarrativeMode('mode3');
     setStrictMode('strict'); setWorkflowMode('guided');
-    setRecapMode('N'); setPeriodicSummary('O'); setRuleSelfCheck('Y');
+    setRecapMode('N'); setPeriodicSummary('O'); setRuleSelfCheck('Y'); setBanghuiEnabled('N');
     setReferenceWorks(''); setEraBackground(''); setProtagonistDilemma(''); setCoreCheat(''); setAgeRule('');
     setSelectedTags([]); setShowExtra(false);
     setShowForm(true);
@@ -104,6 +105,7 @@ export function ScriptsPage() {
     setRecapMode(ed.recapMode || 'N');
     setPeriodicSummary(ed.periodicSummary || 'O');
     setRuleSelfCheck(ed.ruleSelfCheck || 'Y');
+    setBanghuiEnabled(ed.banghuiEnabled || 'N');
     setReferenceWorks(ed.referenceWorks || '');
     setEraBackground(ed.eraBackground || '');
     setProtagonistDilemma(ed.protagonistDilemma || '');
@@ -134,7 +136,7 @@ export function ScriptsPage() {
       ageRule: ageRule.trim(),
       timeline: timeline.trim(),
       chapters: chapters.trim(),
-      strictMode, workflowMode, recapMode, periodicSummary, ruleSelfCheck,
+      strictMode, workflowMode, recapMode, periodicSummary, ruleSelfCheck, banghuiEnabled,
     };
 
     if (editingScript) {
@@ -449,6 +451,17 @@ export function ScriptsPage() {
                             </select>
                           </div>
                           <p className="text-xs text-gray-600">生成超3000字或完成工作流步骤后内部检查规则是否偏离并修正</p>
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-xs text-gray-400">帮回辅助系统</span>
+                            <select value={banghuiEnabled} onChange={(e) => setBanghuiEnabled(e.target.value)}
+                              className="bg-gray-900 border border-gray-700 rounded px-2 py-0.5 text-xs text-gray-200">
+                              <option value="N">关闭</option>
+                              <option value="Y">开启</option>
+                            </select>
+                          </div>
+                          <p className="text-xs text-gray-600">开启[帮回]核心辅助系统：帮回剧情总结/章节规划/爽点分析/人设检查/主动/被动/黑暗/推进等指令</p>
                         </div>
                       </div>
                     </div>

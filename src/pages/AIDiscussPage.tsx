@@ -86,6 +86,7 @@ export function AIDiscussPage() {
       recapMode: ed.recapMode || 'N',
       periodicSummary: ed.periodicSummary || 'O',
       ruleSelfCheck: ed.ruleSelfCheck || 'Y',
+      banghuiEnabled: ed.banghuiEnabled || 'N',
     });
   }, [selectedScript?.id, selectedScript?.title, selectedScript?.worldSetting, selectedScript?.background, JSON.stringify(selectedScript?.extraData)]);
 
@@ -117,6 +118,7 @@ export function AIDiscussPage() {
         recapMode: editFields.recapMode,
         periodicSummary: editFields.periodicSummary,
         ruleSelfCheck: editFields.ruleSelfCheck,
+        banghuiEnabled: editFields.banghuiEnabled,
       } as any,
     });
     await loadScripts();
@@ -321,6 +323,10 @@ ${JSON.stringify(getFields(), null, 2)}`;
                 <div className="grid grid-cols-2 gap-2">
                   <div><label className="block text-xs text-gray-500 mb-0.5">定期总结</label><select value={editFields.periodicSummary || 'O'} onChange={e => setEditFields({...editFields, periodicSummary: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200"><option value="O">开启</option><option value="P">不开启</option></select></div>
                   <div><label className="block text-xs text-gray-500 mb-0.5">规则自检</label><select value={editFields.ruleSelfCheck || 'Y'} onChange={e => setEditFields({...editFields, ruleSelfCheck: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200"><option value="Y">开启</option><option value="N">不开启</option></select></div>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-0.5">帮回辅助系统</label>
+                  <select value={editFields.banghuiEnabled || 'N'} onChange={e => setEditFields({...editFields, banghuiEnabled: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200"><option value="N">关闭</option><option value="Y">开启</option></select>
                 </div>
                 <button onClick={handleSaveManual} className="px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded">💾 保存设定</button>
               </div>
