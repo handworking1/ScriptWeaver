@@ -30,13 +30,24 @@ export function HistoryPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [characterName, setCharacterName] = useState<string>('');
   const [filterScriptId, setFilterScriptId] = useState<string | undefined>();
-  const [filterCharacterId] = useState<string | undefined>();
+  const [filterCharacterId, setFilterCharacterId] = useState<string | undefined>();
+  const [characters, setCharacters] = useState<any[]>([]);
   const [viewMode, setViewMode] = useState<'chat' | 'raw'>('chat');
 
   useEffect(() => {
     loadScripts();
     loadConversations();
   }, [filterScriptId, filterCharacterId]);
+
+  /** Load characters for the selected script filter / 加载剧本对应的角色列表 */
+  useEffect(() => {
+    if (filterScriptId) {
+      window.electronAPI.getCharacters(filterScriptId).then(setCharacters).catch(() => setCharacters([]));
+    } else {
+      setCharacters([]);
+      setFilterCharacterId(undefined);
+    }
+  }, [filterScriptId]);
 
   const loadConversations = async () => {
     const convs = await window.electronAPI.getConversations(filterScriptId, filterCharacterId);
@@ -120,6 +131,18 @@ export function HistoryPage() {
               <option key={s.id} value={s.id}>{s.title}</option>
             ))}
           </select>
+          {filterScriptId && characters.length > 0 && (
+            <select
+              value={filterCharacterId ?? ''}
+              onChange={(e) => setFilterCharacterId(e.target.value || undefined)}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-purple-500"
+            >
+              <option value="">全部角色</option>
+              {characters.map((c: any) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         <ConversationList

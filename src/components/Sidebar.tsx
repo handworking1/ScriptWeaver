@@ -25,7 +25,7 @@ export function Sidebar() {
   const [showModelPicker, setShowModelPicker] = useState(false);
 
   /** en: Sync token bar limit when active config changes / zh: 切换配置时同步 token 条上限 */
-  useEffect(() => { refreshTokenLimit(); }, [activeConfigId, refreshTokenLimit]);
+  useEffect(() => { refreshTokenLimit(); }, [activeConfigId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isDark = theme === 'dark';
 

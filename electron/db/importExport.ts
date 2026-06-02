@@ -45,7 +45,7 @@ export function importAllData(data: { scripts: any[]; characters: any[]; convers
   const d = getDb();
   try {
   d.run('BEGIN TRANSACTION');
-  d.run('DELETE FROM messages'); d.run('DELETE FROM conversations'); d.run('DELETE FROM characters'); d.run('DELETE FROM scripts'); d.run('DELETE FROM ai_configs');
+  d.run('DELETE FROM messages'); d.run('DELETE FROM conversations'); d.run('DELETE FROM characters'); d.run('DELETE FROM scripts'); d.run('DELETE FROM ai_configs'); d.run('DELETE FROM prompt_templates');
   for (const s of data.scripts) d.run('INSERT INTO scripts (id, title, world_setting, background, extra_data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)', [s.id, s.title, s.world_setting ?? '', s.background ?? '', s.extra_data ?? '{}', s.created_at, s.updated_at]);
   for (const c of data.characters) d.run('INSERT INTO characters (id, script_id, name, personality, background, speaking_style, appearance, avatar, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [c.id, c.script_id, c.name, c.personality ?? '', c.background ?? '', c.speaking_style ?? '', c.appearance ?? '', c.avatar ?? '', c.created_at]);
   for (const c of data.conversations) d.run('INSERT INTO conversations (id, script_id, character_id, parent_id, title, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)', [c.id, c.script_id, c.character_id, c.parent_id ?? null, c.title ?? '', c.created_at, c.updated_at]);

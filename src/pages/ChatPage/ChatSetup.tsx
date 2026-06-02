@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useScriptStore } from '@/stores/scriptStore';
 import { useConfigStore } from '@/stores/configStore';
 import { useTemplateStore } from '@/stores/templateStore';
@@ -41,15 +41,25 @@ export function ChatSetup({
     } else { setRecentConvs([]); }
   }, [selectedScriptId]);
 
+  /** en: 防止快速双点导致多次 navigate / Prevent rapid double-click race */
+  const resumingRef = useRef(false);
+
   /** Resume conversation via navStore so ChatPage useEffect handles setup properly.
    *  通过 navStore 恢复对话，让 ChatPage 的 useEffect 正确处理设置页跳过。 */
   const resumeConv = async (convId: string) => {
-    const conv = await window.electronAPI.getConversation(convId);
-    if (!conv) return;
-    selectScript(conv.scriptId);
-    selectCharacter(conv.characterId || null);
-    setResumeConversation(convId);
-    navigate('chat');
+    if (resumingRef.current) return; // en: 已有恢复进行中 / Already resuming
+    resumingRef.current = true;
+    try {
+      const conv = await window.electronAPI.getConversation(convId);
+      if (!conv) return;
+      selectScript(conv.scriptId);
+      selectCharacter(conv.characterId || null);
+      setResumeConversation(convId);
+      navigate('chat');
+    } finally {
+      // en: 延迟重置，等待 ChatPage useEffect 消费 resumeConversationId / Delay reset for ChatPage useEffect to consume
+      setTimeout(() => { resumingRef.current = false; }, 500);
+    }
   };
 
   const needsSetup = scripts.length === 0 || configs.length === 0;

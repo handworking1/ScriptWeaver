@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, protocol, net } from 'electron';
 import path from 'path';
 import { initDatabase, saveDbSync } from './db';
 import { registerIpcHandlers } from './ipc-handlers';
@@ -26,6 +26,13 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
 }
+
+/** Register local-file protocol for avatar images / 注册本地文件协议加载头像 */
+protocol.handle('local-file', (request) => {
+  const url = request.url.replace('local-file://', '');
+  const filePath = decodeURIComponent(url);
+  return net.fetch(`file://${filePath}`);
+});
 
 app.whenReady().then(async () => {
   await initDatabase();

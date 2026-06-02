@@ -272,8 +272,20 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   finishStreaming: async (conversationId) => {
     const state = get();
     const convId = conversationId || state.activeConversationId;
-    if (!convId || !state.streamingContent || !state.isStreaming) {
+    if (!convId || !state.isStreaming) {
       set({ isStreaming: false, streamingContent: '' });
+      return;
+    }
+    // en: 空回复也写入占位消息，避免静默丢失 / Write placeholder for empty replies too
+    if (!state.streamingContent) {
+      set({ isStreaming: false, streamingContent: '' });
+      try {
+        const fallbackId = nanoid();
+        await window.electronAPI.createMessage({ id: fallbackId, conversationId: convId, role: 'assistant', content: '(AI 返回空内容，请重试)', timestamp: Date.now() });
+        const fbMsg: Message = { id: fallbackId, conversationId: convId, role: 'assistant', content: '(AI 返回空内容，请重试)', timestamp: Date.now() };
+        set({ messages: [...state.messages, fbMsg], displayMessages: [...state.displayMessages, fbMsg] });
+        await window.electronAPI.updateConversation(convId, {});
+      } catch (err) { console.error('[finishStreaming] empty reply save:', err); }
       return;
     }
     // Atomic gate: close door immediately to prevent double-invocation.

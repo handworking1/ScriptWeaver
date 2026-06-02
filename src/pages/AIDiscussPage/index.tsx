@@ -268,7 +268,9 @@ export function AIDiscussPage() {
 }
 已有设定（未填表示尚未设定）：
 ${JSON.stringify(getFields(), null, 2)}`;
-    const history = messages.map(m => ({ role: m.role, content: m.content }));
+    // en: 只发送最近10轮对话作为上下文，避免消息堆积超 token 限制
+    const recent = messages.slice(-20); // 20 messages = ~10 turns
+    const history = recent.map(m => ({ role: m.role, content: m.content }));
     try {
       const result = await window.electronAPI.discussSettings(activeConfigId, 'script', getFields(), [...history, { role: 'user' as const, content: prompt }]);
       if (result.error) {

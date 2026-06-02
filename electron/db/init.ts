@@ -57,19 +57,28 @@ export async function initDatabase(): Promise<void> {
   db.run('CREATE INDEX IF NOT EXISTS idx_conversations_character_id ON conversations(character_id)');
   db.run('CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id)');
 
-  /** Idempotent migration: always try to add legacy columns, regardless of user_version.
-   *  幂等迁移：始终尝试添加遗留列，不依赖版本号。try/catch 在列已存在时静默跳过。 */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  try { db.run('ALTER TABLE conversations ADD COLUMN parent_id TEXT DEFAULT NULL'); } catch (_e) { /* exists */ }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  try { db.run('ALTER TABLE scripts ADD COLUMN extra_data TEXT DEFAULT \'{}\''); } catch (_e) { /* exists */ }
+  /** Versioned migrations — runs in order, each bumps user_version.
+   *  版本化迁移 — 按版本号递增执行，避免 try/catch 吞错。 */
+  const verResult = db.exec('PRAGMA user_version');
+  let version: number = verResult.length ? (verResult[0].values[0] as number[])[0] : 0;
 
-  // Version-based migration for future schema changes
-  const currentVersion = db.exec('PRAGMA user_version');
-  const version = currentVersion.length ? (currentVersion[0].values[0] as number[])[0] : 0;
+  /** Migration v0→v1: add legacy columns / 添加遗留列 */
   if (version < 1) {
-    db.run('PRAGMA user_version = 1');
+    try { db.run('ALTER TABLE conversations ADD COLUMN parent_id TEXT DEFAULT NULL'); } catch (e: any) {
+      if (!e.message?.includes('duplicate column')) throw e;
+    }
+    try { db.run('ALTER TABLE scripts ADD COLUMN extra_data TEXT DEFAULT \'{}\''); } catch (e: any) {
+      if (!e.message?.includes('duplicate column')) throw e;
+    }
+    version = 1;
+    db.run(`PRAGMA user_version = ${version}`);
   }
+
+  /** Migration v1→v2: reserved for future use / 预留给未来迁移 */
+  // if (version < 2) {
+  //   version = 2;
+  //   db.run(`PRAGMA user_version = ${version}`);
+  // }
 
   // Seed templates
   const tc = db.exec('SELECT COUNT(*) as c FROM prompt_templates');
