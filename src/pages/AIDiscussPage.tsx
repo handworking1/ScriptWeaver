@@ -27,6 +27,7 @@ export function AIDiscussPage() {
   const [detectedChars, setDetectedChars] = useState<any[]>([]);
   const [targetScriptId, setTargetScriptId] = useState<string>('');
   const [targetTitle, setTargetTitle] = useState('');
+  const [openScriptIds, setOpenScriptIds] = useState<string[]>([]);
   const [charName, setCharName] = useState('');
   const [charPersonality, setCharPersonality] = useState('');
   const [editFields, setEditFields] = useState<Record<string, string>>({});
@@ -38,6 +39,8 @@ export function AIDiscussPage() {
     (async () => {
       try {
         const lastId = await window.electronAPI.getSetting('discuss_last_script');
+        const tabs = await window.electronAPI.getSetting('discuss_open_tabs');
+        if (tabs) setOpenScriptIds(JSON.parse(tabs));
         if (lastId) setTargetScriptId(lastId);
       } catch {}
     })();
@@ -68,6 +71,24 @@ export function AIDiscussPage() {
   }, [targetScriptId]);
 
   const selectedScript = scripts.find((s) => s.id === targetScriptId);
+
+  // Tab management
+  const openScript = (id: string) => {
+    setTargetScriptId(id);
+    window.electronAPI.setSetting('discuss_last_script', id);
+    const updated = id && !openScriptIds.includes(id) ? [...openScriptIds, id] : openScriptIds;
+    setOpenScriptIds(updated);
+    window.electronAPI.setSetting('discuss_open_tabs', JSON.stringify(updated));
+  };
+  const closeScript = (id: string) => {
+    const updated = openScriptIds.filter(s => s !== id);
+    setOpenScriptIds(updated);
+    window.electronAPI.setSetting('discuss_open_tabs', JSON.stringify(updated));
+    if (targetScriptId === id) {
+      const next = updated.length > 0 ? updated[updated.length - 1] : '';
+      setTargetScriptId(next);
+    }
+  };
 
   // Sync editFields when script changes (all extraData fields)
   useEffect(() => {
@@ -276,11 +297,26 @@ ${JSON.stringify(getFields(), null, 2)}`;
       <div className="flex-shrink-0 bg-gray-900 border-b border-gray-800 px-4 py-3 flex items-center gap-3 flex-wrap">
         <h2 className="text-lg font-bold text-gray-100">💬 AI 剧本讨论</h2>
         <div className="flex gap-1.5 flex-wrap">
-          <button onClick={() => { setTargetScriptId(''); setMessages([]); }} className={`px-2 py-1 text-xs rounded ${!targetScriptId ? 'bg-purple-900/50 text-purple-300' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}>+ 新建</button>
-          {scripts.map(s => (
-            <button key={s.id} onClick={() => { setTargetScriptId(s.id); window.electronAPI.setSetting('discuss_last_script', s.id); }}
-              className={`px-2 py-1 text-xs rounded transition-colors ${targetScriptId === s.id ? 'bg-purple-900/50 text-purple-300' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}>{s.title}</button>
-          ))}
+          {openScriptIds.map(id => {
+            const s = scripts.find(x => x.id === id);
+            return (
+              <span key={id} className={`inline-flex items-center gap-0.5 px-2 py-1 text-xs rounded cursor-pointer ${targetScriptId === id ? 'bg-purple-900/50 text-purple-300' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}>
+                <span onClick={() => setTargetScriptId(id)}>{s?.title || id}</span>
+                <button onClick={() => closeScript(id)} className="text-gray-600 hover:text-red-400 ml-0.5">×</button>
+              </span>
+            );
+          })}
+          <button onClick={() => { setTargetScriptId(''); setMessages([]); setTargetTitle(''); }} className="px-2 py-1 text-xs rounded bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200">+</button>
+          {scripts.filter(s => !openScriptIds.includes(s.id)).length > 0 && (
+            <select value="" onChange={e => { if (e.target.value) openScript(e.target.value); }}
+              className="bg-gray-700 text-gray-400 hover:bg-gray-600 rounded px-1 py-0.5 text-xs">
+              <option value="">全部剧本▾</option>
+              {scripts.filter(s => !openScriptIds.includes(s.id)).map(s => (
+                <option key={s.id} value={s.id}>{s.title}</option>
+              ))}
+            </select>
+          )}
+          {!targetScriptId && <input value={targetTitle} onChange={e => setTargetTitle(e.target.value)} className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 w-36" placeholder="新剧本标题" />}
         </div>
         {!targetScriptId && <input value={targetTitle} onChange={e => setTargetTitle(e.target.value)} className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 w-36" placeholder="新剧本标题（可选）" />}
         <div className="ml-auto flex gap-1.5 flex-wrap">

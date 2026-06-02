@@ -42,6 +42,8 @@ export function ChatPage() {
   const [showCompendium, setShowCompendium] = useState(false);
   const [showConvList, setShowConvList] = useState(false);
   const [convList, setConvList] = useState<any[]>([]);
+  const [openConvIds, setOpenConvIds] = useState<string[]>([]);
+  const [convTitles, setConvTitles] = useState<Record<string, string>>({});
 
   useIpcListeners(appendToken, finishStreaming, setStreamError, handleSummaryResult);
 
@@ -73,11 +75,13 @@ export function ChatPage() {
       const char = await window.electronAPI.getCharacter(selectedCharacterId!);
       if (!char) return;
       const conv = await createConversation(generateId(), selectedScriptId, selectedCharacterId!, `与${char.name}的对话`);
+      addOpenConv(conv.id, conv.title || `与${char.name}的对话`);
       const prompt = await build1v1Prompt(char);
       await window.electronAPI.createMessage({ id: generateId(), conversationId: conv.id, role: 'system', content: prompt, timestamp: Date.now() });
       setShowSetup(false); await loadMessages(conv.id);
     } else {
       const conv = await createConversation(generateId(), selectedScriptId, '', `世界：${script?.title || '未知'}`);
+      addOpenConv(conv.id, conv.title || `世界：${script?.title || '未知'}`);
       const prompt = await buildWorldPrompt();
       await window.electronAPI.createMessage({ id: generateId(), conversationId: conv.id, role: 'system', content: prompt, timestamp: Date.now() });
       // Generate AI intro for world mode
@@ -98,12 +102,43 @@ export function ChatPage() {
   };
 
   const loadConvList = async () => { if (selectedScriptId) { setConvList(await window.electronAPI.getConversations(selectedScriptId)); setShowConvList(true); } };
-  const switchConv = async (id: string) => { useChatStore.getState().setActiveConversation(id); useChatStore.getState().loadMessages(id); const c = await window.electronAPI.getConversation(id); if (c) { selectCharacter(c.characterId || null); setChatMode(c.characterId ? '1v1' : 'world'); } setShowConvList(false); };
+  const addOpenConv = (id: string, title: string) => {
+    if (!openConvIds.includes(id)) {
+      setOpenConvIds(prev => [...prev, id]);
+      setConvTitles(prev => ({ ...prev, [id]: title }));
+    }
+  };
+  const closeConv = (id: string) => {
+    setOpenConvIds(prev => prev.filter(x => x !== id));
+  };
+  const switchConv = async (id: string) => {
+    useChatStore.getState().setActiveConversation(id);
+    useChatStore.getState().loadMessages(id);
+    const c = await window.electronAPI.getConversation(id);
+    if (c) {
+      selectCharacter(c.characterId || null);
+      setChatMode(c.characterId ? '1v1' : 'world');
+      addOpenConv(id, c.title || '未命名');
+    }
+    setShowConvList(false);
+  };
 
   if (showSetup) return <ChatSetup chatMode={chatMode} setChatMode={setChatMode} selectedScriptId={selectedScriptId} selectedCharacterId={selectedCharacterId} activeConfigId={activeConfigId} activeTemplateId={activeTemplateId} replyLength={replyLength} setReplyLength={setReplyLength} interactionOpts={interactionOpts} setInteractionOpts={setInteractionOpts} onStart={handleStartChat} />;
 
   return (
     <div className="flex-1 flex flex-col h-full">
+      {/* Conversation tabs */}
+      {openConvIds.length > 0 && (
+        <div className="flex-shrink-0 bg-gray-900 border-b border-gray-800 px-2 py-1 flex gap-1 items-center flex-wrap">
+          {openConvIds.map(id => (
+            <span key={id} className={`inline-flex items-center gap-0.5 px-2 py-0.5 text-xs rounded cursor-pointer ${activeConversationId === id ? 'bg-purple-900/50 text-purple-300' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
+              <span onClick={() => switchConv(id)} className="truncate max-w-[120px]">{convTitles[id] || id}</span>
+              <button onClick={() => closeConv(id)} className="text-gray-600 hover:text-red-400 ml-0.5 flex-shrink-0">×</button>
+            </span>
+          ))}
+          <button onClick={() => setShowSetup(true)} className="px-2 py-0.5 text-xs rounded bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200">+</button>
+        </div>
+      )}
       <ChatHeader characterName={character?.name} characterAvatar={character?.avatar} scriptTitle={script?.title} chatMode={chatMode} isStreaming={isStreaming} displayMessagesLen={displayMessages.length} onBack={() => setShowSetup(true)} onStop={stopStreaming} onSummary={() => { if (activeConfigId && activeConversationId) { const name = character?.name || script?.title || '当前剧情'; requestSummary(activeConfigId, name); } }} onBranch={async () => { if (selectedScriptId && selectedCharacterId) await branchConversation(selectedScriptId, selectedCharacterId); }} onRegenerate={async () => { if (activeConfigId) await regenerateLast(activeConfigId, failoverConfigId ?? undefined); }} onConvList={loadConvList} onCompendium={() => setShowCompendium(!showCompendium)} showCompendium={showCompendium} selectedScriptId={selectedScriptId} />
 
       <ChatMessages displayMessages={displayMessages} streamingContent={streamingContent} isStreaming={isStreaming} error={error} suggestions={suggestions} showSummary={showSummary} summaryContent={summaryContent} summaryLoading={summaryLoading} summaryError={summaryError} characterName={character?.name} characterAvatar={character?.avatar} editingMessageId={editingMessageId} editContent={editContent} setEditContent={setEditContent} onEditSave={handleEditMessage} onEditCancel={() => setEditingMessageId(null)} onEditStart={(msg) => { setEditingMessageId(msg.id); setEditContent(msg.content); }} onQuickReply={(t) => { if (activeConfigId) sendMessage(activeConfigId, t, failoverConfigId ?? undefined); }} onDismissSummary={dismissSummary} onCopySummary={() => navigator.clipboard.writeText(summaryContent)} />
