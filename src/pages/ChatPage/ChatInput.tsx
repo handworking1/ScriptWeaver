@@ -202,7 +202,7 @@ export const ChatInput = memo(function ChatInput({
             className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-100 focus:outline-none focus:border-purple-500 resize-none h-12"
             rows={1} disabled={isStreaming} />
           <div className="relative">
-            <button onClick={() => setShowTemplates(v => !v)} disabled={isStreaming}
+            <button onClick={(e) => { e.stopPropagation(); setShowTemplates(v => !v); }} disabled={isStreaming}
               className="w-12 h-12 bg-teal-700 hover:bg-teal-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl flex items-center justify-center flex-shrink-0 transition-colors" title="消息模板">
               <span className="text-sm">📋</span>
             </button>

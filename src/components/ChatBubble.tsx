@@ -47,7 +47,7 @@ export function ChatBubble({ role, content, timestamp, characterName, characterA
           }`}
         >
           {isUser ? (
-            <p className="whitespace-pre-wrap text-sm">{content}</p>
+            <p className="whitespace-pre-wrap text-sm" dangerouslySetInnerHTML={{ __html: searchQuery ? highlightText(content, searchQuery) : content }} />
           ) : (
             <MarkdownRenderer content={content} />
           )}

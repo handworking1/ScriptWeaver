@@ -390,8 +390,10 @@ export function registerIpcHandlers(): void {
         if (result.trim().length < 20) return content;
         return result;
       };
+      // en: Only strip after first exchange / 仅首次对话后剥离设定块
+      const hasExchange = messages.some((m: any) => m.role === 'user');
       const systemMsgs = messages.filter((m: any) => m.role === 'system').map((m: any) => ({
-        ...m, content: stripFirstUseOnly(m.content || ''),
+        ...m, content: hasExchange ? stripFirstUseOnly(m.content || '') : m.content || '',
       }));
       const nonSystem = messages.filter((m: any) => m.role !== 'system');
       // en: 按 token 数动态截断 / Dynamic token-based truncation
