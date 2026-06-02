@@ -18,7 +18,7 @@ const pages = {
   aiDiscuss: AIDiscussPage,
 };
 
-const FONT_SIZES: Record<string, string> = { small: '14px', normal: '16px', large: '18px' };
+const FONT_SIZES: Record<string, string> = { xs: '12px', sm: '14px', normal: '16px', lg: '18px', xl: '20px' };
 
 export function App() {
   const currentPage = useNavStore((s) => s.currentPage);

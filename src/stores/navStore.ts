@@ -7,14 +7,14 @@ interface NavStore {
   selectedCharacterId: string | null;
   resumeConversationId: string | null;
   theme: 'dark' | 'light';
-  /** Font size: small=14px, normal=16px, large=18px / 文字大小 */
-  fontSize: 'small' | 'normal' | 'large';
+  /** Font size: xs=12px, sm=14px, normal=16px, lg=18px, xl=20px / 文字大小 */
+  fontSize: 'xs' | 'sm' | 'normal' | 'lg' | 'xl';
   navigate: (page: Page) => void;
   selectScript: (id: string | null) => void;
   selectCharacter: (id: string | null) => void;
   setResumeConversation: (id: string | null) => void;
   toggleTheme: () => void;
-  setFontSize: (size: 'small' | 'normal' | 'large') => void;
+  setFontSize: (size: 'xs' | 'sm' | 'normal' | 'lg' | 'xl') => void;
 }
 
 // Load persisted theme
@@ -26,12 +26,14 @@ const getInitialTheme = (): 'dark' | 'light' => {
   return 'dark';
 };
 
-const getInitialFontSize = (): 'small' | 'normal' | 'large' => {
+const FONT_SIZES_LIST = ['xs', 'sm', 'normal', 'lg', 'xl'] as const;
+
+const getInitialFontSize = () => {
   try {
     const v = localStorage.getItem('app_font_size');
-    if (v === 'small' || v === 'large') return v;
+    if (FONT_SIZES_LIST.includes(v as any)) return v as 'xs' | 'sm' | 'normal' | 'lg' | 'xl';
   } catch { /* ignore */ }
-  return 'normal';
+  return 'normal' as const;
 };
 
 export const useNavStore = create<NavStore>((set) => ({
