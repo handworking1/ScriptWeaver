@@ -368,13 +368,22 @@ export function registerIpcHandlers(): void {
 
       const apiKey = decryptApiKey(configRow.api_key_encrypted);
 
-      /** en: Keep system messages intact, trim oldest non-system messages if too many.
-       *  zh: 保留系统消息完整，非系统消息超过100条时裁最早的消息（不动剧本设定）。 */
-      const systemMsgs = messages.filter((m: any) => m.role === 'system');
+      /** en: Strip global rules from system messages — rules only needed at conversation start.
+       *  zh: 从系统消息中剥离全局规则——规则仅需在对话开始时使用一次。 */
+      const stripGlobalRules = (content: string): string => {
+        const idx = content.indexOf('【全局规则');
+        if (idx < 0) return content;
+        const end = content.indexOf('\n\n---\n\n', idx);
+        if (end > idx) return content.slice(0, idx) + content.slice(end + 8);
+        const nl = content.indexOf('\n', idx);
+        return nl > idx ? content.slice(0, idx) + content.slice(nl) : content.slice(0, idx);
+      };
+      const systemMsgs = messages.filter((m: any) => m.role === 'system').map((m: any) => ({
+        ...m, content: stripGlobalRules(m.content || ''),
+      }));
       const nonSystem = messages.filter((m: any) => m.role !== 'system');
-      const sendMessages = nonSystem.length > 100
-        ? [...systemMsgs, ...nonSystem.slice(-80)]
-        : messages;
+      const trimmedNonSystem = nonSystem.length > 100 ? nonSystem.slice(-80) : nonSystem;
+      const sendMessages = [...systemMsgs, ...trimmedNonSystem];
 
       const body = {
         model: configRow.model,
