@@ -45,14 +45,14 @@ export async function initDatabase(): Promise<void> {
   db.run('CREATE INDEX IF NOT EXISTS idx_conversations_character_id ON conversations(character_id)');
   db.run('CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id)');
 
-  // Version-based migration
+  // Always ensure legacy columns exist (safe idempotent migration)
+  try { db.run('ALTER TABLE conversations ADD COLUMN parent_id TEXT DEFAULT NULL'); } catch (_) { /* exists */ }
+  try { db.run('ALTER TABLE scripts ADD COLUMN extra_data TEXT DEFAULT \'{}\''); } catch (_) { /* exists */ }
+
+  // Version-based migration for future schema changes
   const currentVersion = db.exec('PRAGMA user_version');
   const version = currentVersion.length ? (currentVersion[0].values[0] as number[])[0] : 0;
-
   if (version < 1) {
-    // For existing DBs created before these columns were in CREATE TABLE
-    try { db.run('ALTER TABLE conversations ADD COLUMN parent_id TEXT DEFAULT NULL'); } catch (_) { /* exists */ }
-    try { db.run('ALTER TABLE scripts ADD COLUMN extra_data TEXT DEFAULT \'{}\''); } catch (_) { /* exists */ }
     db.run('PRAGMA user_version = 1');
   }
 
