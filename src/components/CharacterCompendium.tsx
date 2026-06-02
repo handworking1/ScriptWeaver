@@ -13,6 +13,8 @@ interface CharEntry {
 
 interface Props {
   scriptId: string;
+  conversationId?: string | null;
+  configId?: string | null;
   onClose: () => void;
 }
 
@@ -20,9 +22,10 @@ function defaultChar(id: string): CharEntry {
   return { id, name: '', personality: '', favorability: 50, bodyType: '', kinks: '', status: '', notes: '' };
 }
 
-export function CharacterCompendium({ scriptId, onClose }: Props) {
+export function CharacterCompendium({ scriptId, conversationId, configId, onClose }: Props) {
   const [chars, setChars] = useState<CharEntry[]>([]);
   const [saved, setSaved] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
 
   useEffect(() => { load(); }, []);
 
@@ -44,6 +47,45 @@ export function CharacterCompendium({ scriptId, onClose }: Props) {
   const removeChar = (id: string) => save(chars.filter((c) => c.id !== id));
   const updateChar = (id: string, patch: Partial<CharEntry>) =>
     save(chars.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+
+  // ── AI analysis ─────────────────────────────────────
+  const handleAIAnalyze = async () => {
+    if (!conversationId || !configId) return;
+    setAnalyzing(true);
+    try {
+      const msgs = await window.electronAPI.getMessages(conversationId);
+      const chatContent = msgs.filter(m => m.role !== 'system').map(m => `[${m.role === 'user' ? '主角' : '角色'}]: ${m.content}`).join('\n');
+
+      const prompt = `分析以下对话，提取所有出场角色（不包括"主角"）的信息。返回严格JSON数组：
+[{"name":"角色名","personality":"性格特征","favorability":50,"bodyType":"身材外貌","kinks":"性癖偏好","status":"当前状态","notes":"与主角的关系和互动摘要"}]
+
+对话内容：
+${chatContent.slice(0, 8000)}`;
+
+      const result = await window.electronAPI.discussSettings(configId, 'character',
+        { name: '', personality: '', background: '', speakingStyle: '', appearance: '' },
+        [{ role: 'system', content: prompt }]);
+      if (result.reply) {
+        const match = result.reply.match(/\[[\s\S]*?\]/);
+        if (match) {
+          try {
+            const analyzed: Partial<CharEntry>[] = JSON.parse(match[0]);
+            const merged = [...chars];
+            for (const a of analyzed) {
+              const existing = merged.find(c => c.name === a.name);
+              if (existing) {
+                Object.assign(existing, { personality: a.personality || existing.personality, favorability: a.favorability ?? existing.favorability, bodyType: a.bodyType || existing.bodyType, kinks: a.kinks || existing.kinks, status: a.status || existing.status, notes: a.notes || existing.notes });
+              } else if (a.name) {
+                merged.push({ id: Date.now().toString() + Math.random().toString(36).slice(2), name: a.name, personality: a.personality || '', favorability: a.favorability ?? 50, bodyType: a.bodyType || '', kinks: a.kinks || '', status: a.status || '', notes: a.notes || '' });
+              }
+            }
+            save(merged);
+          } catch (err) { console.error('[compendium] parse:', err); }
+        }
+      }
+    } catch (err) { console.error('[compendium] analyze:', err); }
+    finally { setAnalyzing(false); }
+  };
 
   const getFavorColor = (v: number) => {
     if (v >= 80) return 'text-pink-400';
@@ -70,6 +112,12 @@ export function CharacterCompendium({ scriptId, onClose }: Props) {
           <div className="text-xs text-gray-500">{chars.length} 个角色</div>
         </div>
         <div className="flex gap-2">
+          {configId && conversationId && (
+            <button onClick={handleAIAnalyze} disabled={analyzing}
+              className="text-xs text-green-400 hover:text-green-300 disabled:text-gray-600">
+              {analyzing ? '⏳' : '🤖 分析'}
+            </button>
+          )}
           <button onClick={addChar} className="text-xs text-purple-400 hover:text-purple-300">+ 添加</button>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-300">✕</button>
         </div>
@@ -79,7 +127,9 @@ export function CharacterCompendium({ scriptId, onClose }: Props) {
 
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {chars.length === 0 && (
-          <div className="text-center text-gray-600 text-xs py-8">点击 + 添加角色，记录对话中出现的人物信息</div>
+          <div className="text-center text-gray-600 text-xs py-8">
+            点击 🤖 分析 让 AI 自动从对话中提取角色信息
+          </div>
         )}
         {chars.map((c) => (
           <div key={c.id} className="bg-gray-800 rounded-xl border border-gray-700 p-3">

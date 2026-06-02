@@ -113,7 +113,7 @@ export function ChatPage() {
           </div>
         </div>
       )}
-      {showCompendium && selectedScriptId && <CharacterCompendium scriptId={selectedScriptId} onClose={() => setShowCompendium(false)} />}
+      {showCompendium && selectedScriptId && <CharacterCompendium scriptId={selectedScriptId} conversationId={activeConversationId} configId={activeConfigId} onClose={() => setShowCompendium(false)} />}
     </div>
   );
 }
