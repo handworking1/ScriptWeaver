@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useScriptStore } from '@/stores/scriptStore';
 import { useConfigStore } from '@/stores/configStore';
+import { useChatStore } from '@/stores/chatStore';
 import { useNavStore } from '@/stores/navStore';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { DiscussManagePanel } from './DiscussManagePanel';
@@ -33,6 +34,8 @@ export function AIDiscussPage() {
   /** Map of discussion id → display title for new_* discussions / 新建讨论的 id→标题映射 */
   const [tabTitles, setTabTitles] = useState<Record<string, string>>({});
   const [editFields, setEditFields] = useState<Record<string, string>>({});
+  /** Save feedback toast / 保存反馈 */
+  const [savedMsg, setSavedMsg] = useState(false);
   /** Inline name input for new discussion / 新建讨论的内联名称输入 */
   const [showNewName, setShowNewName] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -206,6 +209,8 @@ export function AIDiscussPage() {
       } as any,
     });
     await loadScripts();
+    setSavedMsg(true);
+    setTimeout(() => setSavedMsg(false), 2000);
   };
 
   const getFields = () => ({
@@ -230,6 +235,9 @@ export function AIDiscussPage() {
     setLoading(true);
     try {
       const result = await window.electronAPI.discussSettings(activeConfigId, 'script', getFields(), newMessages.map(m => ({ role: m.role, content: m.content })));
+      // en: 估算本次讨论的 token 消耗并汇入全局统计 / Estimate discuss token usage
+      const estimatedTokens = JSON.stringify(newMessages).length / 2 + (result.reply?.length || 0) / 2;
+      useChatStore.getState().addExternalTokens(Math.round(estimatedTokens));
       if (result.error) { setMessages([...newMessages, { role: 'assistant', content: '❌ ' + result.error }]); }
       else { setMessages([...newMessages, { role: 'assistant', content: result.reply || '（无回复）' }]); }
     } catch (err: any) { setMessages([...newMessages, { role: 'assistant', content: '❌ ' + err.message }]); }
@@ -442,7 +450,7 @@ ${JSON.stringify(getFields(), null, 2)}`;
       {/* Inline manage panel — extracted to sub-component for maintainability / 内联管理面板已抽取为子组件 */}
       {selectedScript && (
         <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700 px-4 py-3 max-h-52 overflow-y-auto">
-          <DiscussManagePanel editFields={editFields} setEditFields={setEditFields} onSave={handleSaveManual} />
+          <DiscussManagePanel editFields={editFields} setEditFields={setEditFields} onSave={handleSaveManual} saved={savedMsg} />
         </div>
       )}
 

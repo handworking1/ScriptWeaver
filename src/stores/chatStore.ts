@@ -28,6 +28,8 @@ interface ChatStore {
 
   /** en: Refresh token limit from active config / zh: 从当前配置刷新 token 上限 */
   refreshTokenLimit: () => void;
+  /** en: External token contribution (AI discuss, etc.) / zh: 外部 token 贡献 */
+  addExternalTokens: (count: number) => void;
 
   suggestions: QuickSuggestion[];
 
@@ -91,12 +93,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     const allMessages = await window.electronAPI.getMessages(conversationId);
     const displayMessages = allMessages.filter((m) => m.role !== 'system');
     const tokens = estimateMessagesTokens(allMessages);
+    // en: 保留会话累计，不清零 / Keep session total, don't reset
+    const prev = get().totalTokensSession;
     set({
       messages: allMessages,
       displayMessages,
       streamingContent: '', isStreaming: false, error: null,
       tokenCount: tokens,
-      totalTokensSession: tokens,
+      totalTokensSession: prev > tokens ? prev : tokens, // at least current conversation's tokens
       estimatedCost: estimateCost(tokens, 0, getActiveModelInfo().model),
     });
   },
@@ -139,6 +143,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     set((state) => {
       const newDisplay = [...state.displayMessages, userMsg];
       const tokenCount = estimateMessagesTokens([...state.messages, userMsg]);
+      const userTokens = estimateTokens(userMsg.content);
       return {
         messages: [...state.messages, userMsg],
         displayMessages: newDisplay,
@@ -147,6 +152,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         error: null,
         suggestions: [],
         tokenCount,
+        totalTokensSession: state.totalTokensSession + userTokens,
         estimatedCost: estimateCost(tokenCount, 0, getActiveModelInfo().model),
       };
     });
@@ -384,5 +390,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
    *  zh: 从当前 AI 配置的 maxTokens 同步 token 上限。 */
   refreshTokenLimit: () => {
     set({ tokenLimit: getActiveModelInfo().maxTokens });
+  },
+
+  /** en: External token contribution (AI discuss, etc.) / zh: 外部 token 贡献（AI 讨论等） */
+  addExternalTokens: (count: number) => {
+    set((state) => ({
+      totalTokensSession: state.totalTokensSession + count,
+    }));
   },
 }));

@@ -9,9 +9,11 @@ interface DiscussManagePanelProps {
   editFields: Record<string, string>;
   setEditFields: (fields: Record<string, string>) => void;
   onSave: () => void;
+  /** Whether save just succeeded / 是否刚保存成功 */
+  saved: boolean;
 }
 
-export function DiscussManagePanel({ editFields, setEditFields, onSave }: DiscussManagePanelProps) {
+export function DiscussManagePanel({ editFields, setEditFields, onSave, saved }: DiscussManagePanelProps) {
   const update = (key: string, value: string) =>
     setEditFields({ ...editFields, [key]: value });
 
@@ -146,8 +148,9 @@ export function DiscussManagePanel({ editFields, setEditFields, onSave }: Discus
         </select>
       </Field>
       <button onClick={onSave}
-        className="px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded">
-        💾 保存设定
+        className="px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded disabled:opacity-50"
+        disabled={saved}>
+        {saved ? '✅ 已保存' : '💾 保存设定'}
       </button>
     </div>
   );

@@ -1,5 +1,55 @@
 import { buildSystemPrompt, buildSystemPromptFromTemplate } from '@/lib/systemPrompt';
+import { estimateTokens } from '@/lib/tokenCounter';
 import type { Character, PromptTemplate } from '@/types';
+
+/** en: Rough token estimation for truncation decisions / zh: 粗略 token 估算用于截断判断 */
+function roughTokens(text: string): number {
+  return Math.ceil(text.length / 2); // ~2 chars per token for Chinese
+}
+
+/** Max system prompt tokens before truncation / 截断阈值 */
+const MAX_SYSTEM_TOKENS = 6000;
+
+/** en: Truncate system prompt if it exceeds token limit.
+ *  zh: 系统提示超长时逐级截断。Priority: keep core, trim banghui > protagonist > globalRules. */
+function truncateSystemPrompt(prompt: string): string {
+  if (roughTokens(prompt) <= MAX_SYSTEM_TOKENS) return prompt;
+  // Try removing banghui block
+  const bhIdx = prompt.indexOf('【[帮回]核心辅助系统');
+  if (bhIdx >= 0) {
+    const bhEnd = prompt.indexOf('\n\n---\n\n', bhIdx);
+    if (bhEnd > bhIdx) {
+      const trimmed = prompt.slice(0, bhIdx) + '\n(系统设定过长，帮回系统已精简)' + prompt.slice(bhEnd);
+      if (roughTokens(trimmed) <= MAX_SYSTEM_TOKENS) return trimmed;
+      prompt = trimmed;
+    }
+  }
+  // Try removing protagonist block
+  const proIdx = prompt.indexOf('【玩家/主角设定】');
+  if (proIdx >= 0) {
+    const proEnd = prompt.indexOf('\n\n---\n\n', proIdx);
+    if (proEnd > proIdx) {
+      const trimmed = prompt.slice(0, proIdx) + prompt.slice(proEnd);
+      if (roughTokens(trimmed) <= MAX_SYSTEM_TOKENS) return trimmed;
+      prompt = trimmed;
+    }
+  }
+  // Try removing global rules
+  const grIdx = prompt.indexOf('【全局规则');
+  if (grIdx >= 0) {
+    const grEnd = prompt.indexOf('\n\n---\n\n', grIdx);
+    if (grEnd > grIdx) {
+      const trimmed = prompt.slice(0, grIdx) + prompt.slice(grEnd);
+      if (roughTokens(trimmed) <= MAX_SYSTEM_TOKENS) return trimmed;
+      prompt = trimmed;
+    }
+  }
+  // Last resort: truncate to max length
+  if (roughTokens(prompt) > MAX_SYSTEM_TOKENS) {
+    return prompt.slice(0, MAX_SYSTEM_TOKENS * 2) + '\n\n(系统设定过长，已自动截断关键部分)';
+  }
+  return prompt;
+}
 
 export function useSystemPrompt(
   chatMode: '1v1' | 'world',
@@ -111,7 +161,7 @@ export function useSystemPrompt(
     p = await applyProtagonist(p);
     p = applyBanghui(p);
     p += getFormatRules();
-    return p;
+    return truncateSystemPrompt(p);
   };
 
   const buildWorldPrompt = async (): Promise<string> => {
@@ -124,7 +174,7 @@ export function useSystemPrompt(
     p = applyBanghui(p);
     p += getFormatRules();
     if (interactionOpts === 'T') p += '\n在关键决策点用 [SUGGESTIONS: ...] 提供选项。';
-    return p;
+    return truncateSystemPrompt(p);
   };
 
   return { build1v1Prompt, buildWorldPrompt };
