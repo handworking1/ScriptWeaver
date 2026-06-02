@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { exportToCardV2 } from '@/lib/characterCard';
 import type { Character } from '@/types';
 
 interface CharacterCardProps {
@@ -33,6 +34,18 @@ export function CharacterCard({ character, onEdit, onDelete, onSelect, isSelecte
           <div className="flex items-center justify-between mb-1">
             <h3 className="font-semibold text-gray-100">{character.name}</h3>
             <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => {
+                  const card = exportToCardV2(character);
+                  const blob = new Blob([JSON.stringify(card, null, 2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url; a.download = `${character.name}-角色卡.json`; a.click();
+                  setTimeout(() => URL.revokeObjectURL(url), 1000);
+                }}
+                className="text-gray-500 hover:text-green-400 p-1 text-xs" title="导出角色卡">
+                📤
+              </button>
               <button
                 onClick={() => onEdit(character)}
                 className="text-gray-500 hover:text-blue-400 p-1 text-xs"

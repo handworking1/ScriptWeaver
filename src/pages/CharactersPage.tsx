@@ -5,6 +5,7 @@ import { useConfigStore } from '@/stores/configStore';
 import { useNavStore } from '@/stores/navStore';
 import { CharacterCard } from '@/components/CharacterCard';
 import { generateId } from '@/lib/id';
+import { importCharacterCard, exportToCardV2 } from '@/lib/characterCard';
 import type { Character } from '@/types';
 
 export function CharactersPage() {
@@ -181,9 +182,10 @@ export function CharactersPage() {
               const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
               input.onchange = async (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) return;
                 try { const d = JSON.parse(await f.text());
-                  if (typeof d !== 'object' || !d.name) throw new Error('无效的角色卡：缺少角色名');
-                  await addCharacter({ id: generateId(), scriptId: selectedScriptId!, name: String(d.name), personality: String(d.personality||''), background: String(d.background||''), speakingStyle: String(d.speakingStyle||''), appearance: String(d.appearance||''), avatar: String(d.avatar||''), createdAt: Date.now() });
-                  alert('导入成功！');
+                  const imported = importCharacterCard(d);
+                  if (!imported) throw new Error('不支持的角色卡格式');
+                  await addCharacter({ id: generateId(), scriptId: selectedScriptId!, ...imported, avatar: String(imported.avatar||''), createdAt: Date.now() });
+                  alert(`导入成功！${d.spec === 'chara_card_v2' ? ' (v2格式)' : ''}`);
                 } catch (err: any) { alert('导入失败：'+err.message); } }; input.click();
             }} disabled={!selectedScriptId}
               className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-gray-300 rounded-lg text-xs font-medium">📥 导入角色卡</button>
