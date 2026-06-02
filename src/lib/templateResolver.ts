@@ -29,8 +29,17 @@ export function extractSuggestions(content: string): string[] {
   // Support | / 、separators, numbered prefixes, newlines inside brackets
   const match = content.match(/\[SUGGESTIONS:\s*([\s\S]+?)\]/);
   if (!match) return [];
-  const items = match[1].split(/[|、]/).map(s => s.replace(/^\s*\d+[\.\、\)）]\s*/, '').trim()).filter(Boolean);
-  return items.slice(0, 3);
+  const raw = match[1].trim();
+  // Try splitting by | or 、first
+  let items = raw.split(/[|、]/);
+  // If that didn't split (e.g. AI used "1. A 2. B 3. C" format), split on numbered markers
+  if (items.length <= 1 && /\d+[\.\、\)）]/.test(raw)) {
+    items = raw.split(/(?=\d+[\.\、\)）])/);
+  }
+  return items
+    .map(s => s.replace(/^\s*\d+[\.\、\)）]\s*/, '').trim())
+    .filter(Boolean)
+    .slice(0, 3);
 }
 
 export function stripSuggestions(content: string): string {
