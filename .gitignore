@@ -7,3 +7,6 @@ out/
 *.exe
 .env
 软件开发.md
+.reasonix/
+eslint_output*.txt
+eslint_final.txt

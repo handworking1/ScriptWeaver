@@ -37,16 +37,18 @@ export const TokenBar = React.memo(function TokenBar({ used, limit, totalInSessi
             style={{ width: `${pct}%` }}
           />
         </div>
-        <span className={`font-mono ${isDanger ? 'text-red-400' : isWarning ? 'text-yellow-400' : 'text-gray-400'}`}>
+        <span className={`font-mono ${isDanger ? 'text-red-400' : isWarning ? 'text-yellow-400' : 'text-gray-400'}`}
+          title={`上下文窗口用量：${used}/${limit} tokens。超过上限后较早的消息会被截断。`}
+        >
           {used}/{limit}
         </span>
       </div>
       <span className="text-gray-600">|</span>
-      <span className="text-gray-500">
+      <span className="text-gray-500" title="本次会话累计消耗的 tokens 总数">
         累计 {totalInSession} tokens
       </span>
       <span className="text-gray-600">|</span>
-      <span className="text-gray-500">{estimatedCost}</span>
+      <span className="text-gray-500" title="根据当前模型价格的估算费用">{estimatedCost}</span>
     </div>
   );
 });

@@ -7,6 +7,7 @@ import { useTemplateStore } from '@/stores/templateStore';
 import { useNavStore } from '@/stores/navStore';
 
 import { CharacterCompendium } from '@/components/CharacterCompendium';
+import { ScriptPreview } from '@/components/ScriptPreview';
 import { TokenBar } from '@/components/TokenBar';
 import { generateId } from '@/lib/id';
 import type { Message } from '@/types';
@@ -19,14 +20,15 @@ import { useSystemPrompt } from './useSystemPrompt';
 
 export function ChatPage() {
   const { scripts } = useScriptStore();
-  const { configs, activeConfigId, failoverConfigId, loadConfigs } = useConfigStore();
+  const { activeConfigId, failoverConfigId, loadConfigs } = useConfigStore();
   const { templates, activeTemplateId, loadTemplates } = useTemplateStore();
   const {
     activeConversationId, displayMessages, streamingContent, isStreaming, error,
-    tokenCount, totalTokensSession, estimatedCost,
+    tokenCount, totalTokensSession, estimatedCost, tokenLimit,
+    refreshTokenLimit,
     suggestions, summaryContent, summaryLoading, summaryError, showSummary,
     loadMessages, createConversation, sendMessage, stopStreaming,
-    editUserMessage, regenerateLast, branchConversation,
+    editUserMessage, undoLastMessage, regenerateLast, branchConversation,
     requestSummary, dismissSummary, handleSummaryResult,
     appendToken, finishStreaming, setStreamError,
   } = useChatStore();
@@ -42,6 +44,8 @@ export function ChatPage() {
   const [shortcutBar, setShortcutBar] = useState<string[]>([]);
   const [shortcutsExpanded, setShortcutsExpanded] = useState(true);
   const [showCompendium, setShowCompendium] = useState(false);
+  const [showScriptPreview, setShowScriptPreview] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   /** Loading state for world intro generation / 世界介绍生成中的加载状态 */
   const [worldIntroLoading, setWorldIntroLoading] = useState(false);
   /** Prevent setState on unmounted component during async world intro / 防止组件卸载后异步回调setState */
@@ -60,6 +64,16 @@ export function ChatPage() {
   const { build1v1Prompt, buildWorldPrompt } = useSystemPrompt(chatMode, character, script, templates, activeTemplateId, replyLength, interactionOpts);
 
   useEffect(() => { loadConfigs(); loadTemplates(); (async () => { try { const d = await window.electronAPI.getSetting('chat_shortcuts'); if (d) setShortcutBar(JSON.parse(d)); } catch (err) { console.error('[ChatPage] loadShortcuts:', err); } })(); }, []);
+
+  /** en: Sync tokenLimit when active config changes / zh: 切换配置时同步 token 上限 */
+  useEffect(() => { refreshTokenLimit(); }, [activeConfigId, refreshTokenLimit]);
+
+  /** en: Auto-dismiss error toast after 5s / zh: 错误横幅 5 秒后自动消失 */
+  useEffect(() => {
+    if (!error) return;
+    const timer = setTimeout(() => useChatStore.getState().setStreamError(''), 5000);
+    return () => clearTimeout(timer);
+  }, [error]);
   useEffect(() => { setShowSetup(true); }, []);
   /** Resume a conversation from history: load messages, skip setup, show tab.
    *  从历史记录恢复对话：加载消息，跳过设置页，显示标签。
@@ -82,40 +96,52 @@ export function ChatPage() {
     })();
   }, [resumeConversationId, activeConfigId]);
 
-  const handleStartChat = async () => {
+  /** Start a 1v1 character chat — create conversation, inject system prompt, load messages.
+   *  启动1v1角色对话：创建对话→注入 system prompt→加载消息。 */
+  const start1v1Chat = async () => {
+    if (!selectedScriptId || !selectedCharacterId || !activeConfigId) return;
+    const char = await window.electronAPI.getCharacter(selectedCharacterId);
+    if (!char) return;
+    const conv = await createConversation(generateId(), selectedScriptId, selectedCharacterId, `与${char.name}的对话`);
+    addOpenConv(conv.id, conv.title || `与${char.name}的对话`);
+    const prompt = await build1v1Prompt(char);
+    await window.electronAPI.createMessage({ id: generateId(), conversationId: conv.id, role: 'system', content: prompt, timestamp: Date.now() });
+    setShowSetup(false);
+    await loadMessages(conv.id);
+  };
+
+  /** Start a world-mode chat — create conversation, inject GM prompt, generate AI intro.
+   *  启动世界模式对话：创建对话→注入 GM prompt→异步生成 AI 开场白。 */
+  const startWorldChat = async () => {
     if (!selectedScriptId || !activeConfigId) return;
-    if (chatMode === '1v1' && !selectedCharacterId) return;
-    if (chatMode === '1v1') {
-      const char = await window.electronAPI.getCharacter(selectedCharacterId!);
-      if (!char) return;
-      const conv = await createConversation(generateId(), selectedScriptId, selectedCharacterId!, `与${char.name}的对话`);
-      addOpenConv(conv.id, conv.title || `与${char.name}的对话`);
-      const prompt = await build1v1Prompt(char);
-      await window.electronAPI.createMessage({ id: generateId(), conversationId: conv.id, role: 'system', content: prompt, timestamp: Date.now() });
-      setShowSetup(false); await loadMessages(conv.id);
-    } else {
-      const conv = await createConversation(generateId(), selectedScriptId, '', `世界：${script?.title || '未知'}`);
-      addOpenConv(conv.id, conv.title || `世界：${script?.title || '未知'}`);
-      const prompt = await buildWorldPrompt();
-      await window.electronAPI.createMessage({ id: generateId(), conversationId: conv.id, role: 'system', content: prompt, timestamp: Date.now() });
-      /** Show loading immediately to cover loadMessages gap / 立即显示加载指示器覆盖空白期 */
-      setWorldIntroLoading(true);
-      setShowSetup(false); await loadMessages(conv.id);
-      /** Fire-and-forget: AI generates world intro in background so UI isn't blocked.
-       *  异步非阻塞：AI在后台生成世界开场白，UI立即可用。 */
-      (async () => {
-        try {
-          const introResult = await window.electronAPI.discussSettings(activeConfigId, 'script',
-            { title: script?.title, worldSetting: script?.worldSetting, background: script?.background, mainQuests: '', sideQuests: '', environment: '', map: '', data: '' },
-            [{ role: 'system', content: `请以GM身份，用2-3段话生动介绍以下世界。只描述世界观概况、当前氛围和玩家初始处境，使用第二人称叙述。不要提任何工作流或下一步指引，不要用【】标注。\n标题：${script?.title}\n世界观：${script?.worldSetting}\n背景：${script?.background}` }]);
-          if (introResult.reply && mountedRef.current) {
-            await window.electronAPI.createMessage({ id: generateId(), conversationId: conv.id, role: 'assistant', content: introResult.reply, timestamp: Date.now() + 1 });
-            await loadMessages(conv.id);
-          }
-        } catch (err) { console.error('[ChatPage] world intro:', err); }
-        finally { if (mountedRef.current) setWorldIntroLoading(false); }
-      })();
-    }
+    const conv = await createConversation(generateId(), selectedScriptId, '', `世界：${script?.title || '未知'}`);
+    addOpenConv(conv.id, conv.title || `世界：${script?.title || '未知'}`);
+    const prompt = await buildWorldPrompt();
+    await window.electronAPI.createMessage({ id: generateId(), conversationId: conv.id, role: 'system', content: prompt, timestamp: Date.now() });
+    setWorldIntroLoading(true);
+    setShowSetup(false);
+    await loadMessages(conv.id);
+    // Fire-and-forget: AI 后台生成世界开场白，UI 不阻塞
+    (async () => {
+      try {
+        const introResult = await window.electronAPI.discussSettings(activeConfigId, 'script',
+          { title: script?.title, worldSetting: script?.worldSetting, background: script?.background, mainQuests: '', sideQuests: '', environment: '', map: '', data: '' },
+          [{ role: 'system', content: `请以GM身份，用2-3段话生动介绍以下世界。只描述世界观概况、当前氛围和玩家初始处境，使用第二人称叙述。不要提任何工作流或下一步指引，不要用【】标注。\n标题：${script?.title}\n世界观：${script?.worldSetting}\n背景：${script?.background}` }]);
+        if (introResult.reply && mountedRef.current) {
+          await window.electronAPI.createMessage({ id: generateId(), conversationId: conv.id, role: 'assistant', content: introResult.reply, timestamp: Date.now() + 1 });
+          await loadMessages(conv.id);
+        }
+      } catch (err) { console.error('[ChatPage] world intro:', err); }
+      finally { if (mountedRef.current) setWorldIntroLoading(false); }
+    })();
+  };
+
+  /** en: Route chat start to the appropriate mode handler.
+   *  zh: 根据聊天模式路由到对应的启动函数。 */
+  const handleStartChat = () => {
+    if (!selectedScriptId || !activeConfigId) return;
+    if (chatMode === '1v1') start1v1Chat();
+    else startWorldChat();
   };
 
   const handleEditMessage = async (msg: Message) => {
@@ -168,8 +194,24 @@ export function ChatPage() {
           ))}
           <button onClick={() => setShowSetup(true)} className="px-2 py-0.5 text-xs rounded bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200">+</button>
       </div>
-      <ChatHeader characterName={character?.name} characterAvatar={character?.avatar} scriptTitle={script?.title} chatMode={chatMode} isStreaming={isStreaming} displayMessagesLen={displayMessages.length} onBack={() => setShowSetup(true)} onStop={stopStreaming} onSummary={() => { if (activeConfigId && activeConversationId) { const name = character?.name || script?.title || '当前剧情'; requestSummary(activeConfigId, name); } }} onBranch={async () => { if (selectedScriptId && selectedCharacterId) await branchConversation(selectedScriptId, selectedCharacterId); }} onRegenerate={async () => { if (activeConfigId) await regenerateLast(activeConfigId, failoverConfigId ?? undefined); }} onConvList={loadConvList} onCompendium={() => setShowCompendium(!showCompendium)} showCompendium={showCompendium} selectedScriptId={selectedScriptId} />
-      <TokenBar used={tokenCount} limit={1048576} totalInSession={totalTokensSession} estimatedCost={estimatedCost} />
+      <ChatHeader characterName={character?.name} characterAvatar={character?.avatar} scriptTitle={script?.title} chatMode={chatMode} isStreaming={isStreaming} displayMessagesLen={displayMessages.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} onBack={() => setShowSetup(true)} onStop={stopStreaming} onSummary={() => { if (activeConfigId && activeConversationId) { const name = character?.name || script?.title || '当前剧情'; requestSummary(activeConfigId, name); } }} onBranch={async () => { if (selectedScriptId && selectedCharacterId) await branchConversation(selectedScriptId, selectedCharacterId); }} onRegenerate={async () => { if (activeConfigId) await regenerateLast(activeConfigId, failoverConfigId ?? undefined); }} onUndo={() => undoLastMessage()} onConvList={loadConvList} onCompendium={() => setShowCompendium(!showCompendium)} showCompendium={showCompendium} onScriptPreview={() => setShowScriptPreview(!showScriptPreview)} showScriptPreview={showScriptPreview} selectedScriptId={selectedScriptId} />
+      <TokenBar used={tokenCount} limit={tokenLimit} totalInSession={totalTokensSession} estimatedCost={estimatedCost} />
+
+      {/* Error toast — auto-dismiss after 5s / 错误横幅，5秒自动消失 */}
+      {error && (
+        <div className="flex-shrink-0 bg-red-900/40 border-b border-red-800/50 px-4 py-2 flex items-center gap-2 animate-in">
+          <span className="text-sm">❌</span>
+          <span className="text-sm text-red-300 flex-1">{error}</span>
+          <button onClick={() => useChatStore.getState().setStreamError('')} className="text-red-500 hover:text-red-300 text-xs">✕</button>
+        </div>
+      )}
+      {/* AI thinking indicator / AI 思考中指示器 */}
+      {isStreaming && !streamingContent && (
+        <div className="flex-shrink-0 bg-purple-900/30 border-b border-purple-800/50 px-4 py-2 flex items-center gap-2">
+          <span className="inline-block w-3 h-3 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm text-purple-300">AI 思考中...</span>
+        </div>
+      )}
 
       {/* World intro loading indicator / 世界介绍生成中指示器 */}
       {worldIntroLoading && (
@@ -178,7 +220,7 @@ export function ChatPage() {
           <span className="text-sm text-purple-300">🌍 正在生成世界介绍...</span>
         </div>
       )}
-      <ChatMessages displayMessages={displayMessages} streamingContent={streamingContent} isStreaming={isStreaming} error={error} suggestions={suggestions} showSummary={showSummary} summaryContent={summaryContent} summaryLoading={summaryLoading} summaryError={summaryError} characterName={character?.name} characterAvatar={character?.avatar} editingMessageId={editingMessageId} editContent={editContent} setEditContent={setEditContent} onEditSave={handleEditMessage} onEditCancel={() => setEditingMessageId(null)} onEditStart={(msg) => { setEditingMessageId(msg.id); setEditContent(msg.content); }} onQuickReply={(t) => { if (activeConfigId) sendMessage(activeConfigId, t, failoverConfigId ?? undefined); }} onDismissSummary={dismissSummary} onCopySummary={() => navigator.clipboard.writeText(summaryContent)} />
+      <ChatMessages displayMessages={displayMessages} streamingContent={streamingContent} isStreaming={isStreaming} error={error} suggestions={suggestions} showSummary={showSummary} summaryContent={summaryContent} summaryLoading={summaryLoading} summaryError={summaryError} characterName={character?.name} characterAvatar={character?.avatar} searchQuery={searchQuery} editingMessageId={editingMessageId} editContent={editContent} setEditContent={setEditContent} onEditSave={handleEditMessage} onEditCancel={() => setEditingMessageId(null)} onEditStart={(msg) => { setEditingMessageId(msg.id); setEditContent(msg.content); }} onQuickReply={(t) => { if (activeConfigId) sendMessage(activeConfigId, t, failoverConfigId ?? undefined); }} onDismissSummary={dismissSummary} onCopySummary={() => navigator.clipboard.writeText(summaryContent)} />
       <ChatInput inputValue={inputValue} setInputValue={setInputValue} isStreaming={isStreaming} shortcutBar={shortcutBar} shortcutsExpanded={shortcutsExpanded} setShortcutsExpanded={setShortcutsExpanded} activeConfigId={activeConfigId} failoverConfigId={failoverConfigId} sendMessage={(cid, t, fid) => sendMessage(cid, t, fid)} recentMessages={displayMessages.slice(-6)} characterName={character?.name} banghuiEnabled={script?.extraData?.banghuiEnabled === 'Y'} chatMode={chatMode} scriptId={selectedScriptId ?? undefined} />
       {showConvList && (
         <div className="fixed inset-0 z-50 flex justify-center items-start pt-20" onClick={() => setShowConvList(false)}>
@@ -189,6 +231,7 @@ export function ChatPage() {
         </div>
       )}
       {showCompendium && selectedScriptId && <CharacterCompendium scriptId={selectedScriptId} conversationId={activeConversationId} configId={activeConfigId} onClose={() => setShowCompendium(false)} />}
+      {showScriptPreview && script && <ScriptPreview script={script} onClose={() => setShowScriptPreview(false)} />}
     </div>
   );
 }

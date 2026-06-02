@@ -29,14 +29,15 @@ export function CharacterCompendium({ scriptId, conversationId, configId, onClos
   /** Cleanup timer ref / 清理定时器引用 */
   const savedTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  useEffect(() => { load(); return () => clearTimeout(savedTimerRef.current); }, []);
-
   const load = async () => {
     try {
       const data = await window.electronAPI.getSetting(`compendium_${scriptId}`);
       if (data) setChars(JSON.parse(data));
     } catch (err) { console.error('[compendium] load:', err); }
   };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); return () => clearTimeout(savedTimerRef.current); }, []);
 
   /** Persist to IPC and show saved indicator / 持久化到IPC并显示已保存指示 */
   const persist = async (updated: CharEntry[]) => {

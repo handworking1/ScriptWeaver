@@ -1,40 +1,49 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import type {
+  IpcScriptData, IpcScriptUpdate,
+  IpcCharacterData, IpcCharacterUpdate,
+  IpcAIConfigData, IpcAIConfigUpdate,
+  IpcConversationData, IpcConversationUpdate,
+  IpcMessageData,
+  IpcTemplateData, IpcTemplateUpdate,
+  IpcImportData,
+} from '../src/types';
 
 const electronAPI = {
   // Scripts
   getScripts: () => ipcRenderer.invoke('script:getAll'),
   getScript: (id: string) => ipcRenderer.invoke('script:get', id),
-  createScript: (data: any) => ipcRenderer.invoke('script:create', data),
-  updateScript: (id: string, data: any) => ipcRenderer.invoke('script:update', id, data),
+  createScript: (data: IpcScriptData) => ipcRenderer.invoke('script:create', data),
+  updateScript: (id: string, data: IpcScriptUpdate) => ipcRenderer.invoke('script:update', id, data),
   deleteScript: (id: string) => ipcRenderer.invoke('script:delete', id),
 
   // Characters
   getCharacters: (scriptId: string) => ipcRenderer.invoke('character:getAll', scriptId),
   getCharacter: (id: string) => ipcRenderer.invoke('character:get', id),
-  createCharacter: (data: any) => ipcRenderer.invoke('character:create', data),
-  updateCharacter: (id: string, data: any) => ipcRenderer.invoke('character:update', id, data),
+  createCharacter: (data: IpcCharacterData) => ipcRenderer.invoke('character:create', data),
+  updateCharacter: (id: string, data: IpcCharacterUpdate) => ipcRenderer.invoke('character:update', id, data),
   deleteCharacter: (id: string) => ipcRenderer.invoke('character:delete', id),
 
   // AI Config
   getAIConfigs: () => ipcRenderer.invoke('aiConfig:getAll'),
   getAIConfig: (id: string) => ipcRenderer.invoke('aiConfig:get', id),
-  createAIConfig: (data: any) => ipcRenderer.invoke('aiConfig:create', data),
-  updateAIConfig: (id: string, data: any) => ipcRenderer.invoke('aiConfig:update', id, data),
+  createAIConfig: (data: IpcAIConfigData) => ipcRenderer.invoke('aiConfig:create', data),
+  updateAIConfig: (id: string, data: IpcAIConfigUpdate) => ipcRenderer.invoke('aiConfig:update', id, data),
   deleteAIConfig: (id: string) => ipcRenderer.invoke('aiConfig:delete', id),
 
   // Conversations
   getConversations: (scriptId?: string, characterId?: string) =>
     ipcRenderer.invoke('conversation:getAll', scriptId, characterId),
   getConversation: (id: string) => ipcRenderer.invoke('conversation:get', id),
-  createConversation: (data: any) => ipcRenderer.invoke('conversation:create', data),
-  updateConversation: (id: string, data: any) => ipcRenderer.invoke('conversation:update', id, data),
+  createConversation: (data: IpcConversationData) => ipcRenderer.invoke('conversation:create', data),
+  updateConversation: (id: string, data: IpcConversationUpdate) => ipcRenderer.invoke('conversation:update', id, data),
   deleteConversation: (id: string) => ipcRenderer.invoke('conversation:delete', id),
   getConversationBranches: (conversationId: string) =>
     ipcRenderer.invoke('conversation:branches', conversationId),
 
   // Messages
   getMessages: (conversationId: string) => ipcRenderer.invoke('message:getAll', conversationId),
-  createMessage: (data: any) => ipcRenderer.invoke('message:create', data),
+  createMessage: (data: IpcMessageData) => ipcRenderer.invoke('message:create', data),
   updateMessage: (id: string, content: string) => ipcRenderer.invoke('message:update', id, content),
   deleteMessagesAfter: (conversationId: string, afterTimestamp: number) =>
     ipcRenderer.invoke('message:deleteAfter', conversationId, afterTimestamp),
@@ -42,8 +51,8 @@ const electronAPI = {
   // Prompt Templates
   getPromptTemplates: () => ipcRenderer.invoke('template:getAll'),
   getPromptTemplate: (id: string) => ipcRenderer.invoke('template:get', id),
-  createPromptTemplate: (data: any) => ipcRenderer.invoke('template:create', data),
-  updatePromptTemplate: (id: string, data: any) => ipcRenderer.invoke('template:update', id, data),
+  createPromptTemplate: (data: IpcTemplateData) => ipcRenderer.invoke('template:create', data),
+  updatePromptTemplate: (id: string, data: IpcTemplateUpdate) => ipcRenderer.invoke('template:update', id, data),
   deletePromptTemplate: (id: string) => ipcRenderer.invoke('template:delete', id),
 
   // Chat streaming — fire-and-forget; completion via onChatDone/onChatError events
@@ -94,9 +103,12 @@ const electronAPI = {
   getSetting: (key: string) => ipcRenderer.invoke('settings:get', key),
   setSetting: (key: string, value: string) => ipcRenderer.invoke('settings:set', key, value),
 
+  // Encryption check
+  isEncryptionAvailable: () => ipcRenderer.invoke('safeStorage:isAvailable'),
+
   // Import/Export
   exportData: () => ipcRenderer.invoke('data:export'),
-  importData: (data: any) => ipcRenderer.invoke('data:import', data),
+  importData: (data: IpcImportData) => ipcRenderer.invoke('data:import', data),
 
   // File dialog for avatar
   pickAvatar: () => ipcRenderer.invoke('dialog:pickAvatar'),

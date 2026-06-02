@@ -38,7 +38,7 @@ export interface AIConfigRow {
 export interface ConversationRow {
   id: string;
   script_id: string;
-  character_id: string;
+  character_id: string | null;
   parent_id: string | null;
   title: string;
   created_at: number;

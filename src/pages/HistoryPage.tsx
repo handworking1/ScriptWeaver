@@ -10,7 +10,10 @@ import type { Conversation, Message } from '@/types';
 // Character name cache with 5-minute TTL
 const charNameCache: Record<string, { name: string; ts: number }> = {};
 
-async function getCharName(charId: string): Promise<string> {
+/** Get character name by id. Returns '世界模式' for null (world-mode conversations).
+ *  根据角色ID获取名称。world模式（null）返回'世界模式'。 */
+async function getCharName(charId: string | null): Promise<string> {
+  if (!charId) return '世界模式';
   const cached = charNameCache[charId];
   if (cached && Date.now() - cached.ts < 300_000) return cached.name;
   const c = await window.electronAPI.getCharacter(charId);
@@ -27,7 +30,7 @@ export function HistoryPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [characterName, setCharacterName] = useState<string>('');
   const [filterScriptId, setFilterScriptId] = useState<string | undefined>();
-  const [filterCharacterId, setFilterCharacterId] = useState<string | undefined>();
+  const [filterCharacterId] = useState<string | undefined>();
   const [viewMode, setViewMode] = useState<'chat' | 'raw'>('chat');
 
   useEffect(() => {

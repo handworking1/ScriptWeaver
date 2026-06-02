@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
 import { useScriptStore } from '@/stores/scriptStore';
-import { useCharacterStore } from '@/stores/characterStore';
 import { useConfigStore } from '@/stores/configStore';
 import { useNavStore } from '@/stores/navStore';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
+import { DiscussManagePanel } from './DiscussManagePanel';
+import { DiscussActionBar } from './DiscussActionBar';
 import { generateId } from '@/lib/id';
 
 interface Message {
@@ -363,69 +364,43 @@ ${JSON.stringify(getFields(), null, 2)}`;
         </div>
       )}
 
-      {/* Always-visible manage panel */}
+      {/* Inline manage panel — extracted to sub-component for maintainability / 内联管理面板已抽取为子组件 */}
       {selectedScript && (
         <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700 px-4 py-3 max-h-52 overflow-y-auto">
-              <div className="max-w-3xl mx-auto space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <div><label className="block text-xs text-gray-500 mb-0.5">标题</label><input value={editFields.title || ''} onChange={e => setEditFields({...editFields, title: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" /></div>
-                  <div><label className="block text-xs text-gray-500 mb-0.5">世界观</label><input value={editFields.worldSetting || ''} onChange={e => setEditFields({...editFields, worldSetting: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" /></div>
-                </div>
-                <div><label className="block text-xs text-gray-500 mb-0.5">故事背景</label><textarea value={editFields.background || ''} onChange={e => setEditFields({...editFields, background: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" /></div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><label className="block text-xs text-gray-500 mb-0.5">对标作品</label><input value={editFields.referenceWorks || ''} onChange={e => setEditFields({...editFields, referenceWorks: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" /></div>
-                  <div><label className="block text-xs text-gray-500 mb-0.5">时代背景</label><input value={editFields.eraBackground || ''} onChange={e => setEditFields({...editFields, eraBackground: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><label className="block text-xs text-gray-500 mb-0.5">主线任务</label><textarea value={editFields.mainQuests || ''} onChange={e => setEditFields({...editFields, mainQuests: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" /></div>
-                  <div><label className="block text-xs text-gray-500 mb-0.5">支线任务</label><textarea value={editFields.sideQuests || ''} onChange={e => setEditFields({...editFields, sideQuests: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><label className="block text-xs text-gray-500 mb-0.5">主角困境</label><textarea value={editFields.protagonistDilemma || ''} onChange={e => setEditFields({...editFields, protagonistDilemma: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" /></div>
-                  <div><label className="block text-xs text-gray-500 mb-0.5">金手指</label><textarea value={editFields.coreCheat || ''} onChange={e => setEditFields({...editFields, coreCheat: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><label className="block text-xs text-gray-500 mb-0.5">环境描述</label><textarea value={editFields.environment || ''} onChange={e => setEditFields({...editFields, environment: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-10 resize-none" /></div>
-                  <div><label className="block text-xs text-gray-500 mb-0.5">地图</label><textarea value={editFields.map || ''} onChange={e => setEditFields({...editFields, map: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-10 resize-none" /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><label className="block text-xs text-gray-500 mb-0.5">时间线</label><textarea value={editFields.timeline || ''} onChange={e => setEditFields({...editFields, timeline: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" /></div>
-                  <div><label className="block text-xs text-gray-500 mb-0.5">章节</label><textarea value={editFields.chapters || ''} onChange={e => setEditFields({...editFields, chapters: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><label className="block text-xs text-gray-500 mb-0.5">其他数据</label><input value={editFields.data || ''} onChange={e => setEditFields({...editFields, data: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" /></div>
-                  <div><label className="block text-xs text-gray-500 mb-0.5">年龄规则</label><input value={editFields.ageRule || ''} onChange={e => setEditFields({...editFields, ageRule: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><label className="block text-xs text-gray-500 mb-0.5">类型标签</label><input value={editFields.tags || ''} onChange={e => setEditFields({...editFields, tags: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" /></div>
-                  <div><label className="block text-xs text-gray-500 mb-0.5">创作模式</label><select value={editFields.narrativeMode || 'mode3'} onChange={e => setEditFields({...editFields, narrativeMode: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200"><option value="mode1">模式1·沉浸扮演</option><option value="mode2">模式2·上帝视角</option><option value="mode3">模式3·混合</option></select></div>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <div><label className="block text-xs text-gray-500 mb-0.5">严格度</label><select value={editFields.strictMode || 'strict'} onChange={e => setEditFields({...editFields, strictMode: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200"><option value="strict">严格</option><option value="loose">宽松</option></select></div>
-                  <div><label className="block text-xs text-gray-500 mb-0.5">工作流</label><select value={editFields.workflowMode || 'guided'} onChange={e => setEditFields({...editFields, workflowMode: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200"><option value="guided">引导</option><option value="flexible">灵活</option></select></div>
-                  <div><label className="block text-xs text-gray-500 mb-0.5">前情提要</label><select value={editFields.recapMode || 'N'} onChange={e => setEditFields({...editFields, recapMode: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200"><option value="N">不开启</option><option value="Y">开启</option></select></div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><label className="block text-xs text-gray-500 mb-0.5">定期总结</label><select value={editFields.periodicSummary || 'O'} onChange={e => setEditFields({...editFields, periodicSummary: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200"><option value="O">开启</option><option value="P">不开启</option></select></div>
-                  <div><label className="block text-xs text-gray-500 mb-0.5">规则自检</label><select value={editFields.ruleSelfCheck || 'Y'} onChange={e => setEditFields({...editFields, ruleSelfCheck: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200"><option value="Y">开启</option><option value="N">不开启</option></select></div>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-0.5">帮回辅助系统</label>
-                  <select value={editFields.banghuiEnabled || 'N'} onChange={e => setEditFields({...editFields, banghuiEnabled: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200"><option value="N">关闭</option><option value="Y">开启</option></select>
-                </div>
-                <button onClick={handleSaveManual} className="px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded">💾 保存设定</button>
-              </div>
-            </div>
+          <DiscussManagePanel editFields={editFields} setEditFields={setEditFields} onSave={handleSaveManual} />
+        </div>
       )}
 
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-3xl mx-auto space-y-3">
           {messages.length === 0 && (
-            <div className="text-center text-gray-600 text-sm py-16">
+            <div className="text-center py-12">
               <div className="text-4xl mb-4">💬</div>
-              <p>和 AI 讨论你的剧本创意。切换页面不会丢失进度。</p>
-              <p className="text-xs mt-2">讨论中可随时点「📥 应用到剧本」覆盖现有设定。</p>
-              {!activeConfigId && <p className="text-red-400 mt-2">请在顶部选择 AI 配置</p>}
+              <p className="text-gray-500 text-sm mb-6">和 AI 讨论你的剧本创意。切换页面不会丢失进度。</p>
+              {!activeConfigId ? (
+                <p className="text-red-400 text-sm">请在顶部选择 AI 配置</p>
+              ) : (
+                <div className="flex flex-col gap-2 max-w-xs mx-auto">
+                  <button
+                    onClick={() => { setInput('帮我想一个世界观'); setMessages([]); }}
+                    className="px-4 py-2 text-sm bg-gray-800 hover:bg-purple-900/40 border border-gray-700 hover:border-purple-500/50 text-gray-300 hover:text-purple-300 rounded-xl transition-colors text-left"
+                  >
+                    🎯 帮我想一个世界观
+                  </button>
+                  <button
+                    onClick={() => { setInput('帮我设计一个主角，包括性格、背景故事和说话风格'); setMessages([]); }}
+                    className="px-4 py-2 text-sm bg-gray-800 hover:bg-purple-900/40 border border-gray-700 hover:border-purple-500/50 text-gray-300 hover:text-purple-300 rounded-xl transition-colors text-left"
+                  >
+                    👤 帮我设计一个主角
+                  </button>
+                  <button
+                    onClick={() => { setInput('根据当前剧本设定，帮我规划主线任务和章节划分'); setMessages([]); }}
+                    className="px-4 py-2 text-sm bg-gray-800 hover:bg-purple-900/40 border border-gray-700 hover:border-purple-500/50 text-gray-300 hover:text-purple-300 rounded-xl transition-colors text-left"
+                  >
+                    📖 帮我规划剧情结构
+                  </button>
+                </div>
+              )}
             </div>
           )}
           {messages.map((m, i) => (
@@ -453,23 +428,13 @@ ${JSON.stringify(getFields(), null, 2)}`;
         </div>
       )}
 
-      <div className="flex-shrink-0 bg-gray-900 border-t border-gray-800 p-4">
-        <div className="max-w-3xl mx-auto flex gap-3">
-          <textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-            placeholder="输入你的剧本想法... (Enter 发送)"
-            className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-100 focus:outline-none focus:border-purple-500 resize-none h-12"
-            rows={1} disabled={loading || !activeConfigId} />
-          <button onClick={handleUndo} disabled={messages.length < 2 || loading} className="px-4 h-12 bg-gray-700 hover:bg-gray-600 disabled:opacity-30 text-gray-300 rounded-xl text-sm font-medium flex-shrink-0 flex items-center" title="撤回最后一轮对话">↩ 撤回</button>
-          <button onClick={handleExtractChars} disabled={extracting || messages.length === 0 || !activeConfigId} className="px-4 h-12 bg-blue-700 hover:bg-blue-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0 flex items-center">{extracting ? '⏳' : '👥 角色'}</button>
-          {targetScriptId && (
-            <button onClick={handleApply} disabled={applying || messages.length === 0 || !activeConfigId} className="px-4 h-12 bg-amber-700 hover:bg-amber-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0 flex items-center">{applying ? '⏳' : '📥 应用'}</button>
-          )}
-          {!targetScriptId && (
-            <button onClick={handleGenerate} disabled={generating || messages.length === 0 || !activeConfigId} className="px-4 h-12 bg-green-700 hover:bg-green-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0 flex items-center">{generating ? '⏳' : '📝 生成'}</button>
-          )}
-          <button onClick={handleSend} disabled={!input.trim() || loading || !activeConfigId} className="px-5 h-12 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0 flex items-center">发送</button>
-        </div>
-      </div>
+      <DiscussActionBar
+        input={input} setInput={setInput}
+        loading={loading} generating={generating} extracting={extracting} applying={applying}
+        targetScriptId={targetScriptId} messagesLen={messages.length} activeConfigId={activeConfigId}
+        onSend={handleSend} onUndo={handleUndo} onExtractChars={handleExtractChars}
+        onApply={handleApply} onGenerate={handleGenerate}
+      />
     </div>
   );
 }

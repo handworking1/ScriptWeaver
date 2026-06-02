@@ -1,5 +1,47 @@
 # 叙世 · ScriptWeaver 更新说明
 
+## v1.3.0 (2026-06-02)
+
+### 🆕 新功能
+- **🔍 对话内搜索**：聊天页头部新增搜索框，实时过滤消息内容，显示匹配条数
+- **📜 剧本速览面板**：聊天中点击「📜 剧本」即可查看当前剧本的完整设定（世界观、主线、金手指等），无需退出聊天
+- **↩ 撤销发送**：聊天页新增撤销按钮（↩），一键删除最后一条用户消息及 AI 回复，重新输入
+- **🚀 首次使用引导**：无剧本或无 AI 配置时，聊天页显示三步引导卡片（创建剧本→配置 AI→开始创作），附直达按钮
+- **💡 AI 讨论快捷提问**：讨论页空白区新增「帮我想一个世界观」「帮我设计一个主角」「帮我规划剧情结构」三个快捷按钮
+
+### ✨ 改进
+- **发送按钮视觉**：禁用时 `opacity-40` 替代暗灰色，不再误以为按钮损坏
+- **AI 思考中指示器**：独立脉动条显示在输入框上方（`isStreaming && !streamingContent`），与消息区明确区分
+- **错误提示优化**：顶部横幅 toast 风格（红色 + ✕ 关闭），5 秒自动消失
+- **API 错误人性化**：401→"Key 无效" · 429→"请求过频" · 网络断开→"无法连接" · 超时→"请求超时"，5 个 API 调用点统一使用 `friendlyError()`
+- **TokenBar 提示**：hover 显示上下文窗口用量说明和费用估算含义
+- **角色头像增强**：无头像时首字加大（`text-base`），背景色根据角色名生成唯一 HSL 色相
+- **发送按钮**：流式传输中发送按钮也显示为禁用态（`disabled={isStreaming}`）
+
+### 🔧 修复
+- `finishStreaming` DB 写入失败时不再清空 `streamingContent`——用户可复制回复内容
+- `sendMessage` 使用 `set(state => ...)` 消除异步窗口期 `displayMessages` 陈旧闭包
+- `useIpcListeners` 使用 `useRef` 持有回调引用，避免 ESLint exhaustive-deps 警告
+- `chat:send` 新增输入校验：configId 格式、messages 长度 ≤200、每条消息 role/content 合法性
+- `AIConfigPage` 四个 `load*` 函数声明顺序修复（移到 useEffect 之上）
+- `CharacterCompendium` 函数声明顺序修复
+- 移除 `CharactersPage`/`ScriptsPage`/`HistoryPage`/`ImportExportButtons` 未使用的 import 和 state
+
+### 🏗 架构
+- **ESLint 集成**：flat config（v10），`ts` + `react-hooks` 插件，0 error / 105 warning
+- **CI 多平台**：GitHub Actions 矩阵扩展为 `ubuntu-latest` + `windows-latest` + `macos-latest`
+- **组件测试**：`@testing-library/react` + `jest-environment-jsdom`，ChatInput 6 个渲染测试（Enter/Shift+Enter/禁用态/帮回/空输入）
+- **execAll<T>/execOne<T> 泛型化**：6 个 CRUD 模块全部添加 `*Row` 返回类型，移除 5 处 `as any` 强转
+- **preload 零 any**：12 个 `Ipc*Data/Ipc*Update` 接口覆盖所有 IPC 参数
+- **safeStorage 不可用警告**：IPC 暴露 `isEncryptionAvailable`，保存 API Key 时密钥链不可用弹出确认框
+- **URL 规范化**：`normalizeApiUrl()` 自动处理尾部 `/` 和已含 `/v1` 路径
+- **tokenLimit 动态化**：`refreshTokenLimit()` 从 AI 配置的 `maxTokens` 读取，切换模型自动更新
+- **token 成本模型感知**：10 个模型的价格映射表 + 部分名称匹配，`estimateCost` 新增 `model` 参数
+- **AIDiscussPage 继续拆分**：新增 `DiscussActionBar.tsx`（底部操作栏），主文件降至 ~400 行
+- **ScriptPreview 组件**：聊天页独立剧本速览侧边抽屉
+
+---
+
 ## v1.2.0 (2026-06-02)
 
 ### 🆕 新功能

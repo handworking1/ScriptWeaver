@@ -4,7 +4,6 @@ import { useScriptStore } from '@/stores/scriptStore';
 import { useConfigStore } from '@/stores/configStore';
 import { useNavStore } from '@/stores/navStore';
 import { CharacterCard } from '@/components/CharacterCard';
-import { SettingsDiscussion } from '@/components/SettingsDiscussion';
 import { generateId } from '@/lib/id';
 import type { Character } from '@/types';
 
@@ -17,7 +16,6 @@ export function CharactersPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
-  const [showDiscuss, setShowDiscuss] = useState(false);
 
   // Form state
   const [name, setName] = useState('');
@@ -186,14 +184,6 @@ export function CharactersPage() {
                     <div className="flex gap-2">
                       <button
                         type="button"
-                        onClick={() => setShowDiscuss(true)}
-                        disabled={!activeConfigId}
-                        className="text-xs text-blue-400 hover:text-blue-300 disabled:text-gray-600"
-                      >
-                        💬 讨论
-                      </button>
-                      <button
-                        type="button"
                         onClick={handleAiComplete}
                         disabled={aiLoading || !name.trim() || !activeConfigId}
                         className="text-xs text-purple-400 hover:text-purple-300 disabled:text-gray-600"
@@ -202,14 +192,6 @@ export function CharactersPage() {
                       </button>
                     </div>
                   </div>
-                  {showDiscuss && activeConfigId && (
-                    <SettingsDiscussion
-                      configId={activeConfigId}
-                      type="character"
-                      fields={{ name, personality, background, speakingStyle, appearance }}
-                      onClose={() => setShowDiscuss(false)}
-                    />
-                  )}
                   <input
                     type="text"
                     value={name}

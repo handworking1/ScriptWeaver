@@ -4,7 +4,6 @@ import { useConfigStore } from '@/stores/configStore';
 import { useNavStore } from '@/stores/navStore';
 import { ScriptCard } from '@/components/ScriptCard';
 import { ImportExportButtons } from '@/components/ImportExportButtons';
-import { SettingsDiscussion } from '@/components/SettingsDiscussion';
 import { generateId } from '@/lib/id';
 import type { Script } from '@/types';
 
@@ -15,7 +14,6 @@ export function ScriptsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingScript, setEditingScript] = useState<Script | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
-  const [showDiscuss, setShowDiscuss] = useState(false);
 
   // Form state
   const [title, setTitle] = useState('');

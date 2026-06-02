@@ -1,7 +1,8 @@
 import { execAll, execOne, run } from './utils';
+import type { TemplateRow } from './types';
 
-export function getAllPromptTemplates() { return execAll('SELECT * FROM prompt_templates ORDER BY is_built_in DESC, created_at ASC'); }
-export function getPromptTemplate(id: string) { return execOne('SELECT * FROM prompt_templates WHERE id = ?', [id]); }
+export function getAllPromptTemplates(): TemplateRow[] { return execAll<TemplateRow>('SELECT * FROM prompt_templates ORDER BY is_built_in DESC, created_at ASC'); }
+export function getPromptTemplate(id: string): TemplateRow | null { return execOne<TemplateRow>('SELECT * FROM prompt_templates WHERE id = ?', [id]); }
 
 export function createPromptTemplate(data: { id: string; name: string; description?: string; systemPrompt: string; isBuiltIn?: boolean; createdAt: number }) {
   run('INSERT INTO prompt_templates (id, name, description, system_prompt, is_built_in, created_at) VALUES (?, ?, ?, ?, ?, ?)',

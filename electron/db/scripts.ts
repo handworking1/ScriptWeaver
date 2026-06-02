@@ -1,7 +1,8 @@
 import { execAll, execOne, run } from './utils';
+import type { ScriptRow } from './types';
 
-export function getAllScripts() { return execAll('SELECT * FROM scripts ORDER BY updated_at DESC'); }
-export function getScript(id: string) { return execOne('SELECT * FROM scripts WHERE id = ?', [id]); }
+export function getAllScripts(): ScriptRow[] { return execAll<ScriptRow>('SELECT * FROM scripts ORDER BY updated_at DESC'); }
+export function getScript(id: string): ScriptRow | null { return execOne<ScriptRow>('SELECT * FROM scripts WHERE id = ?', [id]); }
 
 export function createScript(data: { id: string; title: string; worldSetting?: string; background?: string; extraData?: string; createdAt: number; updatedAt: number }) {
   run('INSERT INTO scripts (id, title, world_setting, background, extra_data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',

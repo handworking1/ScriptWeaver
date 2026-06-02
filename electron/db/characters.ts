@@ -1,7 +1,8 @@
 import { execAll, execOne, run } from './utils';
+import type { CharacterRow } from './types';
 
-export function getAllCharacters(scriptId: string) { return execAll('SELECT * FROM characters WHERE script_id = ? ORDER BY created_at ASC', [scriptId]); }
-export function getCharacter(id: string) { return execOne('SELECT * FROM characters WHERE id = ?', [id]); }
+export function getAllCharacters(scriptId: string): CharacterRow[] { return execAll<CharacterRow>('SELECT * FROM characters WHERE script_id = ? ORDER BY created_at ASC', [scriptId]); }
+export function getCharacter(id: string): CharacterRow | null { return execOne<CharacterRow>('SELECT * FROM characters WHERE id = ?', [id]); }
 
 export function createCharacter(data: { id: string; scriptId: string; name: string; personality?: string; background?: string; speakingStyle?: string; appearance?: string; avatar?: string; createdAt: number }) {
   run('INSERT INTO characters (id, script_id, name, personality, background, speaking_style, appearance, avatar, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',

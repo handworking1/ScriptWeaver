@@ -40,3 +40,29 @@ export function validateApiKey(key: unknown, label: string): void {
   if (typeof key !== 'string') return; // empty key is OK (e.g. Ollama)
   if (key.length > MAX_API_KEY_LEN) throw new Error(`${label} 超过最大长度 ${MAX_API_KEY_LEN}`);
 }
+
+/**
+ * Normalize a user-supplied API base URL to the full chat completions endpoint.
+ * Handles common mistakes: trailing slashes, path already includes /v1, etc.
+ *
+ * 规范化用户输入的 API 基础地址为完整的 chat completions 端点。
+ * 处理常见错误：尾部斜杠、路径已含 /v1 等。
+ *
+ * Examples:
+ *   https://api.openai.com          → https://api.openai.com/v1/chat/completions
+ *   https://api.openai.com/         → https://api.openai.com/v1/chat/completions
+ *   https://api.openai.com/v1       → https://api.openai.com/v1/chat/completions
+ *   https://api.deepseek.com/v1/    → https://api.deepseek.com/v1/chat/completions
+ *   http://localhost:11434/v1       → http://localhost:11434/v1/chat/completions
+ *   https://api.com/v1/chat/completions → https://api.com/v1/chat/completions (passthrough)
+ */
+export function normalizeApiUrl(rawUrl: string): string {
+  // Strip trailing slashes / 去尾部斜杠
+  let url = rawUrl.replace(/\/+$/, '');
+
+  // Already a complete endpoint — use as-is / 已是完整端点
+  if (url.endsWith('/chat/completions')) return url;
+
+  // Append standard OpenAI-compatible path / 追加标准路径
+  return url + '/v1/chat/completions';
+}

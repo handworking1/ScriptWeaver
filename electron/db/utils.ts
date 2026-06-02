@@ -32,13 +32,16 @@ export function saveDbSync(): void {
   fs.writeFileSync(dbPath, Buffer.from(db.export()));
 }
 
-export function execAll(sql: string, params?: any[]): any[] {
+/** Execute a SELECT query returning multiple rows, typed as T[].
+ *  Defaults to `Record<string, unknown>` when T is omitted.
+ *  执行 SELECT 查询返回多行，默认返回 Record<string, unknown>。 */
+export function execAll<T = Record<string, unknown>>(sql: string, params?: any[]): T[] {
   const d = getDb();
   if (params) {
     const stmt = d.prepare(sql);
     stmt.bind(params);
-    const rows: any[] = [];
-    while (stmt.step()) rows.push(stmt.getAsObject());
+    const rows: T[] = [];
+    while (stmt.step()) rows.push(stmt.getAsObject() as unknown as T);
     stmt.free();
     return rows;
   }
@@ -48,16 +51,18 @@ export function execAll(sql: string, params?: any[]): any[] {
   return values.map((row: any[]) => {
     const obj: any = {};
     columns.forEach((col, i) => { obj[col] = row[i]; });
-    return obj;
+    return obj as T;
   });
 }
 
-export function execOne(sql: string, params: any[]): any | null {
+/** Execute a SELECT query returning a single row or null.
+ *  执行 SELECT 查询返回单行或 null。 */
+export function execOne<T = Record<string, unknown>>(sql: string, params: any[]): T | null {
   const d = getDb();
   const stmt = d.prepare(sql);
   stmt.bind(params);
-  let row: any = null;
-  if (stmt.step()) row = stmt.getAsObject();
+  let row: T | null = null;
+  if (stmt.step()) row = stmt.getAsObject() as unknown as T;
   stmt.free();
   return row;
 }

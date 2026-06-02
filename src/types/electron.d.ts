@@ -57,6 +57,8 @@ export interface ElectronAPI {
   importData: (data: any) => Promise<{ success: boolean }>;
 
   pickAvatar: () => Promise<string | null>;
+
+  isEncryptionAvailable: () => Promise<boolean>;
 }
 
 declare global {

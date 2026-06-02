@@ -1,4 +1,4 @@
-import { ipcMain, dialog, BrowserWindow } from 'electron';
+import { ipcMain, dialog, BrowserWindow, safeStorage } from 'electron';
 import {
   getAllScripts, getScript, createScript, updateScript, deleteScript,
   getAllCharacters, getCharacter, createCharacter, updateCharacter, deleteCharacter,
@@ -12,8 +12,20 @@ import {
 } from './db';
 import { encryptApiKey, decryptApiKey } from './safe-storage';
 import { aiCompleteScriptPrompt, aiCompleteCharacterPrompt, discussScriptPrompt, discussCharacterPrompt } from './prompts';
-import { validateId, validateText, validateRole } from './validate';
+import { validateId, validateText, validateRole, normalizeApiUrl } from './validate';
 import type { ScriptRow, CharacterRow, AIConfigRow, ConversationRow, MessageRow, TemplateRow } from './db/types';
+
+/** en: Translate raw fetch errors into user-friendly messages.
+ *  zh: 将原始 fetch 错误转为用户可读的提示。 */
+function friendlyError(status: number, message: string): string {
+  if (status === 401) return '❌ API Key 无效或已过期，请在 AI 配置中更新。';
+  if (status === 403) return '❌ 访问被拒绝，请检查 API Key 权限。';
+  if (status === 429) return '⏳ 请求过于频繁，请稍后再试。';
+  if (status === 500 || status === 502 || status === 503) return `❌ API 服务器故障 (${status})，请稍后重试。`;
+  if (message.includes('ENOTFOUND') || message.includes('ECONNREFUSED') || message.includes('fetch failed')) return '🔌 无法连接到 API 服务器，请检查网络或 API 地址。';
+  if (message.includes('ETIMEDOUT') || message.includes('AbortError')) return '⏰ 请求超时，请检查网络或 API 地址。';
+  return `❌ API 错误 (${status}): ${message.slice(0, 200)}`;
+}
 
 let activeAbortController: AbortController | null = null;
 
@@ -25,13 +37,18 @@ function rowToScript(row: ScriptRow) {
     workflowMode: 'guided', recapMode: 'N', periodicSummary: 'O', ruleSelfCheck: 'Y', banghuiEnabled: 'N',
   };
   let extraData = { ...fallback };
-  try { if (row.extra_data) extraData = { ...fallback, ...JSON.parse(row.extra_data) }; } catch (err) { console.error('[rowToScript] JSON parse error:', err); }
+  let parseError = false;
+  try { if (row.extra_data) extraData = { ...fallback, ...JSON.parse(row.extra_data) }; } catch (err) {
+    console.error('[rowToScript] JSON parse error for script', row.id, '— falling back to defaults:', err);
+    parseError = true;
+  }
   return {
     id: row.id,
     title: row.title,
     worldSetting: row.world_setting,
     background: row.background,
     extraData,
+    _parseError: parseError || undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -104,7 +121,7 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('script:getAll', () => getAllScripts().map(rowToScript));
   ipcMain.handle('script:get', (_e, id: string) => {
     const row = getScript(id);
-    return row ? rowToScript(row) : null;
+    return row ? rowToScript(row!) : null;
   });
   ipcMain.handle('script:create', (_e, data: any) => {
     validateId(data.id, '剧本ID');
@@ -115,7 +132,7 @@ export function registerIpcHandlers(): void {
       extraData: data.extraData ? JSON.stringify(data.extraData) : undefined,
       createdAt: data.createdAt, updatedAt: data.updatedAt,
     });
-    return rowToScript(row);
+    return rowToScript(row!);
   });
   ipcMain.handle('script:update', (_e, id: string, data: any) => {
     const updateData: any = { ...data };
@@ -130,7 +147,7 @@ export function registerIpcHandlers(): void {
     getAllCharacters(scriptId).map(rowToCharacter));
   ipcMain.handle('character:get', (_e, id: string) => {
     const row = getCharacter(id);
-    return row ? rowToCharacter(row) : null;
+    return row ? rowToCharacter(row!) : null;
   });
   ipcMain.handle('character:create', (_e, data: any) => {
     validateId(data.id, '角色ID');
@@ -142,7 +159,7 @@ export function registerIpcHandlers(): void {
       speakingStyle: data.speakingStyle, appearance: data.appearance,
       avatar: data.avatar, createdAt: data.createdAt,
     });
-    return rowToCharacter(row);
+    return rowToCharacter(row!);
   });
   ipcMain.handle('character:update', (_e, id: string, data: any) => {
     const row = updateCharacter(id, data);
@@ -154,7 +171,7 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('aiConfig:getAll', () => getAllAIConfigs().map(rowToAIConfig));
   ipcMain.handle('aiConfig:get', (_e, id: string) => {
     const row = getAIConfig(id);
-    return row ? rowToAIConfig(row) : null;
+    return row ? rowToAIConfig(row!) : null;
   });
   ipcMain.handle('aiConfig:create', (_e, data: any) => {
     validateId(data.id, '配置ID');
@@ -169,7 +186,7 @@ export function registerIpcHandlers(): void {
       topP: data.topP, frequencyPenalty: data.frequencyPenalty,
       presencePenalty: data.presencePenalty,
     });
-    return rowToAIConfig(row);
+    return rowToAIConfig(row!);
   });
   ipcMain.handle('aiConfig:update', (_e, id: string, data: any) => {
     const updateData: any = { ...data };
@@ -187,7 +204,7 @@ export function registerIpcHandlers(): void {
     getAllConversations(scriptId, characterId).map(rowToConversation));
   ipcMain.handle('conversation:get', (_e, id: string) => {
     const row = getConversation(id);
-    return row ? rowToConversation(row) : null;
+    return row ? rowToConversation(row!) : null;
   });
   ipcMain.handle('conversation:create', (_e, data: any) => {
     validateId(data.id, '对话ID');
@@ -197,7 +214,7 @@ export function registerIpcHandlers(): void {
       parentId: data.parentId ?? null,
       title: data.title, createdAt: data.createdAt, updatedAt: data.updatedAt,
     });
-    return rowToConversation(row);
+    return rowToConversation(row!);
   });
   ipcMain.handle('conversation:branches', (_e, id: string) => getConversationBranches(id));
   ipcMain.handle('conversation:update', (_e, id: string, data: any) => {
@@ -229,14 +246,14 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('template:getAll', () => getAllPromptTemplates().map(rowToTemplate));
   ipcMain.handle('template:get', (_e, id: string) => {
     const row = getPromptTemplate(id);
-    return row ? rowToTemplate(row) : null;
+    return row ? rowToTemplate(row!) : null;
   });
   ipcMain.handle('template:create', (_e, data: any) => {
     const row = createPromptTemplate({
       id: data.id, name: data.name, description: data.description,
       systemPrompt: data.systemPrompt, isBuiltIn: false, createdAt: data.createdAt,
     });
-    return rowToTemplate(row);
+    return rowToTemplate(row!);
   });
   ipcMain.handle('template:update', (_e, id: string, data: any) => {
     const row = updatePromptTemplate(id, data);
@@ -246,7 +263,7 @@ export function registerIpcHandlers(): void {
 
   // ─── Chat: Summary ──────────────────────────────────────
   ipcMain.handle('chat:summary', async (event, configId: string, messages: any[], characterName: string) => {
-    const configRow = getAIConfig(configId) as any;
+    const configRow = getAIConfig(configId);
     if (!configRow) throw new Error('AI config not found');
 
     const apiKey = decryptApiKey(configRow.api_key_encrypted);
@@ -267,7 +284,7 @@ export function registerIpcHandlers(): void {
     };
 
     try {
-      const response = await fetch(`${configRow.api_url}/v1/chat/completions`, {
+      const response = await fetch(normalizeApiUrl(configRow.api_url), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -277,7 +294,8 @@ export function registerIpcHandlers(): void {
       });
 
       if (!response.ok) {
-        throw new Error(`API error ${response.status}: ${await response.text()}`);
+        const errText = await response.text();
+        throw new Error(friendlyError(response.status, errText));
       }
 
       const json = await response.json();
@@ -293,6 +311,36 @@ export function registerIpcHandlers(): void {
   ipcMain.on('chat:send', (_event, configId: string, messages: any[], failoverConfigId?: string) => {
     const win = BrowserWindow.fromWebContents(_event.sender);
     if (!win) return;
+
+    // ── Input validation / 输入校验 ──
+    try {
+      validateId(configId, '配置ID');
+    } catch (err: any) {
+      win.webContents.send('chat:error', { error: `配置ID无效: ${err.message}`, conversationId: '' });
+      return;
+    }
+    if (!Array.isArray(messages) || messages.length > 200) {
+      win.webContents.send('chat:error', { error: `消息数量超限 (最大200, 实际${Array.isArray(messages) ? messages.length : 0})`, conversationId: '' });
+      return;
+    }
+    if (failoverConfigId && failoverConfigId !== configId) {
+      try { validateId(failoverConfigId, '备用配置ID'); } catch (err: any) {
+        win.webContents.send('chat:error', { error: `备用配置ID无效: ${err.message}`, conversationId: '' });
+        return;
+      }
+    }
+    // en: 校验每条消息的 role/content 基本结构 / Validate basic structure of each message
+    for (let i = 0; i < messages.length; i++) {
+      const m = messages[i];
+      if (!m || typeof m.role !== 'string' || !['user', 'assistant', 'system'].includes(m.role)) {
+        win.webContents.send('chat:error', { error: `消息[${i}] role 无效`, conversationId: '' });
+        return;
+      }
+      if (typeof m.content !== 'string' || m.content.length > 100000) {
+        win.webContents.send('chat:error', { error: `消息[${i}] content 无效或超长`, conversationId: '' });
+        return;
+      }
+    }
 
     // en: 中止前一个请求以避免并发污染 / Abort previous request to prevent concurrent pollution
     if (activeAbortController) { activeAbortController.abort(); }
@@ -315,7 +363,7 @@ export function registerIpcHandlers(): void {
     let lastError: string = '';
 
     for (const cid of configIds) {
-      const configRow = getAIConfig(cid) as any;
+      const configRow = getAIConfig(cid);
       if (!configRow) continue;
 
       const apiKey = decryptApiKey(configRow.api_key_encrypted);
@@ -331,7 +379,7 @@ export function registerIpcHandlers(): void {
       };
 
       try {
-        const response = await fetch(`${configRow.api_url}/v1/chat/completions`, {
+        const response = await fetch(normalizeApiUrl(configRow.api_url), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -343,7 +391,7 @@ export function registerIpcHandlers(): void {
 
         if (!response.ok) {
           const errText = await response.text();
-          lastError = `API error ${response.status}: ${errText}`;
+          lastError = friendlyError(response.status, errText);
           continue; // try failover
         }
 
@@ -409,13 +457,13 @@ export function registerIpcHandlers(): void {
 
   // ─── API Test Connection ────────────────────────────────
   ipcMain.handle('api:test', async (_event, configId: string) => {
-    const configRow = getAIConfig(configId) as any;
+    const configRow = getAIConfig(configId);
     if (!configRow) return { ok: false, error: '配置不存在' };
     const apiKey = decryptApiKey(configRow.api_key_encrypted);
     if (!apiKey) return { ok: false, error: '未设置 API Key' };
 
     try {
-      const response = await fetch(`${configRow.api_url}/v1/chat/completions`, {
+      const response = await fetch(normalizeApiUrl(configRow.api_url), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         body: JSON.stringify({
@@ -427,7 +475,7 @@ export function registerIpcHandlers(): void {
       });
       if (!response.ok) {
         const errText = await response.text();
-        return { ok: false, error: `HTTP ${response.status}: ${errText.slice(0, 200)}` };
+        return { ok: false, error: friendlyError(response.status, errText) };
       }
       const json = await response.json();
       const reply = json.choices?.[0]?.message?.content ?? '';
@@ -439,7 +487,7 @@ export function registerIpcHandlers(): void {
 
   // ─── AI Complete ────────────────────────────────────────
   ipcMain.handle('ai:complete', async (_event, configId: string, type: 'script' | 'character', partial: any) => {
-    const configRow = getAIConfig(configId) as any;
+    const configRow = getAIConfig(configId);
     if (!configRow) throw new Error('AI config not found');
     const apiKey = decryptApiKey(configRow.api_key_encrypted);
 
@@ -448,7 +496,7 @@ export function registerIpcHandlers(): void {
       : aiCompleteCharacterPrompt(partial);
 
     try {
-      const response = await fetch(`${configRow.api_url}/v1/chat/completions`, {
+      const response = await fetch(normalizeApiUrl(configRow.api_url), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         body: JSON.stringify({
@@ -459,7 +507,10 @@ export function registerIpcHandlers(): void {
           stream: false,
         }),
       });
-      if (!response.ok) throw new Error(`API error ${response.status}`);
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(friendlyError(response.status, errText));
+      }
       const json = await response.json();
       const text = json.choices?.[0]?.message?.content ?? '';
       // Extract JSON from response (handle markdown code blocks)
@@ -472,7 +523,7 @@ export function registerIpcHandlers(): void {
 
   // ─── AI Discuss Chat ────────────────────────────────────
   ipcMain.handle('ai:discuss', async (_event, configId: string, type: string, fields: any, history: any[]) => {
-    const configRow = getAIConfig(configId) as any;
+    const configRow = getAIConfig(configId);
     if (!configRow) return { reply: '', error: '配置不存在' };
     const apiKey = decryptApiKey(configRow.api_key_encrypted);
 
@@ -481,7 +532,7 @@ export function registerIpcHandlers(): void {
       : discussCharacterPrompt(fields);
 
     try {
-      const response = await fetch(`${configRow.api_url}/v1/chat/completions`, {
+      const response = await fetch(normalizeApiUrl(configRow.api_url), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         body: JSON.stringify({
@@ -490,7 +541,10 @@ export function registerIpcHandlers(): void {
           temperature: 0.7, max_tokens: 8192, stream: false,
         }),
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(friendlyError(response.status, errText));
+      }
       const json = await response.json();
       return { reply: json.choices?.[0]?.message?.content ?? '' };
     } catch (err: any) {
@@ -508,6 +562,9 @@ export function registerIpcHandlers(): void {
     importAllData(data);
     return { success: true };
   });
+
+  // ─── SafeStorage availability check ────────────────────
+  ipcMain.handle('safeStorage:isAvailable', () => safeStorage.isEncryptionAvailable());
 
   // ─── Avatar picker ──────────────────────────────────────
   ipcMain.handle('dialog:pickAvatar', async () => {

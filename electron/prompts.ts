@@ -61,6 +61,6 @@ export function discussCharacterPrompt(fields: Record<string, string>): string {
   return `你是角色设计顾问。用户正在设计角色：姓名「${fields.name || '未定'}」、性格「${fields.personality || '未定'}」、背景「${fields.background || '未定'}」、口癖「${fields.speakingStyle || '未定'}」、外貌「${fields.appearance || '未定'}」。请帮用户分析并给出建议。用中文回复，简洁直接。`;
 }
 
-export function testApiPrompt(model: string): string {
+export function testApiPrompt(_model: string): string {
   return '回复OK';
 }

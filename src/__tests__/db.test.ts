@@ -1,3 +1,4 @@
+/** @jest-environment node */
 /**
  * DB layer CRUD round-trip tests using in-memory sql.js.
  * Tests the most critical CRUD operations: scripts, characters.
@@ -107,7 +108,7 @@ describe('conversations + messages', () => {
   });
 
   test('create and get messages', () => {
-    const conv = createConversation({ id: 'conv1', scriptId: 's1', characterId: 'c1', title: 'Chat', createdAt: 1, updatedAt: 1 });
+    createConversation({ id: 'conv1', scriptId: 's1', characterId: 'c1', title: 'Chat', createdAt: 1, updatedAt: 1 });
     createMessage({ id: 'm1', conversationId: 'conv1', role: 'user', content: 'Hello', timestamp: 1 });
     createMessage({ id: 'm2', conversationId: 'conv1', role: 'assistant', content: 'Hi!', timestamp: 2 });
     const msgs = getAllMessages('conv1');
@@ -117,7 +118,7 @@ describe('conversations + messages', () => {
   });
 
   test('deleteMessagesAfter removes newer messages', () => {
-    const conv = createConversation({ id: 'conv1', scriptId: 's1', characterId: 'c1', title: 'Chat', createdAt: 1, updatedAt: 1 });
+    createConversation({ id: 'conv1', scriptId: 's1', characterId: 'c1', title: 'Chat', createdAt: 1, updatedAt: 1 });
     createMessage({ id: 'm1', conversationId: 'conv1', role: 'user', content: 'Keep', timestamp: 1 });
     createMessage({ id: 'm2', conversationId: 'conv1', role: 'assistant', content: 'Delete', timestamp: 2 });
     deleteMessagesAfter('conv1', 1);
@@ -126,7 +127,7 @@ describe('conversations + messages', () => {
   });
 
   test('delete conversation cascades messages', () => {
-    const conv = createConversation({ id: 'conv1', scriptId: 's1', characterId: 'c1', title: 'Chat', createdAt: 1, updatedAt: 1 });
+    createConversation({ id: 'conv1', scriptId: 's1', characterId: 'c1', title: 'Chat', createdAt: 1, updatedAt: 1 });
     createMessage({ id: 'm1', conversationId: 'conv1', role: 'user', content: 'Hello', timestamp: 1 });
     deleteConversation('conv1');
     expect(getConversation('conv1')).toBeNull();

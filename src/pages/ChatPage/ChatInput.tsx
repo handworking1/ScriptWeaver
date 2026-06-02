@@ -24,19 +24,31 @@ export function ChatInput({
 }: Props) {
   const [aiReplies, setAiReplies] = useState<string[]>([]);
   const [replyLoading, setReplyLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [mentionQuery, setMentionQuery] = useState('');
   const [mentionChars, setMentionChars] = useState<{ id: string; name: string }[]>([]);
   const [showMention, setShowMention] = useState(false);
 
+  /** Debounce timer for @mention query to avoid excessive DB reads on fast typing.
+   *  防抖定时器——快速输入时减少数据库查询次数。 */
+  const mentionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   /** Watch input for '@' — load matching characters from the script roster for autocomplete.
    *  监听输入中的@符号，从剧本角色列表加载匹配角色名供补全。
-   *  Stale-query guard / 过期查询防护：只展示最新查询的结果。 */
+   *  Debounced at 300ms + stale-query guard to prevent thundering-herd on fast typing.
+   *  300ms 防抖 + 过期查询防护，避免快速输入时的数据库风暴。 */
   useEffect(() => {
     if (chatMode !== 'world' || !scriptId) return;
     const atIdx = inputValue.lastIndexOf('@');
-    if (atIdx >= 0) {
-      const q = inputValue.slice(atIdx + 1);
-      if (q.includes(' ')) { setShowMention(false); return; }
+    if (atIdx < 0) { setShowMention(false); return; }
+
+    const q = inputValue.slice(atIdx + 1);
+    if (q.includes(' ')) { setShowMention(false); return; }
+
+    // Clear previous timer — debounce / 清除上一次定时器
+    if (mentionTimerRef.current) clearTimeout(mentionTimerRef.current);
+
+    mentionTimerRef.current = setTimeout(() => {
       setMentionQuery(q);
       (async () => {
         try {
@@ -49,7 +61,9 @@ export function ChatInput({
           }
         } catch { setShowMention(false); }
       })();
-    } else { setShowMention(false); }
+    }, 300);
+
+    return () => { if (mentionTimerRef.current) { clearTimeout(mentionTimerRef.current); mentionTimerRef.current = null; } };
   }, [inputValue, chatMode, scriptId]);
 
   const handleSend = () => {
@@ -160,7 +174,7 @@ export function ChatInput({
             <span className="text-sm">{replyLoading ? '⏳' : '✨'}</span>
           </button>
           <button onClick={handleSend} disabled={!inputValue.trim() || isStreaming}
-            className="px-6 h-12 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0 flex items-center">发送</button>
+            className="px-6 h-12 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white rounded-xl text-sm font-medium flex-shrink-0 flex items-center transition-opacity">发送</button>
         </div>
       </div>
     </>

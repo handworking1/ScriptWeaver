@@ -1,7 +1,8 @@
 import { execAll, execOne, run } from './utils';
+import type { AIConfigRow } from './types';
 
-export function getAllAIConfigs() { return execAll('SELECT * FROM ai_configs ORDER BY rowid ASC'); }
-export function getAIConfig(id: string) { return execOne('SELECT * FROM ai_configs WHERE id = ?', [id]); }
+export function getAllAIConfigs(): AIConfigRow[] { return execAll<AIConfigRow>('SELECT * FROM ai_configs ORDER BY rowid ASC'); }
+export function getAIConfig(id: string): AIConfigRow | null { return execOne<AIConfigRow>('SELECT * FROM ai_configs WHERE id = ?', [id]); }
 
 export function createAIConfig(data: { id: string; name: string; apiUrl: string; apiKeyEncrypted: string; model: string; temperature: number; maxTokens: number; topP: number; frequencyPenalty: number; presencePenalty: number }) {
   run('INSERT INTO ai_configs (id, name, api_url, api_key_encrypted, model, temperature, max_tokens, top_p, frequency_penalty, presence_penalty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',

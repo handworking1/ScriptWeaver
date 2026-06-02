@@ -1,6 +1,4 @@
 import { useScriptStore } from '@/stores/scriptStore';
-import { useCharacterStore } from '@/stores/characterStore';
-import { useConfigStore } from '@/stores/configStore';
 
 export function ImportExportButtons() {
   const loadScripts = useScriptStore((s) => s.loadScripts);

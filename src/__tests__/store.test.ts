@@ -1,3 +1,4 @@
+/** @jest-environment node */
 /**
  * Real Zustand store tests with mocked Electron IPC.
  * Tests the chatStore state machine: sendMessage → appendToken → finishStreaming.

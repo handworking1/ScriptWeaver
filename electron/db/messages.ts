@@ -1,6 +1,7 @@
 import { execAll, run } from './utils';
+import type { MessageRow } from './types';
 
-export function getAllMessages(conversationId: string) { return execAll('SELECT * FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC', [conversationId]); }
+export function getAllMessages(conversationId: string): MessageRow[] { return execAll<MessageRow>('SELECT * FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC', [conversationId]); }
 
 export function createMessage(data: { id: string; conversationId: string; role: string; content: string; timestamp: number }) {
   run('INSERT INTO messages (id, conversation_id, role, content, timestamp) VALUES (?, ?, ?, ?, ?)',

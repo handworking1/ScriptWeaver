@@ -50,6 +50,48 @@ export function ChatSetup({
     navigate('chat');
   };
 
+  const needsSetup = scripts.length === 0 || configs.length === 0;
+
+  if (needsSetup) {
+    /* Welcome guide for first-time users / 首次使用引导 */
+    return (
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-lg mx-auto mt-20">
+          <div className="text-center bg-gray-800/50 border border-gray-700 rounded-2xl p-8">
+            <div className="text-5xl mb-4">👋</div>
+            <h2 className="text-xl font-bold text-gray-100 mb-2">欢迎使用叙世</h2>
+            <p className="text-sm text-gray-400 mb-6">AI 驱动的叙事创作平台。从灵感到成书，每一步都有 AI 相伴。</p>
+            <div className="space-y-3 text-left">
+              <div className="flex gap-3 items-start p-3 bg-gray-800/70 rounded-xl">
+                <span className="text-lg flex-shrink-0">📝</span>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-200">第一步：创建剧本</div>
+                  <div className="text-xs text-gray-500 mt-0.5">输入你的故事标题，AI 自动补全世界观和背景</div>
+                  <button onClick={() => navigate('scripts')} className="mt-2 px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded-lg">前往剧本管理</button>
+                </div>
+              </div>
+              <div className="flex gap-3 items-start p-3 bg-gray-800/70 rounded-xl">
+                <span className="text-lg flex-shrink-0">⚙️</span>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-200">第二步：配置 AI</div>
+                  <div className="text-xs text-gray-500 mt-0.5">选择一个预设模型，填入 API Key（加密存储）</div>
+                  <button onClick={() => navigate('aiConfig')} className="mt-2 px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded-lg">前往 AI 配置</button>
+                </div>
+              </div>
+              <div className="flex gap-3 items-start p-3 bg-gray-800/70 rounded-xl">
+                <span className="text-lg flex-shrink-0">💬</span>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-200">第三步：开始创作</div>
+                  <div className="text-xs text-gray-500 mt-0.5">回到这里，选择剧本和角色，开始沉浸式对话</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 overflow-y-auto p-6">
       <div className="max-w-lg mx-auto mt-20">

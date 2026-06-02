@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, safeStorage } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import path from 'path';
 import { initDatabase, saveDbSync } from './db';
 import { registerIpcHandlers } from './ipc-handlers';

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useConfigStore } from '@/stores/configStore';
 import { useTemplateStore } from '@/stores/templateStore';
+import { useNavStore } from '@/stores/navStore';
 import { generateId } from '@/lib/id';
 import { resolveTemplatePreview } from '@/lib/templateResolver';
 import type { AIConfig } from '@/types';
@@ -32,6 +33,8 @@ const MODEL_PRESETS = [
 ];
 
 export function AIConfigPage() {
+  const theme = useNavStore((s) => s.theme);
+  const isDark = theme === 'dark';
   const { configs, activeConfigId, failoverConfigId, loading, loadConfigs, addConfig, editConfig, removeConfig, setActiveConfig, setFailoverConfig } =
     useConfigStore();
   const { templates, loading: tplLoading, loadTemplates, addTemplate, editTemplate, removeTemplate } = useTemplateStore();
@@ -50,15 +53,6 @@ export function AIConfigPage() {
   const [hasExistingKey, setHasExistingKey] = useState(false);
   const [testingId, setTestingId] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null);
-
-  useEffect(() => {
-    loadConfigs();
-    loadTemplates();
-    loadGlobalRules();
-    loadProtagonist();
-    loadGmSettings();
-    loadShortcuts();
-  }, []);
 
   const loadGlobalRules = async () => {
     try {
@@ -148,6 +142,17 @@ export function AIConfigPage() {
     } catch { /* not set */ }
   };
 
+  // en: Load all persisted settings on mount / zh: 挂载时加载所有持久化设置
+  useEffect(() => {
+    loadConfigs();
+    loadTemplates();
+    loadGlobalRules();
+    loadProtagonist();
+    loadGmSettings();
+    loadShortcuts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const saveShortcuts = async () => {
     const filtered = shortcuts.filter((s) => s.trim());
     await window.electronAPI.setSetting('chat_shortcuts', JSON.stringify(filtered));
@@ -184,6 +189,15 @@ export function AIConfigPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.apiUrl.trim() || !form.model.trim()) return;
+
+    // en: Warn if encryption is unavailable (Linux without keychain) — API key stored as plaintext
+    // zh: 密钥链不可用时警告—API Key 以明文存储
+    if (form.apiKey && !(await window.electronAPI.isEncryptionAvailable())) {
+      const ok = confirm(
+        '⚠️ 系统密钥链不可用。API Key 将以明文存储，建议在支持密钥链的环境中运行（如 Windows/macOS 或安装了 gnome-keyring 的 Linux）。\n\n是否继续保存？'
+      );
+      if (!ok) return;
+    }
 
     const data = {
       name: form.name.trim(),
@@ -270,12 +284,12 @@ export function AIConfigPage() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">配置名称 *</label>
+                  <label className={`block text-sm mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>配置名称 *</label>
                   <input
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-purple-500"
+                    className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500 ${isDark ? 'bg-gray-900 border-gray-700 text-gray-100' : 'bg-white border-gray-300 text-gray-900'}`}
                     placeholder="如：OpenAI、DeepSeek"
                     required
                   />

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavStore } from '@/stores/navStore';
 import { useConfigStore } from '@/stores/configStore';
 import { useChatStore } from '@/stores/chatStore';
@@ -21,8 +21,11 @@ export function Sidebar() {
   const toggleTheme = useNavStore((s) => s.toggleTheme);
   const setActiveConfig = useConfigStore((s) => s.setActiveConfig);
   const { configs, activeConfigId } = useConfigStore();
-  const { tokenCount, totalTokensSession, estimatedCost } = useChatStore();
+  const { tokenCount, totalTokensSession, estimatedCost, tokenLimit, refreshTokenLimit } = useChatStore();
   const [showModelPicker, setShowModelPicker] = useState(false);
+
+  /** en: Sync token bar limit when active config changes / zh: 切换配置时同步 token 条上限 */
+  useEffect(() => { refreshTokenLimit(); }, [activeConfigId, refreshTokenLimit]);
 
   const isDark = theme === 'dark';
 
@@ -70,7 +73,7 @@ export function Sidebar() {
       )}
 
       <div className="mx-3 mb-2">
-        <TokenBar used={tokenCount} limit={1048576} totalInSession={totalTokensSession} estimatedCost={estimatedCost} compact />
+        <TokenBar used={tokenCount} limit={tokenLimit} totalInSession={totalTokensSession} estimatedCost={estimatedCost} compact />
       </div>
 
       <button onClick={toggleTheme}
