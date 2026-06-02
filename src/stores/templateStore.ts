@@ -26,7 +26,8 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
         loading: false,
         activeTemplateId: get().activeTemplateId ?? (templates.length > 0 ? templates[0].id : null),
       });
-    } catch {
+    } catch (err) {
+      console.error('[templateStore] loadTemplates error:', err);
       set({ loading: false });
     }
   },

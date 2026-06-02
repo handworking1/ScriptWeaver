@@ -13,10 +13,11 @@ import {
 import { encryptApiKey, decryptApiKey } from './safe-storage';
 import { aiCompleteScriptPrompt, aiCompleteCharacterPrompt, discussScriptPrompt, discussCharacterPrompt } from './prompts';
 import { validateId, validateText, validateRole } from './validate';
+import type { ScriptRow, CharacterRow, AIConfigRow, ConversationRow, MessageRow, TemplateRow } from './db/types';
 
 let activeAbortController: AbortController | null = null;
 
-function rowToScript(row: any) {
+function rowToScript(row: ScriptRow) {
   const fallback: any = {
     mainQuests: '', sideQuests: '', environment: '', map: '', data: '',
     tags: '', referenceWorks: '', eraBackground: '', protagonistDilemma: '',
@@ -24,7 +25,7 @@ function rowToScript(row: any) {
     workflowMode: 'guided', recapMode: 'N', periodicSummary: 'O', ruleSelfCheck: 'Y',
   };
   let extraData = { ...fallback };
-  try { if (row.extra_data) extraData = { ...fallback, ...JSON.parse(row.extra_data) }; } catch { /* ignore */ }
+  try { if (row.extra_data) extraData = { ...fallback, ...JSON.parse(row.extra_data) }; } catch (err) { console.error('[rowToScript] JSON parse error:', err); }
   return {
     id: row.id,
     title: row.title,
@@ -36,7 +37,7 @@ function rowToScript(row: any) {
   };
 }
 
-function rowToCharacter(row: any) {
+function rowToCharacter(row: CharacterRow) {
   return {
     id: row.id,
     scriptId: row.script_id,
@@ -50,7 +51,7 @@ function rowToCharacter(row: any) {
   };
 }
 
-function rowToAIConfig(row: any) {
+function rowToAIConfig(row: AIConfigRow) {
   return {
     id: row.id,
     name: row.name,
@@ -65,7 +66,7 @@ function rowToAIConfig(row: any) {
   };
 }
 
-function rowToConversation(row: any) {
+function rowToConversation(row: ConversationRow) {
   return {
     id: row.id,
     scriptId: row.script_id,
@@ -77,7 +78,7 @@ function rowToConversation(row: any) {
   };
 }
 
-function rowToTemplate(row: any) {
+function rowToTemplate(row: TemplateRow) {
   return {
     id: row.id,
     name: row.name,
@@ -88,7 +89,7 @@ function rowToTemplate(row: any) {
   };
 }
 
-function rowToMessage(row: any) {
+function rowToMessage(row: MessageRow) {
   return {
     id: row.id,
     conversationId: row.conversation_id,
@@ -132,6 +133,9 @@ export function registerIpcHandlers(): void {
     return row ? rowToCharacter(row) : null;
   });
   ipcMain.handle('character:create', (_e, data: any) => {
+    validateId(data.id, '角色ID');
+    validateText(data.name, '角色名', 100);
+    validateId(data.scriptId, '剧本ID');
     const row = createCharacter({
       id: data.id, scriptId: data.scriptId, name: data.name,
       personality: data.personality, background: data.background,
@@ -153,6 +157,9 @@ export function registerIpcHandlers(): void {
     return row ? rowToAIConfig(row) : null;
   });
   ipcMain.handle('aiConfig:create', (_e, data: any) => {
+    validateId(data.id, '配置ID');
+    validateText(data.name, '配置名', 100);
+    validateText(data.apiUrl, 'API地址', 500);
     // Encrypt the API key before storing
     const apiKeyEncrypted = data.apiKey ? encryptApiKey(data.apiKey) : '';
     const row = createAIConfig({
@@ -183,6 +190,8 @@ export function registerIpcHandlers(): void {
     return row ? rowToConversation(row) : null;
   });
   ipcMain.handle('conversation:create', (_e, data: any) => {
+    validateId(data.id, '对话ID');
+    validateId(data.scriptId, '剧本ID');
     const row = createConversation({
       id: data.id, scriptId: data.scriptId, characterId: data.characterId,
       parentId: data.parentId ?? null,
@@ -204,11 +213,10 @@ export function registerIpcHandlers(): void {
     validateId(data.id, '消息ID');
     validateRole(data.role);
     validateText(data.content, '消息内容', 50000);
-    const row = createMessage({
+    return createMessage({
       id: data.id, conversationId: data.conversationId,
       role: data.role, content: data.content, timestamp: data.timestamp,
     });
-    return rowToMessage(row);
   });
   ipcMain.handle('message:update', (_e, id: string, content: string) => {
     updateMessage(id, content);
