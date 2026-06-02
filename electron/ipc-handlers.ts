@@ -374,7 +374,8 @@ export function registerIpcHandlers(): void {
         // Remove blocks that should only appear once (separated by \n\n---\n\n)
         const blocks = content.split('\n\n---\n\n');
         // Keep: format rules (always at end), remove: worldview/background/rules blocks
-        const toRemove = ['【世界观】', '【故事背景】', '【全局规则', '【类型标签】', '【执行严格度】',
+        const toRemove = ['【世界观】', '【故事背景】', '【主线任务】', '【支线任务】',
+          '【全局规则', '【类型标签】', '【执行严格度】',
           '【创作模式】', '【GM主持设置】', '【玩家/主角设定】', '【[帮回]核心辅助系统',
           '【工作流】', '【前情提要】', '【定期总结】', '【规则自检】'];
         const kept = blocks.filter((b, i, arr) => {

@@ -87,6 +87,7 @@ export function ChatPage() {
     if (!resumeConversationId || !activeConfigId) return;
     const targetId = resumeConversationId;
     (async () => {
+      try {
       const conv = await window.electronAPI.getConversation(targetId);
       if (!conv) return;
       // Stale guard / 过期检查：如果resumeConversationId已变化，放弃本次结果
@@ -98,6 +99,10 @@ export function ChatPage() {
       await loadMessages(conv.id);
       setResumeConversation(null);
       setShowSetup(false);
+      } catch (err) {
+        console.error('[resumeConv]', err);
+        useChatStore.getState().setStreamError('恢复对话失败：' + (err as Error).message);
+      }
     })();
   }, [resumeConversationId, activeConfigId]);
 
@@ -205,7 +210,7 @@ export function ChatPage() {
   }, [openConvIds, activeConversationId]);
   const switchConv = async (id: string) => {
     useChatStore.getState().setActiveConversation(id);
-    useChatStore.getState().loadMessages(id);
+    await useChatStore.getState().loadMessages(id);
     const c = await window.electronAPI.getConversation(id);
     if (c) {
       selectScript(c.scriptId);
