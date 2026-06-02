@@ -474,6 +474,8 @@ AI:
 - CloseConv useEffect 回退 + 世界介绍卸载保护
 - 世界模式注入主线/支线任务 + 任务状态按对话隔离
 - 更改回复长度时保留互动选项
+- 系统设置指令加强（必须遵守+具体行为说明）
+- AI 写回复增加分情况错误提示
 
 **架构改进**
 - ESLint v10 flat config + CI 多平台矩阵（ubuntu/windows/macos）

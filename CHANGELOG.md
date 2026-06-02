@@ -47,6 +47,11 @@
 - 导入验证放宽 character_id 允许 null
 - switchConv 加 await 防消息加载竞态
 - resume 恢复对话加 try/catch 防静默失败
+- 世界模式 character_id NOT NULL 约束修复
+- 互动选项+系统设置指令加强（必须遵守+具体行为说明）
+- AI 写回复增加错误反馈（API/网络/格式分情况提示）
+- Token 统计修复：loadMessages 不再虚高累加
+- 消息长度校验统一为 100000
 
 ### 🏗 架构
 - ESLint v10 flat config + CI 多平台矩阵（ubuntu/windows/macos）
