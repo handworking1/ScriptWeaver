@@ -52,10 +52,14 @@ export function AIDiscussPage() {
   }, []);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
-  // Persist messages on change
+  // Persist messages on change + save on unmount
   useEffect(() => {
     const key = DISCUSS_KEY_PREFIX + (targetScriptId || '_new_');
     window.electronAPI.setSetting(key, JSON.stringify({ title: targetTitle, msgs: messages }));
+    return () => {
+      // Force save on unmount (cleanup fires before next mount)
+      window.electronAPI.setSetting(key, JSON.stringify({ title: targetTitle, msgs: messages }));
+    };
   }, [messages, targetScriptId, targetTitle]);
 
   // Load messages when switching scripts

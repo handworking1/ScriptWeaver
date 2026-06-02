@@ -84,16 +84,19 @@ export function ChatPage() {
       addOpenConv(conv.id, conv.title || `世界：${script?.title || '未知'}`);
       const prompt = await buildWorldPrompt();
       await window.electronAPI.createMessage({ id: generateId(), conversationId: conv.id, role: 'system', content: prompt, timestamp: Date.now() });
-      // Generate AI intro for world mode
-      try {
-        const introResult = await window.electronAPI.discussSettings(activeConfigId, 'script',
-          { title: script?.title, worldSetting: script?.worldSetting, background: script?.background, mainQuests: '', sideQuests: '', environment: '', map: '', data: '' },
-          [{ role: 'system', content: `请以GM身份，用3-5句话介绍以下世界的开场。包含世界观概况、当前氛围和玩家处境。不要用【】标注。\n标题：${script?.title}\n世界观：${script?.worldSetting}\n背景：${script?.background}` }]);
-        if (introResult.reply) {
-          await window.electronAPI.createMessage({ id: generateId(), conversationId: conv.id, role: 'assistant', content: introResult.reply, timestamp: Date.now() + 1 });
-        }
-      } catch (err) { console.error('[ChatPage] world intro:', err); }
       setShowSetup(false); await loadMessages(conv.id);
+      // Fire-and-forget AI intro (non-blocking)
+      (async () => {
+        try {
+          const introResult = await window.electronAPI.discussSettings(activeConfigId, 'script',
+            { title: script?.title, worldSetting: script?.worldSetting, background: script?.background, mainQuests: '', sideQuests: '', environment: '', map: '', data: '' },
+            [{ role: 'system', content: `请以GM身份，用3-5句话介绍以下世界的开场。包含世界观概况、当前氛围和玩家处境。不要用【】标注。\n标题：${script?.title}\n世界观：${script?.worldSetting}\n背景：${script?.background}` }]);
+          if (introResult.reply) {
+            await window.electronAPI.createMessage({ id: generateId(), conversationId: conv.id, role: 'assistant', content: introResult.reply, timestamp: Date.now() + 1 });
+            await loadMessages(conv.id);
+          }
+        } catch (err) { console.error('[ChatPage] world intro:', err); }
+      })();
     }
   };
 
