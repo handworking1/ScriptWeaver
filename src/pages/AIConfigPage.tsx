@@ -280,7 +280,7 @@ export function AIConfigPage() {
                     <button
                       key={preset.model}
                       type="button"
-                      onClick={() => setForm({ ...form, apiUrl: preset.apiUrl, model: preset.model, name: form.name || preset.name })}
+                      onClick={() => setForm({ ...form, apiUrl: preset.apiUrl, model: preset.model, name: form.name || preset.name, contextWindow: preset.model.includes('deepseek') ? 1000000 : form.contextWindow })}
                       className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
                         form.apiUrl === preset.apiUrl && form.model === preset.model
                           ? 'bg-purple-900/50 text-purple-300 border-purple-500/50'
@@ -418,14 +418,17 @@ export function AIConfigPage() {
                   <input
                     type="range"
                     min="4096"
-                    max="131072"
-                    step="4096"
+                    max={form.model.includes('deepseek') ? 1000000 : 131072}
+                    step={form.model.includes('deepseek') ? 8192 : 4096}
                     value={form.contextWindow}
                     onChange={(e) => setForm({ ...form, contextWindow: parseInt(e.target.value) })}
                     className="w-full accent-amber-500"
                   />
                   <div className="flex justify-between text-xs text-gray-600 mt-0.5">
-                    <span>4K</span><span>16K</span><span>32K</span><span>64K</span><span>128K</span>
+                    {form.model.includes('deepseek')
+                      ? <><span>4K</span><span>128K</span><span>256K</span><span>512K</span><span>1M</span></>
+                      : <><span>4K</span><span>16K</span><span>32K</span><span>64K</span><span>128K</span></>
+                    }
                   </div>
                   <p className="text-xs text-gray-600 mt-1">控制发送给 AI 的系统提示+对话历史总 token 上限。超过后自动截断最早的消息</p>
                 </div>
