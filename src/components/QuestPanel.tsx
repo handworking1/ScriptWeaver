@@ -2,7 +2,7 @@
  * Quest tracking panel for chat page — shows main/side quests with auto-detection.
  * 任务追踪面板 — 显示主线/支线任务，支持手动标记和 AI 自动识别进度。
  */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Quest {
   id: string;
@@ -56,7 +56,6 @@ export function QuestPanel({ scriptId, conversationId, configId, mainQuests, sid
   const [quests, setQuests] = useState<Quest[]>([]);
   const [selectedQuest, setSelectedQuest] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const savedRef = useRef(false); // eslint-disable-line
 
   useEffect(() => {
     // Parse quests from script data + merge saved state
@@ -88,7 +87,7 @@ export function QuestPanel({ scriptId, conversationId, configId, mainQuests, sid
         setQuests(all);
       }
     })();
-  }, [scriptId, mainQuests, sideQuests]);
+  }, [scriptId, mainQuests, sideQuests, conversationId]);
 
   /** Persist quest state to DB / 持久化任务状态 */
   const persist = async (updated: Quest[]) => {
@@ -146,7 +145,9 @@ ${chatContent.slice(0, 6000)}
         { title: '', worldSetting: '', background: '', mainQuests: '', sideQuests: '', environment: '', map: '', data: '' },
         [{ role: 'system', content: prompt }]);
 
-      if (result.reply) {
+      if (result.error) {
+        console.error('[questPanel] AI error:', result.error);
+      } else if (result.reply) {
         const match = result.reply.match(/\{[\s\S]*\}/);
         if (match) {
           try {
