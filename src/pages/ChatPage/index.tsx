@@ -89,7 +89,7 @@ export function ChatPage() {
         if (introResult.reply) {
           await window.electronAPI.createMessage({ id: generateId(), conversationId: conv.id, role: 'assistant', content: introResult.reply, timestamp: Date.now() + 1 });
         }
-      } catch {}
+      } catch (err) { console.error('[ChatPage] world intro:', err); }
       setShowSetup(false); await loadMessages(conv.id);
     }
   };
