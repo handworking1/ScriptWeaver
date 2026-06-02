@@ -25,7 +25,8 @@ export function resolveTemplatePreview(template: PromptTemplate): string {
   return result;
 }
 
-/** Extract [SUGGESTIONS: ...] from AI reply. Handles | 、separators + numbered prefixes. */
+/** Extract [SUGGESTIONS: ...] from AI reply. Handles | 、separators + numbered prefixes.
+ *  从AI回复中提取行动建议，支持 | 、分隔符和数字编号前缀。 */
 export function extractSuggestions(content: string): string[] {
   // Support | / 、separators, numbered prefixes, newlines inside brackets
   const match = content.match(/\[SUGGESTIONS:\s*([\s\S]+?)\]/);

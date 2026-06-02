@@ -46,7 +46,7 @@ export async function initDatabase(): Promise<void> {
   db.run('CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id)');
 
   /** Idempotent migration: always try to add legacy columns, regardless of user_version.
-   *  try/catch silently skips if column already exists — safe to run every startup. */
+   *  幂等迁移：始终尝试添加遗留列，不依赖版本号。try/catch 在列已存在时静默跳过。 */
   try { db.run('ALTER TABLE conversations ADD COLUMN parent_id TEXT DEFAULT NULL'); } catch (_) { /* exists */ }
   try { db.run('ALTER TABLE scripts ADD COLUMN extra_data TEXT DEFAULT \'{}\''); } catch (_) { /* exists */ }
 

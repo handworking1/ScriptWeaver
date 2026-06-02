@@ -28,7 +28,8 @@ export function ChatInput({
   const [mentionChars, setMentionChars] = useState<{ id: string; name: string }[]>([]);
   const [showMention, setShowMention] = useState(false);
 
-  /** Watch input for '@' — load matching characters from the script roster for autocomplete */
+  /** Watch input for '@' — load matching characters from the script roster for autocomplete.
+   *  监听输入中的@符号，从剧本角色列表加载匹配角色名供补全。 */
   useEffect(() => {
     if (chatMode !== 'world' || !scriptId) return;
     const atIdx = inputValue.lastIndexOf('@');
@@ -52,7 +53,7 @@ export function ChatInput({
   const handleSend = () => {
     let c = inputValue.trim();
     if (!c || isStreaming || !activeConfigId) return;
-    // ⚡ @私聊: wrap message as a private-chat instruction for that NPC
+    // ⚡ @私聊: wrap message as a private-chat instruction for that NPC / 将消息包装为私聊指令
     if (chatMode === 'world') {
       const atMatch = c.match(/@(\S+)/);
       if (atMatch) {

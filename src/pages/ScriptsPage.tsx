@@ -139,7 +139,8 @@ export function ScriptsPage() {
       strictMode, workflowMode, recapMode, periodicSummary, ruleSelfCheck, banghuiEnabled,
     };
 
-    /** Try/catch guards against missing DB columns or constraint violations */
+    /** Try/catch guards against missing DB columns or constraint violations.
+     *  try/catch 保护：防止数据库缺失列或约束违规导致崩溃。 */
     try {
       if (editingScript) {
         await editScript(editingScript.id, {

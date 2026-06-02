@@ -81,7 +81,8 @@ export function AIDiscussPage() {
 
   const selectedScript = scripts.find((s) => s.id === targetScriptId);
 
-  /** Add a script tab + persist; when generating a new script, the caller adds it here. */
+  /** Add a script tab + persist; when generating a new script, the caller adds it here.
+   *  打开脚本标签页并持久化；生成新剧本时由调用方添加。 */
   const openScript = (id: string) => {
     setTargetScriptId(id);
     window.electronAPI.setSetting('discuss_last_script', id);
@@ -89,7 +90,8 @@ export function AIDiscussPage() {
     setOpenScriptIds(updated);
     window.electronAPI.setSetting('discuss_open_tabs', JSON.stringify(updated));
   };
-  /** Close a script tab; if it was active, switch to the last remaining one. */
+  /** Close a script tab; if it was active, switch to the last remaining one.
+   *  关闭脚本标签页；如果当前是活跃标签，回退到最后一个剩余标签。 */
   const closeScript = (id: string) => {
     const updated = openScriptIds.filter(s => s !== id);
     setOpenScriptIds(updated);
