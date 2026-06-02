@@ -16,6 +16,9 @@ export function CharactersPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const [parseLoading, setParseLoading] = useState(false);
+  const [showParse, setShowParse] = useState(false);
+  const [parseText, setParseText] = useState('');
 
   // Form state
   const [name, setName] = useState('');
@@ -50,6 +53,33 @@ export function CharactersPage() {
     }
   };
 
+  /** Parse pasted character description into structured fields / 识别人设文本自动填入表单 */
+  const handleParseProfile = async () => {
+    if (!parseText.trim() || !activeConfigId) return;
+    setParseLoading(true);
+    try {
+      const result = await window.electronAPI.discussSettings(activeConfigId, 'character',
+        { name: '', personality: '', background: '', speakingStyle: '', appearance: '' },
+        [{ role: 'system', content: `从以下人物描述中提取角色信息，只输出JSON：\n{"name":"角色名","personality":"性格","background":"背景故事","speakingStyle":"说话风格","appearance":"外貌"}\n\n描述：${parseText.trim()}` }]);
+      if (result.reply) {
+        const match = result.reply.match(/\{[\s\S]*\}/);
+        if (match) {
+          try {
+            const data = JSON.parse(match[0]);
+            if (data.name) setName(data.name);
+            if (data.personality) setPersonality(data.personality);
+            if (data.background) setBackground(data.background);
+            if (data.speakingStyle) setSpeakingStyle(data.speakingStyle);
+            if (data.appearance) setAppearance(data.appearance);
+            setParseText('');
+            setShowParse(false);
+          } catch { alert('AI 返回格式异常，请重试'); }
+        }
+      }
+    } catch (err: any) { alert('识别失败：' + err.message); }
+    finally { setParseLoading(false); }
+  };
+
   useEffect(() => {
     loadScripts();
   }, []);
@@ -70,6 +100,8 @@ export function CharactersPage() {
     setSpeakingStyle('');
     setAppearance('');
     setAvatar('');
+    setShowParse(false);
+    setParseText('');
     setShowForm(true);
   };
 
@@ -81,6 +113,8 @@ export function CharactersPage() {
     setSpeakingStyle(character.speakingStyle);
     setAppearance(character.appearance);
     setAvatar(character.avatar);
+    setShowParse(false);
+    setParseText('');
     setShowForm(true);
   };
 
@@ -190,6 +224,13 @@ export function CharactersPage() {
                       >
                         {aiLoading ? '⏳ 生成中...' : '✨ AI 补全人设'}
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowParse(v => !v)}
+                        className="text-xs text-amber-400 hover:text-amber-300"
+                      >
+                        📝 一键识别人设
+                      </button>
                     </div>
                   </div>
                   <input
@@ -201,6 +242,30 @@ export function CharactersPage() {
                     required
                   />
                 </div>
+                {/* Parse profile textarea / 识别人设文本输入区 */}
+                {showParse && (
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">
+                      📝 粘贴人物描述（AI 自动识别填入）
+                    </label>
+                    <textarea
+                      value={parseText}
+                      onChange={e => setParseText(e.target.value)}
+                      className="w-full bg-gray-900 border border-amber-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-amber-500 h-24 resize-none"
+                      placeholder="粘贴任意格式的人物描述，AI 会自动提取姓名、性格、背景、说话风格和外貌。&#10;&#10;例：苏灵儿是青云宗掌门之女，十五岁，性格天真活泼，笑起来有两个酒窝。母亲早逝，父亲严厉，擅长炼丹术。说话喜欢用'呀''呢'语气词..."
+                    />
+                    <div className="flex justify-end mt-1">
+                      <button
+                        type="button"
+                        onClick={handleParseProfile}
+                        disabled={parseLoading || !parseText.trim() || !activeConfigId}
+                        className="px-3 py-1 text-xs bg-amber-700 hover:bg-amber-600 disabled:opacity-40 text-white rounded"
+                      >
+                        {parseLoading ? '⏳ 识别中...' : '🤖 开始识别'}
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">性格描述</label>
                   <textarea
