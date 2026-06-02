@@ -12,6 +12,7 @@ interface DiscussActionBarProps {
   generating: boolean;
   extracting: boolean;
   applying: boolean;
+  lorebookLoading: boolean;
   targetScriptId: string;
   /** Whether targetScriptId is a real script (not new_* discussion) / 是否为真实剧本（非新建讨论） */
   isRealScript: boolean;
@@ -22,12 +23,14 @@ interface DiscussActionBarProps {
   onExtractChars: () => void;
   onApply: () => void;
   onGenerate: () => void;
+  onGenerateLorebook: () => void;
 }
 
 export function DiscussActionBar({
   input, setInput, loading, generating, extracting, applying,
+  lorebookLoading,
   targetScriptId: _targetScriptId, isRealScript, messagesLen, activeConfigId,
-  onSend, onUndo, onExtractChars, onApply, onGenerate,
+  onSend, onUndo, onExtractChars, onApply, onGenerate, onGenerateLorebook,
 }: DiscussActionBarProps) {
   return (
     <div className="flex-shrink-0 bg-gray-900 border-t border-gray-800 p-4">
@@ -44,6 +47,10 @@ export function DiscussActionBar({
         <button onClick={onUndo} disabled={messagesLen < 2 || loading}
           className="px-4 h-12 bg-gray-700 hover:bg-gray-600 disabled:opacity-30 text-gray-300 rounded-xl text-sm font-medium flex-shrink-0 flex items-center"
           title="撤回最后一轮对话">↩ 撤回</button>
+        <button onClick={onGenerateLorebook} disabled={lorebookLoading || messagesLen === 0 || !activeConfigId || !isRealScript}
+          className="px-4 h-12 bg-teal-700 hover:bg-teal-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0 flex items-center">
+          {lorebookLoading ? '⏳' : '🌐 世界信息'}
+        </button>
         <button onClick={onExtractChars} disabled={extracting || messagesLen === 0 || !activeConfigId}
           className="px-4 h-12 bg-blue-700 hover:bg-blue-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-sm font-medium flex-shrink-0 flex items-center">
           {extracting ? '⏳' : '👥 角色'}

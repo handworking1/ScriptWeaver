@@ -27,6 +27,7 @@ export function AIDiscussPage() {
   const [generating, setGenerating] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [lorebookLoading, setLorebookLoading] = useState(false);
   const [detectedChars, setDetectedChars] = useState<any[]>([]);
   const [targetScriptId, setTargetScriptId] = useState<string>('');
   const [targetTitle, setTargetTitle] = useState('');
@@ -348,6 +349,32 @@ ${JSON.stringify(getFields(), null, 2)}`;
     } catch (err: any) { alert('添加角色失败：' + err.message); }
   };
 
+  // ── Generate lorebook / 生成世界信息 ─────────
+  const handleGenerateLorebook = async () => {
+    if (messages.length === 0 || !activeConfigId || !targetScriptId || targetScriptId.startsWith('new_')) return;
+    setLorebookLoading(true);
+    const history = messages.slice(-20).map(m => ({ role: m.role, content: m.content }));
+    try {
+      const result = await window.electronAPI.discussSettings(activeConfigId, 'script', getFields(), [...history, { role: 'user' as const, content: '根据以上讨论，提取所有可以做成世界信息词条的内容。每个词条包含关键词（逗号分隔）和注入内容。输出JSON数组：[{"keywords":"青云宗,宗门","content":"青云宗是苍玄大陆七大正道宗门之一..."}]。只输出JSON数组，不要额外文字。' }]);
+      if (result.reply) {
+        const match = result.reply.match(/\[[\s\S]*\]/);
+        if (match) {
+          try {
+            const items = JSON.parse(match[0]);
+            if (!Array.isArray(items)) { setMessages(prev => [...prev, { role: 'assistant', content: '❌ 格式异常' }]); return; }
+            const ed = selectedScript?.extraData || {};
+            const existing = Array.isArray((ed as any).lorebook) ? (ed as any).lorebook : [];
+            const merged = [...existing, ...items.map((item: any) => ({ id: Date.now().toString(36) + Math.random().toString(36).slice(2), keywords: item.keywords || '', content: item.content || '' }))];
+            await editScript(targetScriptId, { extraData: { ...selectedScript?.extraData, lorebook: merged } as any });
+            await loadScripts();
+            setMessages(prev => [...prev, { role: 'assistant', content: `✅ 已生成 ${items.length} 条世界信息并保存到剧本。可在剧本管理中查看。` }]);
+          } catch { setMessages(prev => [...prev, { role: 'assistant', content: '❌ AI返回格式异常，请重试' }]); }
+        } else { setMessages(prev => [...prev, { role: 'assistant', content: '❌ 未识别到JSON' }]); }
+      }
+    } catch (err: any) { setMessages(prev => [...prev, { role: 'assistant', content: '❌ ' + err.message }]); }
+    finally { setLorebookLoading(false); }
+  };
+
   // ── Generate new script ─────────────────────────
   const handleGenerate = async () => {
     if (messages.length === 0 || !activeConfigId) return;
@@ -541,11 +568,11 @@ ${JSON.stringify(getFields(), null, 2)}`;
 
       <DiscussActionBar
         input={input} setInput={setInput}
-        loading={loading} generating={generating} extracting={extracting} applying={applying}
+        loading={loading} generating={generating} extracting={extracting} applying={applying} lorebookLoading={lorebookLoading}
         targetScriptId={targetScriptId} isRealScript={!!targetScriptId && !targetScriptId.startsWith('new_')}
         messagesLen={messages.length} activeConfigId={activeConfigId}
         onSend={handleSend} onUndo={handleUndo} onExtractChars={handleExtractChars}
-        onApply={handleApply} onGenerate={handleGenerate}
+        onApply={handleApply} onGenerate={handleGenerate} onGenerateLorebook={handleGenerateLorebook}
       />
     </div>
   );
