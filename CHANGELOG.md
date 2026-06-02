@@ -4,41 +4,49 @@
 
 ### 🆕 新功能
 - **🔍 对话内搜索**：聊天页头部新增搜索框，实时过滤消息内容，显示匹配条数
-- **📜 剧本速览面板**：聊天中点击「📜 剧本」即可查看当前剧本的完整设定（世界观、主线、金手指等），无需退出聊天
-- **↩ 撤销发送**：聊天页新增撤销按钮（↩），一键删除最后一条用户消息及 AI 回复，重新输入
-- **🚀 首次使用引导**：无剧本或无 AI 配置时，聊天页显示三步引导卡片（创建剧本→配置 AI→开始创作），附直达按钮
-- **💡 AI 讨论快捷提问**：讨论页空白区新增「帮我想一个世界观」「帮我设计一个主角」「帮我规划剧情结构」三个快捷按钮
+- **📜 剧本速览面板**：聊天中点击「📜 剧本」侧边抽屉查看完整设定，无需退出聊天
+- **↩ 撤销发送**：聊天页新增撤销按钮，一键删除最后一条用户消息及 AI 回复
+- **🚀 首次使用引导**：无剧本或无 AI 配置时，聊天页显示三步引导卡片，附直达按钮
+- **💡 AI 讨论快捷提问**：空白区三个快捷按钮（世界观/主角/剧情结构）
+- **📋 任务追踪面板**：聊天页侧边面板，解析剧本主线/支线，支持手动标记和 AI 分析进度
+- **🎭 角色设置面板**：AI 讨论页可折叠角色管理面板，随时增删改查
+- **🔧 设置页重命名**：导航栏「AI 配置」→「设置」，新增上下文窗口滑块（4K~1M tokens）
+- **📦 内置示例剧本「苍玄录」**：首次运行自动植入（4 主线+3 支线+4 角色），不覆盖用户数据
+- **💾 保存设定反馈**：按钮变为「✅ 已保存」2 秒后恢复
 
 ### ✨ 改进
-- **发送按钮视觉**：禁用时 `opacity-40` 替代暗灰色，不再误以为按钮损坏
-- **AI 思考中指示器**：独立脉动条显示在输入框上方（`isStreaming && !streamingContent`），与消息区明确区分
-- **错误提示优化**：顶部横幅 toast 风格（红色 + ✕ 关闭），5 秒自动消失
-- **API 错误人性化**：401→"Key 无效" · 429→"请求过频" · 网络断开→"无法连接" · 超时→"请求超时"，5 个 API 调用点统一使用 `friendlyError()`
-- **TokenBar 提示**：hover 显示上下文窗口用量说明和费用估算含义
-- **角色头像增强**：无头像时首字加大（`text-base`），背景色根据角色名生成唯一 HSL 色相
-- **发送按钮**：流式传输中发送按钮也显示为禁用态（`disabled={isStreaming}`）
+- 发送按钮视觉：禁用时 `opacity-40` + 流式中也禁用
+- AI 思考中指示器：独立脉动条 + 世界介绍生成中指示器
+- 错误提示优化：toast 风格横幅 5 秒自动消失 + API 错误人性化翻译
+- TokenBar hover 提示：上下文窗口说明和费用估算含义
+- 角色头像增强：无头像时首字加大，背景色 HSL 唯一色相
+- AI 讨论新建命名：点 + 先输名称再创建标签，切页不丢失
+- DeepSeek 模型上下文窗口上限开放至 1,000,000 tokens
+- 历史页激活角色过滤器（选剧本后显示角色下拉）
 
 ### 🔧 修复
-- `finishStreaming` DB 写入失败时不再清空 `streamingContent`——用户可复制回复内容
-- `sendMessage` 使用 `set(state => ...)` 消除异步窗口期 `displayMessages` 陈旧闭包
-- `useIpcListeners` 使用 `useRef` 持有回调引用，避免 ESLint exhaustive-deps 警告
-- `chat:send` 新增输入校验：configId 格式、messages 长度 ≤200、每条消息 role/content 合法性
-- `AIConfigPage` 四个 `load*` 函数声明顺序修复（移到 useEffect 之上）
-- `CharacterCompendium` 函数声明顺序修复
-- 移除 `CharactersPage`/`ScriptsPage`/`HistoryPage`/`ImportExportButtons` 未使用的 import 和 state
+- finishStreaming 空回复写入占位消息（不再静默丢弃）
+- sendMessage 函数式 setState 消除陈旧闭包 + 补用户 token 累加
+- 6 个竞态条件 + resumeConv 快速双点保护
+- Token 累计：切换对话不再重置（改为累加），AI 讨论页 token 汇入全局
+- 导入数据补清理 prompt_templates 表 + 字段级校验（含 NaN 检测）
+- 角色图鉴闭包陈旧 + setTimeout 清理 + 持久化与副作用分离
+- CloseConv 改用 useEffect 回退 + 世界介绍卸载保护
+- AI 讨论「应用」按钮：新建讨论显示生成/真剧本显示应用，JSON 贪婪匹配
+- AI 讨论 Apply 只发最近 10 轮上下文（防 token 堆积）
+- Sidebar refreshTokenLimit 去掉重复 dep 防反复渲染
 
 ### 🏗 架构
-- **ESLint 集成**：flat config（v10），`ts` + `react-hooks` 插件，0 error / 105 warning
-- **CI 多平台**：GitHub Actions 矩阵扩展为 `ubuntu-latest` + `windows-latest` + `macos-latest`
-- **组件测试**：`@testing-library/react` + `jest-environment-jsdom`，ChatInput 6 个渲染测试（Enter/Shift+Enter/禁用态/帮回/空输入）
-- **execAll<T>/execOne<T> 泛型化**：6 个 CRUD 模块全部添加 `*Row` 返回类型，移除 5 处 `as any` 强转
-- **preload 零 any**：12 个 `Ipc*Data/Ipc*Update` 接口覆盖所有 IPC 参数
-- **safeStorage 不可用警告**：IPC 暴露 `isEncryptionAvailable`，保存 API Key 时密钥链不可用弹出确认框
-- **URL 规范化**：`normalizeApiUrl()` 自动处理尾部 `/` 和已含 `/v1` 路径
-- **tokenLimit 动态化**：`refreshTokenLimit()` 从 AI 配置的 `maxTokens` 读取，切换模型自动更新
-- **token 成本模型感知**：10 个模型的价格映射表 + 部分名称匹配，`estimateCost` 新增 `model` 参数
-- **AIDiscussPage 继续拆分**：新增 `DiscussActionBar.tsx`（底部操作栏），主文件降至 ~400 行
-- **ScriptPreview 组件**：聊天页独立剧本速览侧边抽屉
+- ESLint v10 flat config + CI 多平台矩阵（ubuntu/windows/macos）
+- ChatInput 6 个组件测试（@testing-library/react）
+- CRUD 泛型化：execAll<T>/execOne<T> + preload 零 any（12 个接口）
+- 种子模板/剧本外部化到独立文件（seedTemplates.ts / seedScript.ts）
+- 数据库迁移改为递增 user_version 版本块（仅忽略 duplicate column）
+- chat:send 事件化（ipcMain.handle → ipcMain.on）
+- 退出前强制刷盘 saveDbSync + 连续发送 AbortController 保护
+- system prompt 超长自动截断（6000 tokens 阈值，逐级精简帮回/主角/全局规则）
+- local-file:// 协议注册 + safeStorage 不可用警告确认框
+- 注释双语化：所有新功能带中英文双语注释
 
 ---
 
