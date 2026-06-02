@@ -15,6 +15,10 @@
 - **🔧 设置页重命名**：导航栏「AI 配置」→「设置」，新增上下文窗口滑块（4K~1M tokens）
 - **📦 内置示例剧本「苍玄录」**：首次运行自动植入（4 主线+3 支线+4 角色），不覆盖用户数据
 - **💾 保存设定反馈**：按钮变为「✅ 已保存」2 秒后恢复
+- **📏 对话中更改回复长度**：聊天页顶部下拉选择 A/B/C/D，即刻更新 system 消息
+- **🧹 设定仅首次发送**：世界观、背景、全局规则等在后续对话中自动剥离，大幅省 token
+- **🔓 maxTokens 无限制**：设 0 表示不限制回复长度
+- **🎯 上下文窗口优化**：步长 1024，DeepSeek 精确到 1,000,000 tokens
 
 ### ✨ 改进
 - 发送按钮视觉：禁用时 `opacity-40` + 流式中也禁用
@@ -37,6 +41,12 @@
 - AI 讨论「应用」按钮：新建讨论显示生成/真剧本显示应用，JSON 贪婪匹配
 - AI 讨论 Apply 只发最近 10 轮上下文（防 token 堆积）
 - Sidebar refreshTokenLimit 去掉重复 dep 防反复渲染
+- handleReplyLengthChange 保留互动选项 + await 竞态修复
+- 世界模式注入主线/支线到 GM 系统提示
+- 任务状态按对话隔离（不再跨对话共享）
+- 导入验证放宽 character_id 允许 null
+- switchConv 加 await 防消息加载竞态
+- resume 恢复对话加 try/catch 防静默失败
 
 ### 🏗 架构
 - ESLint v10 flat config + CI 多平台矩阵（ubuntu/windows/macos）
