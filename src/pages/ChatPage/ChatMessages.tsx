@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { ChatBubble } from '@/components/ChatBubble';
 import { QuickReplies } from '@/components/QuickReplies';
 import { SummaryCard } from '@/components/SummaryCard';
@@ -33,8 +34,21 @@ export function ChatMessages({
   editingMessageId, editContent, setEditContent, onEditSave, onEditCancel, onEditStart,
   onQuickReply, onDismissSummary, onCopySummary,
 }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const endRef = useRef<HTMLDivElement>(null);
+
+  // Smart scroll: only auto-scroll if user is near bottom
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    if (isNearBottom) {
+      endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [displayMessages.length, streamingContent]);
+
   return (
-    <div className="flex-1 overflow-y-auto p-4">
+    <div ref={containerRef} className="flex-1 overflow-y-auto p-4">
       <div className="max-w-3xl mx-auto">
         {showSummary && <SummaryCard summary={summaryContent} loading={summaryLoading} error={summaryError} onClose={onDismissSummary} onCopy={onCopySummary} />}
         {displayMessages.map((msg) => (
@@ -62,6 +76,7 @@ export function ChatMessages({
         {isStreaming && streamingContent && <ChatBubble role="assistant" content={streamingContent} characterName={characterName} characterAvatar={characterAvatar} />}
         {error && <div className="bg-red-900/30 border border-red-800 rounded-lg p-3 text-sm text-red-300 mb-4">❌ {error}</div>}
         {suggestions.length > 0 && !isStreaming && <QuickReplies suggestions={suggestions.map((s) => s.text)} onSelect={onQuickReply} disabled={isStreaming} />}
+        <div ref={endRef} />
       </div>
     </div>
   );
