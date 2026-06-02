@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavStore } from '@/stores/navStore';
 import { useConfigStore } from '@/stores/configStore';
 import { useChatStore } from '@/stores/chatStore';
+import { TokenBar } from '@/components/TokenBar';
 import type { Page } from '@/types';
 
 const navItems: { page: Page; label: string; icon: string }[] = [
@@ -24,9 +25,6 @@ export function Sidebar() {
   const [showModelPicker, setShowModelPicker] = useState(false);
 
   const isDark = theme === 'dark';
-  const pct = Math.min(100, Math.round((tokenCount / 1048576) * 100));
-  const isWarning = pct > 70;
-  const isDanger = pct > 90;
 
   return (
     <aside className={`w-56 flex flex-col h-full ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'} border-r`}>
@@ -71,18 +69,8 @@ export function Sidebar() {
         </div>
       )}
 
-      {/* Global TokenBar */}
-      <div className={`mx-3 mb-2 px-2 py-1.5 rounded-lg text-xs ${isDark ? 'bg-gray-800/50' : 'bg-gray-100'}`}>
-        <div className="flex items-center justify-between mb-1">
-          <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>上下文</span>
-          <span className={`font-mono ${isDanger ? 'text-red-400' : isWarning ? 'text-yellow-400' : isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            {tokenCount}/{totalTokensSession}
-          </span>
-        </div>
-        <div className="h-1 bg-gray-700 rounded-full overflow-hidden">
-          <div className={`h-full rounded-full transition-all ${isDanger ? 'bg-red-500' : isWarning ? 'bg-yellow-500' : 'bg-purple-500'}`} style={{ width: `${pct}%` }} />
-        </div>
-        <div className="text-[10px] mt-0.5 text-right" style={{ color: isDark ? '#666' : '#999' }}>{estimatedCost}</div>
+      <div className="mx-3 mb-2">
+        <TokenBar used={tokenCount} limit={1048576} totalInSession={totalTokensSession} estimatedCost={estimatedCost} />
       </div>
 
       <button onClick={toggleTheme}
