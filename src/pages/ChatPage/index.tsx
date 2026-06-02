@@ -164,6 +164,22 @@ export function ChatPage() {
     if (editingMessageId === msg.id) { await editUserMessage(msg.id, editContent); setEditingMessageId(null); setEditContent(''); }
   };
 
+  /** en: Change reply length mid-conversation and update format rules / 对话中更改回复长度 */
+  const handleReplyLengthChange = (len: 'A' | 'B' | 'C' | 'D') => {
+    setReplyLength(len);
+    try {
+      const msgs = useChatStore.getState().messages;
+      const sysMsg = msgs.find(m => m.role === 'system');
+      if (sysMsg && activeConversationId) {
+        const lm: Record<string, string> = { A: '每次回复>=3000字', B: '每次回复~1500字', C: '每次回复~800字', D: '自主决定回复长度，倾向长回复' };
+        const newRules = `\n\n---\n【回复长度】${lm[len]}`;
+        const clean = sysMsg.content.replace(/\n\n---\n【回复长度】[^\n]*(\n【互动选项】[^\n]*)?/g, '');
+        window.electronAPI.updateMessage(sysMsg.id, clean + newRules);
+        useChatStore.getState().loadMessages(activeConversationId);
+      }
+    } catch (err) { console.error('[replyLength] update failed:', err); }
+  };
+
   const loadConvList = async () => { if (selectedScriptId) { setConvList(await window.electronAPI.getConversations(selectedScriptId)); setShowConvList(true); } };
   const addOpenConv = (id: string, title: string) => {
     if (!openConvIds.includes(id)) {
@@ -211,7 +227,7 @@ export function ChatPage() {
           ))}
           <button onClick={() => setShowSetup(true)} className="px-2 py-0.5 text-xs rounded bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200">+</button>
       </div>
-      <ChatHeader characterName={character?.name} characterAvatar={character?.avatar} scriptTitle={script?.title} chatMode={chatMode} isStreaming={isStreaming} displayMessagesLen={displayMessages.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} onBack={() => setShowSetup(true)} onStop={stopStreaming} onSummary={() => { if (activeConfigId && activeConversationId) { const name = character?.name || script?.title || '当前剧情'; requestSummary(activeConfigId, name); } }} onBranch={async () => { if (selectedScriptId && selectedCharacterId) await branchConversation(selectedScriptId, selectedCharacterId); }} onRegenerate={async () => { if (activeConfigId) await regenerateLast(activeConfigId, failoverConfigId ?? undefined); }} onUndo={() => undoLastMessage()} onConvList={loadConvList} onCompendium={() => setShowCompendium(!showCompendium)} showCompendium={showCompendium} onScriptPreview={() => setShowScriptPreview(!showScriptPreview)} showScriptPreview={showScriptPreview} onQuestList={() => setShowQuestList(!showQuestList)} showQuestList={showQuestList} hasQuests={!!(script?.extraData?.mainQuests || script?.extraData?.sideQuests)} selectedScriptId={selectedScriptId} />
+      <ChatHeader characterName={character?.name} characterAvatar={character?.avatar} scriptTitle={script?.title} chatMode={chatMode} isStreaming={isStreaming} displayMessagesLen={displayMessages.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} onBack={() => setShowSetup(true)} onStop={stopStreaming} onSummary={() => { if (activeConfigId && activeConversationId) { const name = character?.name || script?.title || '当前剧情'; requestSummary(activeConfigId, name); } }} onBranch={async () => { if (selectedScriptId && selectedCharacterId) await branchConversation(selectedScriptId, selectedCharacterId); }} onRegenerate={async () => { if (activeConfigId) await regenerateLast(activeConfigId, failoverConfigId ?? undefined); }} onUndo={() => undoLastMessage()} onConvList={loadConvList} onCompendium={() => setShowCompendium(!showCompendium)} showCompendium={showCompendium} onScriptPreview={() => setShowScriptPreview(!showScriptPreview)} showScriptPreview={showScriptPreview} onQuestList={() => setShowQuestList(!showQuestList)} showQuestList={showQuestList} hasQuests={!!(script?.extraData?.mainQuests || script?.extraData?.sideQuests)} replyLength={replyLength} onReplyLengthChange={handleReplyLengthChange} selectedScriptId={selectedScriptId} />
       <TokenBar used={tokenCount} limit={tokenLimit} totalInSession={totalTokensSession} estimatedCost={estimatedCost} />
 
       {/* Error toast — auto-dismiss after 5s / 错误横幅，5秒自动消失 */}

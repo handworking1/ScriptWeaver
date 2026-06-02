@@ -25,6 +25,10 @@ interface Props {
   showQuestList: boolean;
   /** en: Whether current script has quest data / zh: 当前剧本是否有任务数据 */
   hasQuests: boolean;
+  /** en: Current reply length setting / zh: 当前回复长度设置 */
+  replyLength: string;
+  /** en: Change reply length / zh: 更改回复长度 */
+  onReplyLengthChange: (len: 'A' | 'B' | 'C' | 'D') => void;
   selectedScriptId: string | null;
 }
 
@@ -35,6 +39,7 @@ export function ChatHeader({
   onConvList, onCompendium, showCompendium,
   onScriptPreview, showScriptPreview,
   onQuestList, showQuestList, hasQuests,
+  replyLength, onReplyLengthChange,
   selectedScriptId,
 }: Props) {
   return (
@@ -74,6 +79,20 @@ export function ChatHeader({
         </div>
         {isStreaming && <><span className="text-xs text-purple-400 animate-pulse">回复中...</span><button onClick={onStop} className="px-2 py-0.5 text-xs bg-red-900/50 text-red-300 rounded">停止</button></>}
         {/* en: Toolbar buttons — only visible when not streaming and has messages / zh: 工具栏按钮—仅非流式且有消息时显示 */}
+        {/* Reply length dropdown / 回复长度下拉 */}
+        {!isStreaming && displayMessagesLen > 0 && (
+          <select
+            value={replyLength}
+            onChange={(e) => onReplyLengthChange(e.target.value as 'A'|'B'|'C'|'D')}
+            className="bg-gray-700 text-gray-300 rounded px-1 py-0.5 text-xs border border-gray-600"
+            title="回复长度"
+          >
+            <option value="D">📏 D 自主</option>
+            <option value="A">📏 A 3000+字</option>
+            <option value="B">📏 B 1500字</option>
+            <option value="C">📏 C 800字</option>
+          </select>
+        )}
         {!isStreaming && displayMessagesLen > 0 && <button onClick={onSummary} className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-gray-300 rounded" title="总结">📋</button>}
         {!isStreaming && displayMessagesLen > 0 && <button onClick={onBranch} className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-gray-300 rounded" title="分支">🔀</button>}
         {!isStreaming && displayMessagesLen > 0 && <button onClick={onRegenerate} className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-gray-300 rounded" title="重新生成">🔄</button>}
