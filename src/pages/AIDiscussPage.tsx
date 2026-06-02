@@ -27,6 +27,8 @@ export function AIDiscussPage() {
   const [detectedChars, setDetectedChars] = useState<any[]>([]);
   const [targetScriptId, setTargetScriptId] = useState<string>('');
   const [targetTitle, setTargetTitle] = useState('');
+  const [showManage, setShowManage] = useState(false);
+  const [editFields, setEditFields] = useState<Record<string, string>>({});
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { loadScripts(); }, []);
@@ -56,6 +58,45 @@ export function AIDiscussPage() {
   }, [targetScriptId]);
 
   const selectedScript = scripts.find((s) => s.id === targetScriptId);
+
+  // Sync editFields when script changes
+  useEffect(() => {
+    if (!selectedScript) { setEditFields({}); return; }
+    const ed = selectedScript.extraData || {} as any;
+    setEditFields({
+      title: selectedScript.title || '',
+      worldSetting: selectedScript.worldSetting || '',
+      background: selectedScript.background || '',
+      mainQuests: ed.mainQuests || '',
+      sideQuests: ed.sideQuests || '',
+      environment: ed.environment || '',
+      map: ed.map || '',
+      data: ed.data || '',
+      timeline: ed.timeline || '',
+      chapters: ed.chapters || '',
+    });
+  }, [selectedScript?.id, selectedScript?.title, selectedScript?.worldSetting, selectedScript?.background, JSON.stringify(selectedScript?.extraData)]);
+
+  // ── Save manual edits ───────────────────────────
+  const handleSaveManual = async () => {
+    if (!targetScriptId) return;
+    await editScript(targetScriptId, {
+      title: editFields.title,
+      worldSetting: editFields.worldSetting,
+      background: editFields.background,
+      extraData: {
+        ...selectedScript?.extraData,
+        mainQuests: editFields.mainQuests,
+        sideQuests: editFields.sideQuests,
+        environment: editFields.environment,
+        map: editFields.map,
+        data: editFields.data,
+        timeline: editFields.timeline,
+        chapters: editFields.chapters,
+      } as any,
+    });
+    await loadScripts();
+  };
 
   const getFields = () => ({
     title: targetTitle || selectedScript?.title || '',
@@ -205,9 +246,62 @@ ${JSON.stringify(getFields(), null, 2)}`;
       </div>
 
       {selectedScript && (
-        <div className="flex-shrink-0 bg-gray-800/50 px-4 py-2 border-b border-gray-800 text-xs text-gray-500">
-          当前讨论剧本：<span className="text-gray-300">{selectedScript.title}</span> · 世界观：{selectedScript.worldSetting?.slice(0, 40) || '未设定'}
-        </div>
+        <>
+          <div className="flex-shrink-0 bg-gray-800/50 px-4 py-2 border-b border-gray-800 text-xs text-gray-500 flex items-center">
+            <span>当前：<span className="text-gray-300">{selectedScript.title}</span> · 世界观：{selectedScript.worldSetting?.slice(0, 40) || '未设定'}</span>
+            <button onClick={() => setShowManage(!showManage)} className="ml-auto text-xs text-purple-400 hover:text-purple-300">
+              {showManage ? '▲ 收起管理' : '▼ 管理设定'}
+            </button>
+          </div>
+          {showManage && (
+            <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700 px-4 py-3">
+              <div className="max-w-3xl mx-auto space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-0.5">标题</label>
+                    <input value={editFields.title || ''} onChange={e => setEditFields({...editFields, title: e.target.value})}
+                      className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-0.5">世界观</label>
+                    <input value={editFields.worldSetting || ''} onChange={e => setEditFields({...editFields, worldSetting: e.target.value})}
+                      className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-0.5">故事背景</label>
+                  <textarea value={editFields.background || ''} onChange={e => setEditFields({...editFields, background: e.target.value})}
+                    className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-14 resize-none" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-0.5">主线任务</label>
+                    <textarea value={editFields.mainQuests || ''} onChange={e => setEditFields({...editFields, mainQuests: e.target.value})}
+                      className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-0.5">支线任务</label>
+                    <textarea value={editFields.sideQuests || ''} onChange={e => setEditFields({...editFields, sideQuests: e.target.value})}
+                      className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-0.5">时间线</label>
+                    <textarea value={editFields.timeline || ''} onChange={e => setEditFields({...editFields, timeline: e.target.value})}
+                      className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-0.5">章节</label>
+                    <textarea value={editFields.chapters || ''} onChange={e => setEditFields({...editFields, chapters: e.target.value})}
+                      className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500 h-12 resize-none" />
+                  </div>
+                </div>
+                <button onClick={handleSaveManual} className="px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded">💾 保存设定</button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <div className="flex-1 overflow-y-auto p-4">
