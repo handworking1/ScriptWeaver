@@ -7,7 +7,7 @@ import {
   getAllMessages, createMessage, updateMessage, deleteMessagesAfter,
   getAllPromptTemplates, getPromptTemplate, createPromptTemplate, updatePromptTemplate, deletePromptTemplate,
   getConversationBranches,
-  exportAllData, importAllData,
+  exportAllData, importAllData, exportScript, importScript,
   getSetting, setSetting,
 } from './db';
 import { encryptApiKey, decryptApiKey } from './safe-storage';
@@ -591,6 +591,11 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('data:export', () => exportAllData());
   ipcMain.handle('data:import', (_e, data: any) => {
     importAllData(data);
+    return { success: true };
+  });
+  ipcMain.handle('data:exportScript', (_e, scriptId: string) => exportScript(scriptId));
+  ipcMain.handle('data:importScript', (_e, data: any) => {
+    importScript(data);
     return { success: true };
   });
 

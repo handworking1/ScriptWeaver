@@ -23,6 +23,23 @@ export function ScriptCard({ script, onEdit, onDelete, onSelect, isSelected }: S
         <h3 className="font-semibold text-gray-100 text-base">{script.title}</h3>
         <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
           <button
+            onClick={async () => {
+              try {
+                const data = await window.electronAPI.exportScript(script.id);
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `${script.title}-剧本导出.json`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+              } catch (err: any) { alert('导出失败：' + (err.message || '未知错误')); }
+            }}
+            className="text-gray-500 hover:text-green-400 p-1 text-xs"
+            title="导出此剧本"
+          >
+            📤
+          </button>
+          <button
             onClick={() => onEdit(script)}
             className="text-gray-500 hover:text-blue-400 p-1 text-xs"
             title="编辑"

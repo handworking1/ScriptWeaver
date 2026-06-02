@@ -109,6 +109,8 @@ const electronAPI = {
   // Import/Export
   exportData: () => ipcRenderer.invoke('data:export'),
   importData: (data: IpcImportData) => ipcRenderer.invoke('data:import', data),
+  exportScript: (scriptId: string) => ipcRenderer.invoke('data:exportScript', scriptId),
+  importScript: (data: any) => ipcRenderer.invoke('data:importScript', data),
 
   // File dialog for avatar
   pickAvatar: () => ipcRenderer.invoke('dialog:pickAvatar'),

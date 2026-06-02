@@ -55,6 +55,8 @@ export interface ElectronAPI {
 
   exportData: () => Promise<any>;
   importData: (data: any) => Promise<{ success: boolean }>;
+  exportScript: (scriptId: string) => Promise<any>;
+  importScript: (data: any) => Promise<{ success: boolean }>;
 
   pickAvatar: () => Promise<string | null>;
 

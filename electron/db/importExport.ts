@@ -11,6 +11,58 @@ export function exportAllData() {
   };
 }
 
+/** Export a single script with its characters / 导出单个剧本及其角色 */
+export function exportScript(scriptId: string) {
+  const d = getDb();
+  const stmt = d.prepare('SELECT * FROM scripts WHERE id = ?');
+  stmt.bind([scriptId]);
+  let script: any = null;
+  if (stmt.step()) script = stmt.getAsObject();
+  stmt.free();
+  if (!script) throw new Error('剧本不存在');
+
+  const chars = execAll('SELECT * FROM characters WHERE script_id = ?', [scriptId]);
+  return {
+    type: 'scriptweaver-script-export',
+    version: 1,
+    script,
+    characters: chars,
+  };
+}
+
+/** Import a single script export (merge, don't wipe) / 导入单个剧本导出（合并，不覆盖现有数据） */
+export function importScript(data: any) {
+  if (data?.type !== 'scriptweaver-script-export') throw new Error('无效的剧本导出文件格式');
+  if (!data.script || !data.script.id || !data.script.title) throw new Error('导出文件中缺少剧本数据');
+  if (!Array.isArray(data.characters)) throw new Error('导出文件中缺少角色数据');
+
+  const d = getDb();
+  try {
+    d.run('BEGIN TRANSACTION');
+    const s = data.script;
+    // UPSERT: replace if same id exists, or insert new / 同名ID则替换，否则插入
+    d.run('INSERT OR REPLACE INTO scripts (id, title, world_setting, background, extra_data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [s.id, s.title, s.world_setting ?? '', s.background ?? '', s.extra_data ?? '{}', s.created_at || Date.now(), s.updated_at || Date.now()]);
+    for (const c of data.characters) {
+      if (!c.id || !c.name) continue;
+      const exists = d.exec('SELECT COUNT(*) as c FROM characters WHERE id = ?', [c.id]);
+      const count = exists.length ? (exists[0].values[0] as number[])[0] : 0;
+      if (count > 0) {
+        d.run('UPDATE characters SET name=?, personality=?, background=?, speaking_style=?, appearance=?, avatar=? WHERE id=?',
+          [c.name, c.personality ?? '', c.background ?? '', c.speakingStyle ?? c.speaking_style ?? '', c.appearance ?? '', c.avatar ?? '', c.id]);
+      } else {
+        d.run('INSERT INTO characters (id, script_id, name, personality, background, speaking_style, appearance, avatar, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [c.id, s.id, c.name, c.personality ?? '', c.background ?? '', c.speakingStyle ?? c.speaking_style ?? '', c.appearance ?? '', c.avatar ?? '', c.created_at || Date.now()]);
+      }
+    }
+    d.run('COMMIT');
+  } catch (err: any) {
+    d.run('ROLLBACK');
+    throw err;
+  }
+  saveDb();
+}
+
 /** Field-level validation for imported data / 导入数据字段级校验 */
 function validateField(row: any, field: string, type: string, idx: number, table: string): void {
   if (row[field] === undefined || row[field] === null) {
