@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { useNavStore } from '@/stores/navStore';
+import { useConfigStore } from '@/stores/configStore';
+import { useChatStore } from '@/stores/chatStore';
 import type { Page } from '@/types';
 
 const navItems: { page: Page; label: string; icon: string }[] = [
@@ -15,8 +18,15 @@ export function Sidebar() {
   const theme = useNavStore((s) => s.theme);
   const navigate = useNavStore((s) => s.navigate);
   const toggleTheme = useNavStore((s) => s.toggleTheme);
+  const setActiveConfig = useConfigStore((s) => s.setActiveConfig);
+  const { configs, activeConfigId } = useConfigStore();
+  const { tokenCount, totalTokensSession, estimatedCost } = useChatStore();
+  const [showModelPicker, setShowModelPicker] = useState(false);
 
   const isDark = theme === 'dark';
+  const pct = Math.min(100, Math.round((tokenCount / 1048576) * 100));
+  const isWarning = pct > 70;
+  const isDanger = pct > 90;
 
   return (
     <aside className={`w-56 flex flex-col h-full ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'} border-r`}>
@@ -40,6 +50,41 @@ export function Sidebar() {
           </button>
         ))}
       </nav>
+
+      {/* Quick model selector */}
+      {configs.length > 0 && (
+        <div className={`px-3 pb-2 ${isDark ? '' : ''}`}>
+          <button onClick={() => setShowModelPicker(!showModelPicker)}
+            className={`w-full text-left px-2 py-1 text-xs rounded transition-colors ${isDark ? 'text-gray-500 hover:bg-gray-800 hover:text-gray-300' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'}`}>
+            {showModelPicker ? '▲' : '▼'} 模型切换
+          </button>
+          {showModelPicker && (
+            <div className="mt-1 space-y-0.5">
+              {configs.map((c) => (
+                <button key={c.id} onClick={() => { setActiveConfig(c.id); setShowModelPicker(false); }}
+                  className={`w-full text-left px-2 py-1 text-xs rounded transition-colors ${activeConfigId === c.id ? (isDark ? 'bg-purple-900/40 text-purple-300' : 'bg-purple-100 text-purple-600') : (isDark ? 'text-gray-500 hover:bg-gray-800' : 'text-gray-400 hover:bg-gray-100')}`}>
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Global TokenBar */}
+      <div className={`mx-3 mb-2 px-2 py-1.5 rounded-lg text-xs ${isDark ? 'bg-gray-800/50' : 'bg-gray-100'}`}>
+        <div className="flex items-center justify-between mb-1">
+          <span className={isDark ? 'text-gray-500' : 'text-gray-400'}>上下文</span>
+          <span className={`font-mono ${isDanger ? 'text-red-400' : isWarning ? 'text-yellow-400' : isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+            {tokenCount}/{totalTokensSession}
+          </span>
+        </div>
+        <div className="h-1 bg-gray-700 rounded-full overflow-hidden">
+          <div className={`h-full rounded-full transition-all ${isDanger ? 'bg-red-500' : isWarning ? 'bg-yellow-500' : 'bg-purple-500'}`} style={{ width: `${pct}%` }} />
+        </div>
+        <div className="text-[10px] mt-0.5 text-right" style={{ color: isDark ? '#666' : '#999' }}>{estimatedCost}</div>
+      </div>
+
       <button onClick={toggleTheme}
         className={`mx-4 mb-2 px-3 py-1.5 text-xs rounded-lg transition-colors ${
           isDark ? 'bg-gray-800 text-gray-400 hover:bg-gray-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
@@ -47,7 +92,7 @@ export function Sidebar() {
         {isDark ? '☀️ 亮色模式' : '🌙 暗色模式'}
       </button>
       <div className={`p-4 border-t ${isDark ? 'border-gray-800 text-gray-600' : 'border-gray-200 text-gray-400'} text-xs`}>
-        v1.0.0
+        v1.1.0
       </div>
     </aside>
   );

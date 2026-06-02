@@ -206,9 +206,8 @@ export function ScriptsPage() {
                     <div className="flex gap-2">
                       <button
                         type="button"
-                        onClick={() => setShowDiscuss(true)}
-                        disabled={!activeConfigId}
-                        className="text-xs text-blue-400 hover:text-blue-300 disabled:text-gray-600"
+                        onClick={() => { if (activeConfigId) navigate('aiDiscuss'); }}
+                        className="text-xs text-blue-400 hover:text-blue-300"
                       >
                         💬 讨论
                       </button>
@@ -222,25 +221,7 @@ export function ScriptsPage() {
                       </button>
                     </div>
                   </div>
-                  {showDiscuss && activeConfigId && (
-                    <SettingsDiscussion
-                      configId={activeConfigId}
-                      type="script"
-                      fields={{ title, worldSetting, background, mainQuests, sideQuests, environment, map, extraData: extraDataText }}
-                      onClose={() => setShowDiscuss(false)}
-                      onCreateScript={(data) => {
-                        if (data.title) setTitle(data.title);
-                        if (data.worldSetting) setWorldSetting(data.worldSetting);
-                        if (data.background) setBackground(data.background);
-                        if (data.mainQuests) setMainQuests(data.mainQuests);
-                        if (data.sideQuests) setSideQuests(data.sideQuests);
-                        if (data.environment) setEnvironment(data.environment);
-                        if (data.map) setMap(data.map);
-                        if (data.data) setExtraDataText(data.data);
-                        setShowExtra(true);
-                      }}
-                    />
-                  )}
+
                   <input
                     type="text"
                     value={title}

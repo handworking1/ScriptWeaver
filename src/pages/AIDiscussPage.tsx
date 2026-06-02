@@ -28,6 +28,9 @@ export function AIDiscussPage() {
   const [targetScriptId, setTargetScriptId] = useState<string>('');
   const [targetTitle, setTargetTitle] = useState('');
   const [showManage, setShowManage] = useState(false);
+  const [showCharCreate, setShowCharCreate] = useState(false);
+  const [charName, setCharName] = useState('');
+  const [charPersonality, setCharPersonality] = useState('');
   const [editFields, setEditFields] = useState<Record<string, string>>({});
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -233,7 +236,17 @@ ${JSON.stringify(getFields(), null, 2)}`;
   const handleGenerate = async () => {
     if (messages.length === 0 || !activeConfigId) return;
     setGenerating(true);
-    const prompt = '根据以上讨论，生成完整剧本设定JSON。只输出JSON：{"title":"剧本标题","worldSetting":"世界观(50-200字)","background":"故事背景(100-300字)","mainQuests":"主线任务","sideQuests":"支线任务","environment":"环境描述","map":"地图","data":"其他设定"}';
+    const prompt = `根据以上讨论和以下约束，生成完整剧本设定JSON。只输出JSON：{"title":"标题","worldSetting":"世界观","background":"背景","mainQuests":"主线","sideQuests":"支线","environment":"环境","map":"地图","data":"其他"}
+严格约束（留空表示尚未设定）：
+标题「${editFields.title || targetTitle || '未定'}」
+世界观「${editFields.worldSetting || ''}」
+背景「${editFields.background || ''}」
+对标「${editFields.referenceWorks || ''}」
+时代「${editFields.eraBackground || ''}」
+主线「${editFields.mainQuests || ''}」
+支线「${editFields.sideQuests || ''}」
+金手指「${editFields.coreCheat || ''}」
+大纲「${editFields.chapters || ''}」`;
     const history = messages.map(m => ({ role: m.role, content: m.content }));
     try {
       const result = await window.electronAPI.discussSettings(activeConfigId, 'script', getFields(), [...history, { role: 'user' as const, content: prompt }]);
@@ -263,13 +276,33 @@ ${JSON.stringify(getFields(), null, 2)}`;
           </select>
           {!targetScriptId && <input value={targetTitle} onChange={e => setTargetTitle(e.target.value)} className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1 text-xs text-gray-200 w-40" placeholder="剧本标题（可选）" />}
         </div>
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex gap-2 items-center">
+          {targetScriptId && (
+            <button onClick={() => setShowCharCreate(!showCharCreate)} className="text-xs text-green-400 hover:text-green-300">
+              {showCharCreate ? '▲ 角色' : '🎭 角色'}
+            </button>
+          )}
           {configs.map(c => (
             <button key={c.id} onClick={() => useConfigStore.getState().setActiveConfig(c.id)}
               className={`px-2 py-1 text-xs rounded transition-colors ${activeConfigId === c.id ? 'bg-purple-900/50 text-purple-300' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}>{c.name}</button>
           ))}
         </div>
       </div>
+
+      {/* Character quick-create */}
+      {showCharCreate && targetScriptId && (
+        <div className="flex-shrink-0 bg-gray-800 border-b border-gray-700 px-4 py-2">
+          <div className="max-w-3xl mx-auto flex gap-2 items-center">
+            <input value={charName} onChange={e => setCharName(e.target.value)} placeholder="角色名" className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 w-24" />
+            <input value={charPersonality} onChange={e => setCharPersonality(e.target.value)} placeholder="性格（可选）" className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 flex-1" />
+            <button onClick={async () => {
+              if (!charName.trim()) return;
+              await window.electronAPI.createCharacter({ id: generateId(), scriptId: targetScriptId, name: charName.trim(), personality: charPersonality.trim(), background: '', speakingStyle: '', appearance: '', avatar: '', createdAt: Date.now() } as any);
+              setCharName(''); setCharPersonality('');
+            }} className="px-3 py-1 text-xs bg-green-700 hover:bg-green-600 text-white rounded">+ 添加</button>
+          </div>
+        </div>
+      )}
 
       {selectedScript && (
         <>
