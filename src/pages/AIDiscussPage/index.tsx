@@ -29,24 +29,31 @@ export function AIDiscussPage() {
   const [targetScriptId, setTargetScriptId] = useState<string>('');
   const [targetTitle, setTargetTitle] = useState('');
   const [openScriptIds, setOpenScriptIds] = useState<string[]>([]);
+  /** Map of discussion id → display title for new_* discussions / 新建讨论的 id→标题映射 */
+  const [tabTitles, setTabTitles] = useState<Record<string, string>>({});
   const [charName, setCharName] = useState('');
   const [charPersonality, setCharPersonality] = useState('');
   const [editFields, setEditFields] = useState<Record<string, string>>({});
+  /** Inline name input for new discussion / 新建讨论的内联名称输入 */
+  const [showNewName, setShowNewName] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadScripts();
-    // Restore last-used script ID
+    // Restore last-used script ID + tab titles for new_* discussions
     (async () => {
       try {
         const lastId = await window.electronAPI.getSetting('discuss_last_script');
         const tabs = await window.electronAPI.getSetting('discuss_open_tabs');
+        const titles = await window.electronAPI.getSetting('discuss_tab_titles');
         if (tabs) {
           const parsed = JSON.parse(tabs);
           setOpenScriptIds(parsed);
         } else if (lastId) {
           setOpenScriptIds([lastId]);
         }
+        if (titles) { try { setTabTitles(JSON.parse(titles)); } catch {} }
         if (lastId) setTargetScriptId(lastId);
       } catch {}
     })();
@@ -94,6 +101,23 @@ export function AIDiscussPage() {
       return updated;
     });
   };
+  /** Create a named discussion that persists across page switches.
+   *  创建命名讨论，切页不丢失。Generates a stable ID so tabs + messages survive remount. */
+  const createNewDiscussion = () => {
+    const title = newTitle.trim() || '新建讨论';
+    const id = 'new_' + Date.now().toString(36);
+    setTargetScriptId(id);
+    setTargetTitle(title);
+    setMessages([]);
+    setNewTitle('');
+    setShowNewName(false);
+    // Persist tab title mapping so tabs show readable name after remount
+    const updated = { ...tabTitles, [id]: title };
+    setTabTitles(updated);
+    window.electronAPI.setSetting('discuss_tab_titles', JSON.stringify(updated));
+    openScript(id);
+  };
+
   /** Close a script tab; if it was active, switch to the last remaining one.
    *  关闭脚本标签页；如果当前是活跃标签，回退到最后一个剩余标签。
    *  Uses functional updater to avoid stale-closure race / 使用函数式更新防止闭包过期。 */
@@ -107,6 +131,15 @@ export function AIDiscussPage() {
       }
       return updated;
     });
+    // Clean up title mapping for new_* discussions / 清理新建讨论的标题映射
+    if (id.startsWith('new_')) {
+      setTabTitles(prev => {
+        const updated = { ...prev };
+        delete updated[id];
+        window.electronAPI.setSetting('discuss_tab_titles', JSON.stringify(updated));
+        return updated;
+      });
+    }
   };
 
   // Sync editFields when script changes (all extraData fields)
@@ -318,19 +351,42 @@ ${JSON.stringify(getFields(), null, 2)}`;
         <div className="flex gap-1.5 flex-wrap">
           {openScriptIds.map(id => {
             const s = scripts.find(x => x.id === id);
+            const label = s?.title || tabTitles[id] || id;
             return (
               <span key={id} className={`inline-flex items-center gap-0.5 px-2 py-1 text-xs rounded cursor-pointer ${targetScriptId === id ? 'bg-purple-900/50 text-purple-300' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}>
-                <span onClick={() => setTargetScriptId(id)}>{s?.title || id}</span>
+                <span onClick={() => setTargetScriptId(id)}>{label}</span>
                 <button onClick={() => closeScript(id)} className="text-gray-600 hover:text-red-400 ml-0.5">×</button>
               </span>
             );
           })}
-          {!targetScriptId && (
+          {/* New discussion tab with title / 带标题的新建讨论标签 */}
+          {!targetScriptId && targetTitle && (
+            <span className="inline-flex items-center gap-0.5 px-2 py-1 text-xs rounded bg-purple-900/50 text-purple-300">
+              {targetTitle}
+            </span>
+          )}
+          {!targetScriptId && !targetTitle && (
             <span className="inline-flex items-center gap-0.5 px-2 py-1 text-xs rounded bg-purple-900/50 text-purple-300">
               新建讨论
             </span>
           )}
-          <button onClick={() => { setTargetScriptId(''); setMessages([]); setTargetTitle(''); }} className="px-2 py-1 text-xs rounded bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200">+</button>
+          {/* Inline name input → create named discussion / 内联名称输入 → 创建命名讨论 */}
+          {showNewName ? (
+            <span className="inline-flex items-center gap-1">
+              <input
+                value={newTitle}
+                onChange={e => setNewTitle(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') createNewDiscussion(); if (e.key === 'Escape') { setShowNewName(false); setNewTitle(''); } }}
+                placeholder="讨论名称..."
+                className="bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-xs text-gray-200 w-28 focus:outline-none focus:border-purple-500"
+                autoFocus
+              />
+              <button onClick={createNewDiscussion} className="px-1.5 py-0.5 text-xs bg-purple-700 hover:bg-purple-600 text-white rounded">✓</button>
+              <button onClick={() => { setShowNewName(false); setNewTitle(''); }} className="px-1.5 py-0.5 text-xs bg-gray-600 hover:bg-gray-500 text-gray-300 rounded">✕</button>
+            </span>
+          ) : (
+            <button onClick={() => { setNewTitle(''); setShowNewName(true); }} className="px-2 py-1 text-xs rounded bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200">+</button>
+          )}
           <select value="" onChange={e => { if (e.target.value) openScript(e.target.value); }}
             className="bg-gray-700 text-gray-400 hover:bg-gray-600 rounded px-1 py-0.5 text-xs">
             <option value="">全部剧本▾</option>
