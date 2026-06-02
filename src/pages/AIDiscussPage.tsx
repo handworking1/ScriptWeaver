@@ -40,7 +40,12 @@ export function AIDiscussPage() {
       try {
         const lastId = await window.electronAPI.getSetting('discuss_last_script');
         const tabs = await window.electronAPI.getSetting('discuss_open_tabs');
-        if (tabs) setOpenScriptIds(JSON.parse(tabs));
+        if (tabs) {
+          const parsed = JSON.parse(tabs);
+          setOpenScriptIds(parsed);
+        } else if (lastId) {
+          setOpenScriptIds([lastId]);
+        }
         if (lastId) setTargetScriptId(lastId);
       } catch {}
     })();
@@ -307,15 +312,13 @@ ${JSON.stringify(getFields(), null, 2)}`;
             );
           })}
           <button onClick={() => { setTargetScriptId(''); setMessages([]); setTargetTitle(''); }} className="px-2 py-1 text-xs rounded bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200">+</button>
-          {scripts.filter(s => !openScriptIds.includes(s.id)).length > 0 && (
-            <select value="" onChange={e => { if (e.target.value) openScript(e.target.value); }}
-              className="bg-gray-700 text-gray-400 hover:bg-gray-600 rounded px-1 py-0.5 text-xs">
-              <option value="">全部剧本▾</option>
-              {scripts.filter(s => !openScriptIds.includes(s.id)).map(s => (
-                <option key={s.id} value={s.id}>{s.title}</option>
-              ))}
-            </select>
-          )}
+          <select value="" onChange={e => { if (e.target.value) openScript(e.target.value); }}
+            className="bg-gray-700 text-gray-400 hover:bg-gray-600 rounded px-1 py-0.5 text-xs">
+            <option value="">全部剧本▾</option>
+            {scripts.filter(s => !openScriptIds.includes(s.id)).map(s => (
+              <option key={s.id} value={s.id}>{s.title}</option>
+            ))}
+          </select>
           {!targetScriptId && <input value={targetTitle} onChange={e => setTargetTitle(e.target.value)} className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 w-36" placeholder="新剧本标题" />}
         </div>
         {!targetScriptId && <input value={targetTitle} onChange={e => setTargetTitle(e.target.value)} className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 w-36" placeholder="新剧本标题（可选）" />}
