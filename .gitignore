@@ -2,6 +2,7 @@ node_modules/
 dist/
 dist-electron/
 release/
+out/
 *.db
 *.exe
 .env
