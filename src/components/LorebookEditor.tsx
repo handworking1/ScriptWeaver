@@ -33,7 +33,7 @@ export function LorebookEditor({ entries, onChange }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm text-gray-400">🌐 世界信息（Lorebook）</span>
+        <span className="text-sm text-gray-400">🌐 世界信息</span>
         <span className="text-xs text-gray-600">{entries.length} 条</span>
       </div>
       <p className="text-xs text-gray-600">

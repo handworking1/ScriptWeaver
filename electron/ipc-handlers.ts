@@ -405,7 +405,7 @@ export function registerIpcHandlers(): void {
       }
       const sendMessages = [...systemMsgs, ...kept];
 
-      /** Lorebook injection: scan recent messages for keyword matches / 世界信息注入 */
+      /** 世界信息注入：扫描最近消息匹配关键词 */
       if (conversationId) {
         try {
           const conv = getConversation(conversationId);
