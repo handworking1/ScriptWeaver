@@ -18,7 +18,7 @@ import type { ScriptRow, CharacterRow, AIConfigRow, ConversationRow, MessageRow,
 /** en: Translate raw fetch errors into user-friendly messages.
  *  zh: 将原始 fetch 错误转为用户可读的提示。 */
 function friendlyError(status: number, message: string): string {
-  if (status === 401) return '❌ API Key 无效或已过期，请在 AI 配置中更新。';
+  if (status === 401) return '❌ API Key 无效或已过期，请在设置中更新。';
   if (status === 403) return '❌ 访问被拒绝，请检查 API Key 权限。';
   if (status === 429) return '⏳ 请求过于频繁，请稍后再试。';
   if (status === 500 || status === 502 || status === 503) return `❌ API 服务器故障 (${status})，请稍后重试。`;

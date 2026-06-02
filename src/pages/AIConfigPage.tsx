@@ -13,6 +13,7 @@ const defaultConfig = {
   model: 'gpt-4o-mini',
   temperature: 0.8,
   maxTokens: 8192,
+  contextWindow: 32768,
   topP: 1.0,
   frequencyPenalty: 0,
   presencePenalty: 0,
@@ -168,8 +169,14 @@ export function AIConfigPage() {
     setShowForm(true);
   };
 
-  const openEdit = (config: AIConfig) => {
+  const openEdit = async (config: AIConfig) => {
     setEditingConfig(config);
+    // en: Load saved context window / zh: 加载已保存的上下文窗口
+    let cw = 32768;
+    try {
+      const saved = await window.electronAPI.getSetting('context_window');
+      if (saved) cw = parseInt(saved) || 32768;
+    } catch { /* use default */ }
     setForm({
       name: config.name,
       apiUrl: config.apiUrl,
@@ -177,6 +184,7 @@ export function AIConfigPage() {
       model: config.model,
       temperature: config.temperature,
       maxTokens: config.maxTokens,
+      contextWindow: cw,
       topP: config.topP,
       frequencyPenalty: config.frequencyPenalty,
       presencePenalty: config.presencePenalty,
@@ -210,6 +218,9 @@ export function AIConfigPage() {
       presencePenalty: form.presencePenalty,
     };
 
+    // en: Save context window as global setting / zh: 全局保存上下文窗口
+    await window.electronAPI.setSetting('context_window', String(form.contextWindow));
+
     if (editingConfig) {
       await editConfig(editingConfig.id, { ...data, apiKey: form.apiKey || undefined });
     } else {
@@ -242,8 +253,8 @@ export function AIConfigPage() {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-100">⚙️ AI 配置</h2>
-            <p className="text-sm text-gray-500 mt-1">管理 OpenAI 兼容 API 的配置，支持多组切换</p>
+            <h2 className="text-2xl font-bold text-gray-100">⚙️ 设置</h2>
+            <p className="text-sm text-gray-500 mt-1">管理 AI API 配置、上下文窗口和全局偏好</p>
           </div>
           <button
             onClick={openCreate}
@@ -397,6 +408,26 @@ export function AIConfigPage() {
                     />
                     <p className="text-xs text-gray-600 mt-1">限制 AI 单次回复的最大长度。1 中文 ≈ 1.5 token</p>
                   </div>
+                </div>
+                {/* Context window / 上下文窗口 */}
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">
+                    📐 上下文窗口 ({form.contextWindow.toLocaleString()} tokens)
+                    <span className="text-xs text-gray-600 ml-1">对话+设定总上限</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="4096"
+                    max="131072"
+                    step="4096"
+                    value={form.contextWindow}
+                    onChange={(e) => setForm({ ...form, contextWindow: parseInt(e.target.value) })}
+                    className="w-full accent-amber-500"
+                  />
+                  <div className="flex justify-between text-xs text-gray-600 mt-0.5">
+                    <span>4K</span><span>16K</span><span>32K</span><span>64K</span><span>128K</span>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">控制发送给 AI 的系统提示+对话历史总 token 上限。超过后自动截断最早的消息</p>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                   <div>

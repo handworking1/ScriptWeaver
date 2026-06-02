@@ -11,7 +11,7 @@ const navItems: { page: Page; label: string; icon: string }[] = [
   { page: 'aiDiscuss', label: 'AI 剧本讨论', icon: '🤖' },
   { page: 'chat', label: '聊天', icon: '💬' },
   { page: 'history', label: '历史记录', icon: '📋' },
-  { page: 'aiConfig', label: 'AI 配置', icon: '⚙️' },
+  { page: 'aiConfig', label: '设置', icon: '⚙️' },
 ];
 
 export function Sidebar() {

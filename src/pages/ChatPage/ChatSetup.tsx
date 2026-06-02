@@ -87,7 +87,7 @@ export function ChatSetup({
                 <div className="flex-1">
                   <div className="text-sm font-medium text-gray-200">第二步：配置 AI</div>
                   <div className="text-xs text-gray-500 mt-0.5">选择一个预设模型，填入 API Key（加密存储）</div>
-                  <button onClick={() => navigate('aiConfig')} className="mt-2 px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded-lg">前往 AI 配置</button>
+                  <button onClick={() => navigate('aiConfig')} className="mt-2 px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded-lg">前往设置</button>
                 </div>
               </div>
               <div className="flex gap-3 items-start p-3 bg-gray-800/70 rounded-xl">
@@ -152,7 +152,7 @@ export function ChatSetup({
           )}
 
           <div>
-            <label className="block text-sm text-gray-400 mb-2">AI 配置</label>
+            <label className="block text-sm text-gray-400 mb-2">设置</label>
             <div className="flex gap-2 flex-wrap">
               {configs.map((c) => (
                 <button key={c.id} onClick={() => setActiveConfig(c.id)}

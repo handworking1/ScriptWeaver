@@ -461,7 +461,7 @@ ${JSON.stringify(getFields(), null, 2)}`;
               <div className="text-4xl mb-4">💬</div>
               <p className="text-gray-500 text-sm mb-6">和 AI 讨论你的剧本创意。切换页面不会丢失进度。</p>
               {!activeConfigId ? (
-                <p className="text-red-400 text-sm">请在顶部选择 AI 配置</p>
+                <p className="text-red-400 text-sm">请在顶部选择设置</p>
               ) : (
                 <div className="flex flex-col gap-2 max-w-xs mx-auto">
                   <button
