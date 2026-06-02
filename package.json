@@ -65,18 +65,11 @@
           "arch": ["x64"]
         },
         {
-          "target": "portable",
-          "arch": ["x64"]
-        },
-        {
           "target": "zip",
           "arch": ["x64"]
         }
       ],
       "signAndEditExecutable": false
-    },
-    "portable": {
-      "artifactName": "${productName}-${version}-portable.${ext}"
     },
     "zip": {
       "artifactName": "${productName}-${version}-portable.${ext}"
