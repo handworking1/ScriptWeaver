@@ -6,6 +6,7 @@ import { AIConfigPage } from '@/pages/AIConfigPage';
 import { ChatPage } from '@/pages/ChatPage';
 import { HistoryPage } from '@/pages/HistoryPage';
 import { AIDiscussPage } from '@/pages/AIDiscussPage';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const pages = {
   scripts: ScriptsPage,
@@ -25,7 +26,9 @@ export function App() {
     <div className={`h-screen flex ${theme === 'dark' ? 'bg-gray-950 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
       <Sidebar />
       <main className="flex-1 flex flex-col overflow-hidden">
-        <PageComponent />
+        <ErrorBoundary>
+          <PageComponent />
+        </ErrorBoundary>
       </main>
     </div>
   );

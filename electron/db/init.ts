@@ -45,9 +45,15 @@ export async function initDatabase(): Promise<void> {
   db.run('CREATE INDEX IF NOT EXISTS idx_conversations_character_id ON conversations(character_id)');
   db.run('CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id)');
 
-  // Migrations
-  try { db.run('ALTER TABLE conversations ADD COLUMN parent_id TEXT DEFAULT NULL'); } catch (_) { /* exists */ }
-  try { db.run('ALTER TABLE scripts ADD COLUMN extra_data TEXT DEFAULT \'{}\''); } catch (_) { /* exists */ }
+  // Version-based migration
+  const currentVersion = db.exec('PRAGMA user_version');
+  const version = currentVersion.length ? (currentVersion[0].values[0] as number[])[0] : 0;
+
+  if (version < 1) {
+    try { db.run('ALTER TABLE conversations ADD COLUMN parent_id TEXT DEFAULT NULL'); } catch (_) { /* ignore */ }
+    try { db.run('ALTER TABLE scripts ADD COLUMN extra_data TEXT DEFAULT \'{}\''); } catch (_) { /* ignore */ }
+    db.run('PRAGMA user_version = 1');
+  }
 
   // Seed templates
   const tc = db.exec('SELECT COUNT(*) as c FROM prompt_templates');

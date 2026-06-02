@@ -20,8 +20,8 @@ export function saveDb(): void {
   if (!db || !dbPath) return;
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
-    const data = db!.export();
-    fs.writeFileSync(dbPath, Buffer.from(data));
+    if (!db || !dbPath) return;
+    fs.writeFileSync(dbPath, Buffer.from(db.export()));
   }, 500);
 }
 
