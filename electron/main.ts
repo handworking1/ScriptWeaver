@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, safeStorage } from 'electron';
 import path from 'path';
-import { initDatabase } from './database';
+import { initDatabase } from './db';
 import { registerIpcHandlers } from './ipc-handlers';
 
 let mainWindow: BrowserWindow | null = null;

@@ -1,0 +1,22 @@
+import { execAll, execOne, run } from './utils';
+
+export function getAllScripts() { return execAll('SELECT * FROM scripts ORDER BY updated_at DESC'); }
+export function getScript(id: string) { return execOne('SELECT * FROM scripts WHERE id = ?', [id]); }
+
+export function createScript(data: { id: string; title: string; worldSetting?: string; background?: string; extraData?: string; createdAt: number; updatedAt: number }) {
+  run('INSERT INTO scripts (id, title, world_setting, background, extra_data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [data.id, data.title, data.worldSetting ?? '', data.background ?? '', data.extraData ?? '{}', data.createdAt, data.updatedAt]);
+  return getScript(data.id);
+}
+
+export function updateScript(id: string, data: { title?: string; worldSetting?: string; background?: string; extraData?: string }) {
+  const sets: string[] = []; const params: any[] = [];
+  if (data.title !== undefined) { sets.push('title = ?'); params.push(data.title); }
+  if (data.worldSetting !== undefined) { sets.push('world_setting = ?'); params.push(data.worldSetting); }
+  if (data.background !== undefined) { sets.push('background = ?'); params.push(data.background); }
+  if (data.extraData !== undefined) { sets.push('extra_data = ?'); params.push(data.extraData); }
+  if (sets.length > 0) { sets.push('updated_at = ?'); params.push(Date.now()); params.push(id); run(`UPDATE scripts SET ${sets.join(', ')} WHERE id = ?`, params); }
+  return getScript(id);
+}
+
+export function deleteScript(id: string) { run('DELETE FROM scripts WHERE id = ?', [id]); }

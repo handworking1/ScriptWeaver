@@ -9,7 +9,7 @@ import {
   getConversationBranches,
   exportAllData, importAllData,
   getSetting, setSetting,
-} from './database';
+} from './db';
 import { encryptApiKey, decryptApiKey } from './safe-storage';
 
 let activeAbortController: AbortController | null = null;
