@@ -4,20 +4,16 @@
  * Chinese characters ≈ 1 token each, English words ≈ 1.3 tokens each.
  * Fallback: chars / 2.5 for mixed content.
  */
+/** en: Fast token estimator — single-pass Chinese char count, O(n) not O(n²).
+ *  zh: 快速 token 估算——单次扫描中文字符数，O(n) 而非 O(n²)。 */
 export function estimateTokens(text: string): number {
-  let chineseChars = 0;
-  let englishTokens = 0;
-
-  for (const char of text) {
-    if (/[\u4e00-\u9fff\u3400-\u4dbf]/.test(char)) {
-      chineseChars++;
-    }
-  }
+  // Single regex for all Chinese chars / 一次正则匹配所有中文字符
+  const chineseChars = (text.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
 
   // Remove Chinese chars, count remaining words
   const nonChinese = text.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, ' ');
   const words = nonChinese.split(/\s+/).filter(Boolean);
-  englishTokens = Math.ceil(words.length * 1.3);
+  const englishTokens = Math.ceil(words.length * 1.3);
 
   const total = chineseChars + englishTokens;
   return Math.max(1, total || Math.ceil(text.length / 2.5));

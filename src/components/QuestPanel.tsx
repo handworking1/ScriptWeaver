@@ -53,7 +53,7 @@ const STORAGE_KEY_PREFIX = 'quest_state_';
 export function QuestPanel({ scriptId, conversationId, configId, mainQuests, sideQuests, onClose }: Props) {
   const [quests, setQuests] = useState<Quest[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
-  const savedRef = useRef(false);
+  const savedRef = useRef(false); // eslint-disable-line @typescript-eslint/no-unused-vars
 
   useEffect(() => {
     // Parse quests from script data + merge saved state

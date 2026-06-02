@@ -71,11 +71,13 @@ export function ChatInput({
     if (!c || isStreaming || !activeConfigId) return;
     // ⚡ @私聊: wrap message as a private-chat instruction for that NPC / 将消息包装为私聊指令
     if (chatMode === 'world') {
-      // Support multi-word names (e.g. 上官婉儿) / 支持多字姓名
-      const atMatch = c.match(/@([\p{L}\p{N}_]+(?:[\p{L}\p{N}_\s]*[\p{L}\p{N}_]+)?)/u);
+      // en: Match @name — Chinese 2-4 chars or Latin word, stops at space / 匹配@角色名（中文2-4字或拉丁词，空格截止）
+      const atMatch = c.match(/@([\u4e00-\u9fff]{2,4}|[\p{L}\p{N}_]+)/u);
       if (atMatch) {
-        const name = atMatch[1].trim();
-        c = `[私聊] 现在你暂时扮演 ${name}，请以该角色的性格语气回复。\n\n我：${c.replace(/@[\p{L}\p{N}_\s]+/u, '').trim()}`;
+        const name = atMatch[1];
+        // en: Remove only the @name prefix, keep the message / 只删除@角色名前缀，保留消息内容
+        const message = c.replace(atMatch[0], '').trim();
+        c = `[私聊] 现在你暂时扮演 ${name}，请以该角色的性格语气回复。\n\n${message ? `我：${message}` : ''}`;
       }
     }
     setInputValue('');

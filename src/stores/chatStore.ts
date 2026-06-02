@@ -234,7 +234,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       createdAt: now,
       updatedAt: now,
     });
-    for (const m of messages) {
+    // en: 跳过 system prompt——新分支已有自己的 / Skip system messages — new branch has its own
+    for (const m of messages.filter(m => m.role !== 'system')) {
       await window.electronAPI.createMessage({
         id: nanoid(),
         conversationId: id,

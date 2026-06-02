@@ -3,7 +3,6 @@ import { useScriptStore } from '@/stores/scriptStore';
 import { useConfigStore } from '@/stores/configStore';
 import { useTemplateStore } from '@/stores/templateStore';
 import { useNavStore } from '@/stores/navStore';
-import { useChatStore } from '@/stores/chatStore';
 import { CharacterSelector } from './CharacterSelector';
 
 interface Props {

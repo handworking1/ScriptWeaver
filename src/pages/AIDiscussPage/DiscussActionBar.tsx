@@ -26,7 +26,7 @@ interface DiscussActionBarProps {
 
 export function DiscussActionBar({
   input, setInput, loading, generating, extracting, applying,
-  targetScriptId, isRealScript, messagesLen, activeConfigId,
+  targetScriptId: _targetScriptId, isRealScript, messagesLen, activeConfigId,
   onSend, onUndo, onExtractChars, onApply, onGenerate,
 }: DiscussActionBarProps) {
   return (

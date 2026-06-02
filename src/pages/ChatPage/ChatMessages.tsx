@@ -8,7 +8,6 @@ interface Props {
   displayMessages: Message[];
   streamingContent: string;
   isStreaming: boolean;
-  error: string | null;
   searchQuery?: string;
   suggestions: { text: string }[];
   showSummary: boolean;
@@ -29,7 +28,7 @@ interface Props {
 }
 
 export function ChatMessages({
-  displayMessages, streamingContent, isStreaming, error, suggestions,
+  displayMessages, streamingContent, isStreaming, suggestions,
   showSummary, summaryContent, summaryLoading, summaryError,
   characterName, characterAvatar, searchQuery,
   editingMessageId, editContent, setEditContent, onEditSave, onEditCancel, onEditStart,
@@ -85,7 +84,6 @@ export function ChatMessages({
           </div>
         ))}
         {isStreaming && streamingContent && <ChatBubble role="assistant" content={streamingContent} characterName={characterName} characterAvatar={characterAvatar} />}
-        {error && <div className="bg-red-900/30 border border-red-800 rounded-lg p-3 text-sm text-red-300 mb-4">❌ {error}</div>}
         {suggestions.length > 0 && !isStreaming && <QuickReplies suggestions={suggestions.map((s) => s.text)} onSelect={onQuickReply} disabled={isStreaming} />}
         <div ref={endRef} />
       </div>

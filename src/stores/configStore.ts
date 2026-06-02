@@ -26,10 +26,13 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const configs = await window.electronAPI.getAIConfigs();
+      // en: 验证当前 active config 仍在列表中，否则回退到第一个 / Validate active config still exists, fallback to first
+      const currentId = get().activeConfigId;
+      const stillExists = currentId && configs.some(c => c.id === currentId);
       set({
         configs,
         loading: false,
-        activeConfigId: configs.length > 0 && !get().activeConfigId ? configs[0].id : get().activeConfigId,
+        activeConfigId: configs.length > 0 && !stillExists ? configs[0].id : currentId,
       });
     } catch (err: any) {
       set({ error: err.message, loading: false });

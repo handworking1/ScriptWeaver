@@ -4,6 +4,7 @@ import fs from 'fs';
 import { app } from 'electron';
 import { setDb, saveDb } from './utils';
 import { seedTemplates } from './seedTemplates';
+import { SEED_SCRIPT, SEED_CHARACTERS } from './seedScript';
 
 export async function initDatabase(): Promise<void> {
   const userDataPath = app.getPath('userData');
@@ -84,6 +85,22 @@ export async function initDatabase(): Promise<void> {
   const tc = db.exec('SELECT COUNT(*) as c FROM prompt_templates');
   if (!tc.length || (tc[0].values[0] as number[])[0] === 0) {
     seedTemplates(db);
+  }
+
+  /** Seed built-in demo script on first run / 首次运行时植入内置示例剧本 */
+  const sc = db.exec(`SELECT COUNT(*) as c FROM scripts WHERE id = '${SEED_SCRIPT.id}'`);
+  if (!sc.length || (sc[0].values[0] as number[])[0] === 0) {
+    const s = SEED_SCRIPT;
+    db.run(
+      'INSERT INTO scripts (id, title, world_setting, background, extra_data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [s.id, s.title, s.worldSetting, s.background, JSON.stringify(s.extraData), s.createdAt, s.updatedAt],
+    );
+    for (const c of SEED_CHARACTERS) {
+      db.run(
+        'INSERT INTO characters (id, script_id, name, personality, background, speaking_style, appearance, avatar, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [c.id, c.scriptId, c.name, c.personality, c.background, c.speakingStyle, c.appearance, c.avatar, c.createdAt],
+      );
+    }
   }
 
   saveDb();

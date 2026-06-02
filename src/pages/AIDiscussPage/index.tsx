@@ -291,7 +291,7 @@ ${JSON.stringify(getFields(), null, 2)}`;
         const match = result.reply.match(/\{[\s\S]*\}/);
         if (match) {
           let data: any;
-          try { data = JSON.parse(match[0]); } catch (err) {
+          try { data = JSON.parse(match[0]); } catch {
             setMessages((prev) => [...prev, { role: 'assistant', content: '❌ AI 返回格式异常，请重试。内容预览：' + match[0].slice(0, 100) }]);
             setApplying(false);
             return;

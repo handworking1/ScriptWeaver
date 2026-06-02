@@ -1,5 +1,4 @@
 import { buildSystemPrompt, buildSystemPromptFromTemplate } from '@/lib/systemPrompt';
-import { estimateTokens } from '@/lib/tokenCounter';
 import type { Character, PromptTemplate } from '@/types';
 
 /** en: Rough token estimation for truncation decisions / zh: 粗略 token 估算用于截断判断 */
