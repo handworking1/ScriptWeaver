@@ -32,6 +32,7 @@ export function ChatSetup({
   const setActiveTemplate = useTemplateStore((s) => s.setActiveTemplate);
   const setActiveConfig = useConfigStore((s) => s.setActiveConfig);
   const navigate = useNavStore((s) => s.navigate);
+  const setResumeConversation = useNavStore((s) => s.setResumeConversation);
 
   const [recentConvs, setRecentConvs] = useState<any[]>([]);
   useEffect(() => {
@@ -40,13 +41,14 @@ export function ChatSetup({
     } else { setRecentConvs([]); }
   }, [selectedScriptId]);
 
+  /** Resume conversation via navStore so ChatPage useEffect handles setup properly.
+   *  通过 navStore 恢复对话，让 ChatPage 的 useEffect 正确处理设置页跳过。 */
   const resumeConv = async (convId: string) => {
     const conv = await window.electronAPI.getConversation(convId);
     if (!conv) return;
     selectScript(conv.scriptId);
     selectCharacter(conv.characterId || null);
-    useChatStore.getState().setActiveConversation(convId);
-    useChatStore.getState().loadMessages(convId);
+    setResumeConversation(convId);
     navigate('chat');
   };
 

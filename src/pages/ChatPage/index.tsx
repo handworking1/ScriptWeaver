@@ -173,6 +173,7 @@ export function ChatPage() {
     useChatStore.getState().loadMessages(id);
     const c = await window.electronAPI.getConversation(id);
     if (c) {
+      selectScript(c.scriptId);
       selectCharacter(c.characterId || null);
       setChatMode(c.characterId ? '1v1' : 'world');
       addOpenConv(id, c.title || '未命名');
