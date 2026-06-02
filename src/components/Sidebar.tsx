@@ -70,7 +70,7 @@ export function Sidebar() {
       )}
 
       <div className="mx-3 mb-2">
-        <TokenBar used={tokenCount} limit={1048576} totalInSession={totalTokensSession} estimatedCost={estimatedCost} />
+        <TokenBar used={tokenCount} limit={1048576} totalInSession={totalTokensSession} estimatedCost={estimatedCost} compact />
       </div>
 
       <button onClick={toggleTheme}

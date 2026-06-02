@@ -7,6 +7,7 @@ import { useTemplateStore } from '@/stores/templateStore';
 import { useNavStore } from '@/stores/navStore';
 
 import { CharacterCompendium } from '@/components/CharacterCompendium';
+import { TokenBar } from '@/components/TokenBar';
 import { generateId } from '@/lib/id';
 import type { Message } from '@/types';
 import { ChatSetup } from './ChatSetup';
@@ -22,6 +23,7 @@ export function ChatPage() {
   const { templates, activeTemplateId, loadTemplates } = useTemplateStore();
   const {
     activeConversationId, displayMessages, streamingContent, isStreaming, error,
+    tokenCount, totalTokensSession, estimatedCost,
     suggestions, summaryContent, summaryLoading, summaryError, showSummary,
     loadMessages, createConversation, sendMessage, stopStreaming,
     editUserMessage, regenerateLast, branchConversation,
@@ -142,6 +144,7 @@ export function ChatPage() {
           <button onClick={() => setShowSetup(true)} className="px-2 py-0.5 text-xs rounded bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200">+</button>
       </div>
       <ChatHeader characterName={character?.name} characterAvatar={character?.avatar} scriptTitle={script?.title} chatMode={chatMode} isStreaming={isStreaming} displayMessagesLen={displayMessages.length} onBack={() => setShowSetup(true)} onStop={stopStreaming} onSummary={() => { if (activeConfigId && activeConversationId) { const name = character?.name || script?.title || '当前剧情'; requestSummary(activeConfigId, name); } }} onBranch={async () => { if (selectedScriptId && selectedCharacterId) await branchConversation(selectedScriptId, selectedCharacterId); }} onRegenerate={async () => { if (activeConfigId) await regenerateLast(activeConfigId, failoverConfigId ?? undefined); }} onConvList={loadConvList} onCompendium={() => setShowCompendium(!showCompendium)} showCompendium={showCompendium} selectedScriptId={selectedScriptId} />
+      <TokenBar used={tokenCount} limit={1048576} totalInSession={totalTokensSession} estimatedCost={estimatedCost} />
 
       <ChatMessages displayMessages={displayMessages} streamingContent={streamingContent} isStreaming={isStreaming} error={error} suggestions={suggestions} showSummary={showSummary} summaryContent={summaryContent} summaryLoading={summaryLoading} summaryError={summaryError} characterName={character?.name} characterAvatar={character?.avatar} editingMessageId={editingMessageId} editContent={editContent} setEditContent={setEditContent} onEditSave={handleEditMessage} onEditCancel={() => setEditingMessageId(null)} onEditStart={(msg) => { setEditingMessageId(msg.id); setEditContent(msg.content); }} onQuickReply={(t) => { if (activeConfigId) sendMessage(activeConfigId, t, failoverConfigId ?? undefined); }} onDismissSummary={dismissSummary} onCopySummary={() => navigator.clipboard.writeText(summaryContent)} />
       <ChatInput inputValue={inputValue} setInputValue={setInputValue} isStreaming={isStreaming} shortcutBar={shortcutBar} shortcutsExpanded={shortcutsExpanded} setShortcutsExpanded={setShortcutsExpanded} activeConfigId={activeConfigId} failoverConfigId={failoverConfigId} sendMessage={(cid, t, fid) => sendMessage(cid, t, fid)} recentMessages={displayMessages.slice(-6)} characterName={character?.name} banghuiEnabled={script?.extraData?.banghuiEnabled === 'Y'} />

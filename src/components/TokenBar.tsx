@@ -5,12 +5,25 @@ interface TokenBarProps {
   limit: number;
   totalInSession: number;
   estimatedCost: string;
+  compact?: boolean;
 }
 
-export const TokenBar = React.memo(function TokenBar({ used, limit, totalInSession, estimatedCost }: TokenBarProps) {
+export const TokenBar = React.memo(function TokenBar({ used, limit, totalInSession, estimatedCost, compact }: TokenBarProps) {
   const pct = Math.min(100, Math.round((used / limit) * 100));
   const isWarning = pct > 70;
   const isDanger = pct > 90;
+
+  if (compact) {
+    return (
+      <div className="px-2 py-1.5 rounded-lg text-xs bg-gray-800/50">
+        <div className="flex items-center justify-between mb-0.5">
+          <span className="text-gray-500">总量</span>
+          <span className="font-mono text-gray-400">{totalInSession}</span>
+        </div>
+        <div className="text-[10px] text-right" style={{ color: '#666' }}>{estimatedCost}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-3 px-3 py-1.5 bg-gray-900/80 border-b border-gray-800 text-xs">
