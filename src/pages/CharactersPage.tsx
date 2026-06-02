@@ -176,13 +176,24 @@ export function CharactersPage() {
               {currentScript ? `剧本：${currentScript.title}` : '请先在剧本管理中选择一个剧本'}
             </p>
           </div>
-          <button
-            onClick={openCreate}
-            disabled={!selectedScriptId}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg text-sm font-medium transition-colors"
-          >
-            + 新建角色
-          </button>
+          <div className="flex gap-2">
+            <button onClick={async () => {
+              const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
+              input.onchange = async (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) return;
+                try { const d = JSON.parse(await f.text());
+                  await window.electronAPI.createCharacter({ id: generateId(), scriptId: selectedScriptId!, name: d.name||'导入角色', personality: d.personality||'', background: d.background||'', speakingStyle: d.speakingStyle||'', appearance: d.appearance||'', avatar: d.avatar||'', createdAt: Date.now() } as any);
+                  loadCharacters(selectedScriptId!); alert('导入成功！');
+                } catch (err: any) { alert('导入失败：'+err.message); } }; input.click();
+            }} disabled={!selectedScriptId}
+              className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-gray-300 rounded-lg text-xs font-medium">📥 导入角色卡</button>
+            <button
+              onClick={openCreate}
+              disabled={!selectedScriptId}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              + 新建角色
+            </button>
+          </div>
         </div>
 
         {/* Script Selector */}
