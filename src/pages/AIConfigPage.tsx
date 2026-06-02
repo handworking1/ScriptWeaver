@@ -407,12 +407,16 @@ export function AIConfigPage() {
                     <input
                       type="number"
                       value={form.maxTokens}
-                      onChange={(e) => setForm({ ...form, maxTokens: parseInt(e.target.value) || 2048 })}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value);
+                        setForm({ ...form, maxTokens: isNaN(v) ? 0 : v });
+                      }}
                       className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-purple-500"
-                      min={1}
-                      max={1048576}
+                      min={0}
                     />
-                    <p className="text-xs text-gray-600 mt-1">限制 AI 单次回复的最大长度。1 中文 ≈ 1.5 token</p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      设 0 表示不限制。限制 AI 单次回复的最大长度。1 中文 ≈ 1.5 token
+                    </p>
                   </div>
                 </div>
                 {/* Context window / 上下文窗口 */}
@@ -425,7 +429,7 @@ export function AIConfigPage() {
                     type="range"
                     min="4096"
                     max={form.model.includes('deepseek') ? 1000000 : 131072}
-                    step={form.model.includes('deepseek') ? 8192 : 4096}
+                    step={form.model.includes('deepseek') ? 1024 : 4096}
                     value={form.contextWindow}
                     onChange={(e) => setForm({ ...form, contextWindow: parseInt(e.target.value) })}
                     className="w-full accent-amber-500"

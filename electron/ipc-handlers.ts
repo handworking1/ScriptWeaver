@@ -401,16 +401,17 @@ export function registerIpcHandlers(): void {
       const trimmedNonSystem = nonSystem.length > 100 ? nonSystem.slice(-80) : nonSystem;
       const sendMessages = [...systemMsgs, ...trimmedNonSystem];
 
-      const body = {
+      const body: any = {
         model: configRow.model,
         messages: sendMessages,
         temperature: configRow.temperature,
-        max_tokens: configRow.max_tokens,
         top_p: configRow.top_p,
         frequency_penalty: configRow.frequency_penalty,
         presence_penalty: configRow.presence_penalty,
         stream: true,
       };
+      // en: 0 = unlimited, don't send max_tokens / 0 = 不限制
+      if (configRow.max_tokens > 0) body.max_tokens = configRow.max_tokens;
 
       try {
         const response = await fetch(normalizeApiUrl(configRow.api_url), {
