@@ -36,7 +36,7 @@ export function ChatMessages({
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  /** en: Filter messages by search query (case-insensitive) / zh: 按搜索词过滤消息 */
+  /** en: Filter messages by search query (case-insensitive) / zh: 按搜索词过滤消息（大小写不敏感） */
   const filteredMessages = searchQuery
     ? displayMessages.filter((m) => m.content.toLowerCase().includes(searchQuery.toLowerCase()))
     : displayMessages;

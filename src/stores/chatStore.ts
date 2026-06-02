@@ -45,6 +45,7 @@ interface ChatStore {
   stopStreaming: () => void;
 
   editUserMessage: (messageId: string, newContent: string) => Promise<void>;
+  /** en: Undo last user message + AI response / zh: 撤销最后一条用户消息及 AI 回复 */
   undoLastMessage: () => Promise<void>;
   regenerateLast: (configId: string, failoverConfigId?: string) => Promise<void>;
 
@@ -57,6 +58,8 @@ interface ChatStore {
   appendToken: (token: string) => void;
   finishStreaming: (conversationId: string) => void;
   setStreamError: (error: string) => void;
+  /** en: Clear error toast without affecting stream / zh: 清除错误提示不中断流 */
+  clearError: () => void;
   clearMessages: () => void;
   recalcTokens: () => void;
 }
@@ -351,6 +354,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   setStreamError: (error) => {
     set({ error, isStreaming: false, streamingContent: '' });
+  },
+
+  /** en: Clear error toast without touching streaming state. / zh: 清除错误提示但不影响流式状态。 */
+  clearError: () => {
+    set({ error: '' });
   },
 
   /** en: Undo last user message and everything after it. / zh: 撤销最后一条用户消息及之后的所有消息。 */

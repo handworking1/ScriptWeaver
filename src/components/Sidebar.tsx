@@ -83,7 +83,7 @@ export function Sidebar() {
         {isDark ? '☀️ 亮色模式' : '🌙 暗色模式'}
       </button>
       <div className={`p-4 border-t ${isDark ? 'border-gray-800 text-gray-600' : 'border-gray-200 text-gray-400'} text-xs`}>
-        v1.2.0
+        v1.3.0
       </div>
     </aside>
   );

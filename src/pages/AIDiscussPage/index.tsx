@@ -490,21 +490,22 @@ ${JSON.stringify(getFields(), null, 2)}`;
               {!activeConfigId ? (
                 <p className="text-red-400 text-sm">请在顶部选择设置</p>
               ) : (
+                /* en: Quick-start prompts for first-time users / zh: 首次使用快捷提问入口 */
                 <div className="flex flex-col gap-2 max-w-xs mx-auto">
                   <button
-                    onClick={() => { setInput('帮我想一个世界观'); setMessages([]); }}
+                    onClick={() => setInput('帮我想一个世界观')}
                     className="px-4 py-2 text-sm bg-gray-800 hover:bg-purple-900/40 border border-gray-700 hover:border-purple-500/50 text-gray-300 hover:text-purple-300 rounded-xl transition-colors text-left"
                   >
                     🎯 帮我想一个世界观
                   </button>
                   <button
-                    onClick={() => { setInput('帮我设计一个主角，包括性格、背景故事和说话风格'); setMessages([]); }}
+                    onClick={() => setInput('帮我设计一个主角，包括性格、背景故事和说话风格')}
                     className="px-4 py-2 text-sm bg-gray-800 hover:bg-purple-900/40 border border-gray-700 hover:border-purple-500/50 text-gray-300 hover:text-purple-300 rounded-xl transition-colors text-left"
                   >
                     👤 帮我设计一个主角
                   </button>
                   <button
-                    onClick={() => { setInput('根据当前剧本设定，帮我规划主线任务和章节划分'); setMessages([]); }}
+                    onClick={() => setInput('根据当前剧本设定，帮我规划主线任务和章节划分')}
                     className="px-4 py-2 text-sm bg-gray-800 hover:bg-purple-900/40 border border-gray-700 hover:border-purple-500/50 text-gray-300 hover:text-purple-300 rounded-xl transition-colors text-left"
                   >
                     📖 帮我规划剧情结构

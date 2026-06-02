@@ -61,6 +61,7 @@ export function ChatSetup({
     }
   };
 
+  /** en: Show welcome guide when user has no scripts or no configs / zh: 无剧本或无配置时显示欢迎引导 */
   const needsSetup = scripts.length === 0 || configs.length === 0;
 
   if (needsSetup) {

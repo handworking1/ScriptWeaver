@@ -12,14 +12,18 @@ interface Props {
   onSummary: () => void;
   onBranch: () => void;
   onRegenerate: () => void;
+  /** en: Undo last user message / zh: 撤销最后一条用户消息 */
   onUndo: () => void;
   onConvList: () => void;
   onCompendium: () => void;
   showCompendium: boolean;
+  /** en: Toggle script preview panel / zh: 切换剧本速览面板 */
   onScriptPreview: () => void;
   showScriptPreview: boolean;
+  /** en: Toggle quest list panel / zh: 切换任务列表面板 */
   onQuestList: () => void;
   showQuestList: boolean;
+  /** en: Whether current script has quest data / zh: 当前剧本是否有任务数据 */
   hasQuests: boolean;
   selectedScriptId: string | null;
 }
@@ -46,6 +50,7 @@ export function ChatHeader({
         </>
       ) : (
         <>
+          {/* en: Avatar with HSL fallback color based on character name / zh: 头像，无头像时根据角色名生成 HSL 底色 */}
           <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0" style={{ backgroundColor: characterAvatar ? 'transparent' : (characterName ? `hsl(${characterName.charCodeAt(0) * 37 % 360}, 40%, 30%)` : '#374151') }}>
             {characterAvatar ? <img src={`file://${characterAvatar}`} className="w-full h-full object-cover" /> : <span className="text-base font-medium text-white">{characterName?.charAt(0) ?? '?'}</span>}
           </div>
@@ -68,13 +73,18 @@ export function ChatHeader({
           )}
         </div>
         {isStreaming && <><span className="text-xs text-purple-400 animate-pulse">回复中...</span><button onClick={onStop} className="px-2 py-0.5 text-xs bg-red-900/50 text-red-300 rounded">停止</button></>}
+        {/* en: Toolbar buttons — only visible when not streaming and has messages / zh: 工具栏按钮—仅非流式且有消息时显示 */}
         {!isStreaming && displayMessagesLen > 0 && <button onClick={onSummary} className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-gray-300 rounded" title="总结">📋</button>}
         {!isStreaming && displayMessagesLen > 0 && <button onClick={onBranch} className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-gray-300 rounded" title="分支">🔀</button>}
         {!isStreaming && displayMessagesLen > 0 && <button onClick={onRegenerate} className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-gray-300 rounded" title="重新生成">🔄</button>}
+        {/* en: Undo — delete last user message and AI response / zh: 撤销—删除最后一条用户消息及AI回复 */}
         {!isStreaming && displayMessagesLen > 0 && <button onClick={onUndo} className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-gray-300 rounded" title="撤销最后一条消息">↩</button>}
         {selectedScriptId && <><button onClick={onConvList} className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded">💬 对话</button>
+        {/* en: Script preview side panel / zh: 剧本速览侧面板 */}
         <button onClick={onScriptPreview} className={`px-2 py-1 text-xs rounded ${showScriptPreview ? 'bg-purple-900/50 text-purple-300' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`}>📜 剧本</button>
+        {/* en: Quest list — only visible when script has quest data / zh: 任务列表—仅剧本有任务数据时显示 */}
         {hasQuests && <button onClick={onQuestList} className={`px-2 py-1 text-xs rounded ${showQuestList ? 'bg-purple-900/50 text-purple-300' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`}>📋 任务</button>}
+        {/* en: Character compendium side panel / zh: 角色图鉴侧面板 */}
         <button onClick={onCompendium} className={`px-2 py-1 text-xs rounded ${showCompendium ? 'bg-purple-900/50 text-purple-300' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`}>📖 图鉴</button></>}
       </div>
     </div>

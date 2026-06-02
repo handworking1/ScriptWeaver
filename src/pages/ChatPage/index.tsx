@@ -31,7 +31,7 @@ export function ChatPage() {
     loadMessages, createConversation, sendMessage, stopStreaming,
     editUserMessage, undoLastMessage, regenerateLast, branchConversation,
     requestSummary, dismissSummary, handleSummaryResult,
-    appendToken, finishStreaming, setStreamError,
+    appendToken, finishStreaming, setStreamError, clearError,
   } = useChatStore();
   const { selectedScriptId, selectedCharacterId, resumeConversationId, selectScript, selectCharacter, setResumeConversation } = useNavStore();
 
@@ -45,8 +45,11 @@ export function ChatPage() {
   const [shortcutBar, setShortcutBar] = useState<string[]>([]);
   const [shortcutsExpanded, setShortcutsExpanded] = useState(true);
   const [showCompendium, setShowCompendium] = useState(false);
+  /** en: Script preview side panel toggle / zh: 剧本速览侧面板开关 */
   const [showScriptPreview, setShowScriptPreview] = useState(false);
+  /** en: Quest list panel toggle / zh: 任务列表面板开关 */
   const [showQuestList, setShowQuestList] = useState(false);
+  /** en: Search query for filtering messages / zh: 消息搜索过滤词 */
   const [searchQuery, setSearchQuery] = useState('');
   /** Loading state for world intro generation / 世界介绍生成中的加载状态 */
   const [worldIntroLoading, setWorldIntroLoading] = useState(false);
@@ -73,7 +76,7 @@ export function ChatPage() {
   /** en: Auto-dismiss error toast after 5s / zh: 错误横幅 5 秒后自动消失 */
   useEffect(() => {
     if (!error) return;
-    const timer = setTimeout(() => useChatStore.getState().setStreamError(''), 5000);
+    const timer = setTimeout(clearError, 5000);
     return () => clearTimeout(timer);
   }, [error]);
   useEffect(() => { setShowSetup(true); }, []);
@@ -205,7 +208,7 @@ export function ChatPage() {
         <div className="flex-shrink-0 bg-red-900/40 border-b border-red-800/50 px-4 py-2 flex items-center gap-2 animate-in">
           <span className="text-sm">❌</span>
           <span className="text-sm text-red-300 flex-1">{error}</span>
-          <button onClick={() => useChatStore.getState().setStreamError('')} className="text-red-500 hover:text-red-300 text-xs">✕</button>
+          <button onClick={clearError} className="text-red-500 hover:text-red-300 text-xs">✕</button>
         </div>
       )}
       {/* AI thinking indicator / AI 思考中指示器 */}
