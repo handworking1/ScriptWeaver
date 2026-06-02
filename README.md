@@ -408,49 +408,6 @@ AI:
 
 ---
 
-## 🛠 开发
-
-### 技术栈
-
-Electron 33 + React 18 + TypeScript + Vite 6 + Tailwind CSS 3 + Zustand 5 + SQLite (sql.js WASM)
-
-### 本地运行
-
-```bash
-git clone https://github.com/yourname/scriptweaver.git
-cd scriptweaver
-npm install
-npm run dev          # 开发模式
-npm run typecheck    # 类型检查
-npm run build:win    # 打包 Windows
-npm run build:mac    # 打包 macOS
-npm run build:linux  # 打包 Linux
-```
-
-### 项目结构
-
-```
-├── electron/          # 主进程
-│   ├── main.ts        # 窗口、生命周期
-│   ├── preload.ts     # 安全 IPC 桥
-│   ├── db/            # SQLite CRUD（按实体拆分，11 个模块）
-│   ├── safe-storage.ts # 密钥加密
-│   └── ipc-handlers.ts # IPC + SSE 流式
-├── src/
-│   ├── pages/         # 7 个页面
-│   ├── components/    # 14 个组件
-│   ├── stores/        # 6 个 Zustand store
-│   ├── lib/           # 工具函数
-│   ├── types/         # TS 类型
-│   └── __tests__/     # 单元测试
-├── .github/workflows/ # CI/CD
-└── package.json
-```
-
----
-
-## 📝 更新日志
-
 ### v1.2.0 (2026-06-02)
 
 **新功能**
@@ -524,6 +481,47 @@ npm run build:linux  # 打包 Linux
 
 ### v1.0.0 (2026-06-02)
 - 初始发布：剧本管理 / 角色管理 / AI 配置 / 流式聊天 / 历史记录
+
+---
+
+## 🛠 开发
+
+### 技术栈
+
+Electron 33 + React 18 + TypeScript + Vite 6 + Tailwind CSS 3 + Zustand 5 + SQLite (sql.js WASM)
+
+### 本地运行
+
+```bash
+git clone https://github.com/yourname/scriptweaver.git
+cd scriptweaver
+npm install
+npm run dev          # 开发模式
+npm run typecheck    # 类型检查
+npm run build:win    # 打包 Windows
+npm run build:mac    # 打包 macOS
+npm run build:linux  # 打包 Linux
+```
+
+### 项目结构
+
+```
+├── electron/          # 主进程
+│   ├── main.ts        # 窗口、生命周期
+│   ├── preload.ts     # 安全 IPC 桥
+│   ├── db/            # SQLite CRUD（按实体拆分，11 个模块）
+│   ├── safe-storage.ts # 密钥加密
+│   └── ipc-handlers.ts # IPC + SSE 流式
+├── src/
+│   ├── pages/         # 7 个页面
+│   ├── components/    # 14 个组件
+│   ├── stores/        # 6 个 Zustand store
+│   ├── lib/           # 工具函数
+│   ├── types/         # TS 类型
+│   └── __tests__/     # 单元测试
+├── .github/workflows/ # CI/CD
+└── package.json
+```
 
 ---
 
