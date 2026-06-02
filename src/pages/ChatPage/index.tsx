@@ -119,6 +119,7 @@ export function ChatPage() {
    *  启动世界模式对话：创建对话→注入 GM prompt→异步生成 AI 开场白。 */
   const startWorldChat = async () => {
     if (!selectedScriptId || !activeConfigId) return;
+    try {
     const conv = await createConversation(generateId(), selectedScriptId, '', `世界：${script?.title || '未知'}`);
     addOpenConv(conv.id, conv.title || `世界：${script?.title || '未知'}`);
     const prompt = await buildWorldPrompt();
@@ -139,6 +140,11 @@ export function ChatPage() {
       } catch (err) { console.error('[ChatPage] world intro:', err); }
       finally { if (mountedRef.current) setWorldIntroLoading(false); }
     })();
+    } catch (err) {
+      console.error('[ChatPage] startWorldChat failed:', err);
+      useChatStore.getState().setStreamError('启动世界模式失败：' + (err as Error).message);
+      setShowSetup(true);
+    }
   };
 
   /** en: Route chat start to the appropriate mode handler.
