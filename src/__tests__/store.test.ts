@@ -1,59 +1,85 @@
-import { extractSuggestions, stripSuggestions } from '@/lib/templateResolver';
-import { estimateTokens, estimateCost } from '@/lib/tokenCounter';
+/**
+ * Real Zustand store tests with mocked Electron IPC.
+ * Tests the chatStore state machine: sendMessage → appendToken → finishStreaming.
+ */
 
-// Chat store state machine: sendMessage → streaming → finishStreaming
-// This tests the atomic gate logic that prevents duplicate messages
+// Mock electronAPI before store import
+const mockIpc = {
+  createMessage: jest.fn(),
+  updateMessage: jest.fn(),
+  deleteMessagesAfter: jest.fn(),
+  getMessages: jest.fn(),
+  createConversation: jest.fn(),
+  updateConversation: jest.fn(),
+  chatSend: jest.fn().mockResolvedValue(undefined),
+  chatStop: jest.fn(),
+  chatSummary: jest.fn(),
+  getSetting: jest.fn(),
+  setSetting: jest.fn(),
+};
+(global as any).window = { electronAPI: mockIpc };
+
+import { useChatStore } from '@/stores/chatStore';
 
 describe('chatStore state machine', () => {
-  test('finishStreaming gate: only processes if isStreaming is true', () => {
-    // The gate in finishStreaming:
-    // const state = get();
-    // if (!convId || !state.streamingContent || !state.isStreaming) { set({ isStreaming: false }); return; }
-    // set({ streamingContent: '', isStreaming: false, suggestions: [] });
-    //
-    // This test verifies the gate logic by checking that a second call
-    // (simulating double chat:done) is a no-op.
-
-    let isStreaming = true;
-    let streamingContent = 'test content';
-    let messages: string[] = [];
-
-    // First call - should succeed
-    expect(isStreaming).toBe(true);
-    expect(streamingContent).toBeTruthy();
-    const captured = streamingContent;
-    isStreaming = false; streamingContent = '';
-    messages.push(captured);
-    expect(messages.length).toBe(1);
-
-    // Second call - should be no-op (gate closed)
-    if (!streamingContent || !isStreaming) {
-      isStreaming = false; streamingContent = ''; // no-op
-    }
-    expect(messages.length).toBe(1); // still 1, no duplicate
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useChatStore.setState({
+      activeConversationId: 'conv-1',
+      messages: [],
+      displayMessages: [],
+      streamingContent: '',
+      isStreaming: false,
+      error: null,
+      tokenCount: 0,
+      totalTokensSession: 0,
+      suggestions: [],
+      showSummary: false,
+      summaryContent: '',
+    });
+    mockIpc.createMessage.mockResolvedValue({ id: 'msg-1', conversationId: 'conv-1', role: 'user', content: 'hello', timestamp: 1 });
+    mockIpc.createConversation.mockResolvedValue({ id: 'conv-1', scriptId: 's1', characterId: 'c1', title: 'test', createdAt: 1, updatedAt: 1 });
+    mockIpc.getMessages.mockResolvedValue([]);
   });
 
-  test('sendMessage creates user message before streaming', () => {
-    let messages: { role: string; content: string }[] = [];
-    const userMsg = { role: 'user', content: 'hello' };
-    messages = [...messages, userMsg];
-    // streaming starts
-    expect(messages.length).toBe(1);
-    expect(messages[0].role).toBe('user');
+  test('sendMessage sets isStreaming and creates user message', async () => {
+    const { sendMessage } = useChatStore.getState();
+    await sendMessage('config-1', 'hello');
+    const state = useChatStore.getState();
+    expect(state.isStreaming).toBe(true);
+    expect(state.displayMessages[0]?.content).toBe('hello');
+    expect(state.displayMessages[0]?.role).toBe('user');
+    expect(mockIpc.createMessage).toHaveBeenCalled();
+    expect(mockIpc.chatSend).toHaveBeenCalled();
   });
 
-  test('extractSuggestions during finishStreaming', () => {
-    const content = '这是回复内容\n[SUGGESTIONS: 选项1 | 选项2 | 选项3]';
-    const suggestions = extractSuggestions(content);
-    expect(suggestions).toEqual(['选项1', '选项2', '选项3']);
-    const cleanContent = stripSuggestions(content);
-    expect(cleanContent).not.toContain('SUGGESTIONS');
+  test('appendToken accumulates streamingContent', () => {
+    const { appendToken } = useChatStore.getState();
+    appendToken('你');
+    appendToken('好');
+    expect(useChatStore.getState().streamingContent).toBe('你好');
   });
 
-  test('tokenCounter utility works', () => {
-    const tokens = estimateTokens('你好世界 hello world');
-    expect(tokens).toBeGreaterThan(0);
-    const cost = estimateCost(tokens, 0);
-    expect(cost).toBeDefined();
+  test('finishStreaming atomic gate: double call is no-op', async () => {
+    // Set up streaming state
+    useChatStore.setState({ isStreaming: true, streamingContent: 'test reply\n[SUGGESTIONS: A | B | C]' });
+    mockIpc.createMessage.mockResolvedValue({ id: 'msg-2', conversationId: 'conv-1', role: 'assistant', content: 'test reply', timestamp: 2 });
+
+    const { finishStreaming } = useChatStore.getState();
+    await finishStreaming('conv-1');
+
+    const state1 = useChatStore.getState();
+    expect(state1.isStreaming).toBe(false);
+    expect(state1.streamingContent).toBe('');
+    expect(state1.suggestions).toEqual([{ text: 'A' }, { text: 'B' }, { text: 'C' }]);
+
+    // Second call should be no-op (gate closed)
+    await finishStreaming('conv-1');
+    expect(useChatStore.getState().displayMessages.length).toBe(state1.displayMessages.length);
+  });
+
+  test('stopStreaming calls chatStop', () => {
+    useChatStore.getState().stopStreaming();
+    expect(mockIpc.chatStop).toHaveBeenCalled();
   });
 });

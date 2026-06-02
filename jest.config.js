@@ -6,5 +6,6 @@ module.exports = {
   testMatch: ['**/__tests__/**/*.test.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^nanoid$': '<rootDir>/src/__mocks__/nanoid.js',
   },
 };
