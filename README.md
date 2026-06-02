@@ -11,7 +11,6 @@
 一个本地优先、AI 驱动的沉浸式叙事创作平台。从灵感到成书，每一步都有 AI 相伴。
 
 [![Release](https://img.shields.io/badge/下载-Windows%20EXE-blue)](../../releases)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Electron](https://img.shields.io/badge/Electron-33-9feaf9)](https://electronjs.org)
 [![React](https://img.shields.io/badge/React-18-61dafb)](https://react.dev)
 
@@ -523,8 +522,4 @@ npm run build:linux  # 打包 Linux
 └── package.json
 ```
 
----
 
-## 📄 许可
-
-MIT License
