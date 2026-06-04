@@ -186,14 +186,14 @@ export function useSystemPrompt(
     // Build role identity / 构建角色身份
     let p = '';
     if (playAs !== 'myself') {
-      p = `用户在扮演【${playAs}】。请用第二人称"你"称呼用户，将所有 NPC 视作独立角色。\n`;
+      p = `用户在扮演【${playAs}】。请称呼用户为「${playAs}」，将所有 NPC 视作独立角色。\n`;
     }
     p += `你是剧本《${script?.title || '未命名'}》的叙述者（Game Master）。`;
     p += `\n\n---\n\n【世界观】${script?.worldSetting || '未设定'}`;
     p += `\n\n---\n\n【故事背景】${script?.background || '未设定'}`;
     if (mq) p += `\n\n---\n\n【主线任务】${mq}`;
     if (sq) p += `\n\n---\n\n【支线任务】${sq}`;
-    p += `\n\n---\n\n以第二人称引导玩家，控制NPC，描述场景。NPC说话标注【名字】。`;
+    p += `\n\n---\n\n控制NPC，描述场景。NPC说话标注【名字】。叙述人称由下方指令决定。`;
     p = applySystemMode(p);
     p = applyNarrativeMode(p);
     p = await applyGmSettings(p);
