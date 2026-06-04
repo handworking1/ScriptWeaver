@@ -15,8 +15,10 @@ interface ChatBubbleProps {
 
 function highlightText(text: string, query: string): string {
   if (!query) return text;
+  // Escape HTML in content first / 先转义HTML
+  const safe = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="bg-yellow-500/30 text-yellow-200 rounded px-0.5">$1</mark>');
+  return safe.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="bg-yellow-500/30 text-yellow-200 rounded px-0.5">$1</mark>');
 }
 
 export function ChatBubble({ role, content, timestamp, characterName, characterAvatar, searchQuery, starred, onStar }: ChatBubbleProps) {

@@ -396,13 +396,14 @@ export function registerIpcHandlers(): void {
         ...m, content: hasExchange ? stripFirstUseOnly(m.content || '') : m.content || '',
       }));
       const nonSystem = messages.filter((m: any) => m.role !== 'system');
-      // en: 按 token 数动态截断 / Dynamic token-based truncation
+      // en: 按 token 数动态截断 (0=不限制) / Dynamic token-based truncation (0=unlimited)
       const maxContextTokens = configRow.max_tokens || 32768;
+      const maxChars = maxContextTokens * 2;
       let totalChars = systemMsgs.reduce((s: number, m: any) => s + (m.content?.length || 0), 0);
       const kept: any[] = [];
       for (let i = nonSystem.length - 1; i >= 0; i--) {
         totalChars += (nonSystem[i].content?.length || 0);
-        if (totalChars > maxContextTokens * 2 && kept.length >= 4) break; // ~2 chars per token
+        if (maxChars > 0 && totalChars > maxChars && kept.length >= 4) break;
         kept.unshift(nonSystem[i]);
       }
       const sendMessages = [...systemMsgs, ...kept];
