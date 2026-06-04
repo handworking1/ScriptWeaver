@@ -88,8 +88,8 @@ export function useSystemPrompt(
 
   const applyNarrativeMode = (prompt: string): string => {
     const m = script?.extraData?.narrativeMode || 'mode3';
-    if (m === 'mode1') return `【创作模式：沉浸式角色扮演】\n禁止OOC，禁止元评论。\n\n${prompt}`;
-    if (m === 'mode2') return `【创作模式：上帝视角共同创作】\n外部视角讨论，不作为故事角色。\n\n${prompt}`;
+    if (m === 'mode1') return `【创作模式：沉浸式角色扮演】\n禁止OOC，禁止元评论。\n\n---\n\n${prompt}`;
+    if (m === 'mode2') return `【创作模式：上帝视角共同创作】\n外部视角讨论，不作为故事角色。\n\n---\n\n${prompt}`;
     return prompt;
   };
 
@@ -201,11 +201,11 @@ export function useSystemPrompt(
     p = await applyProtagonist(p);
     p = applyBanghui(p);
     p += getFormatRules();
-    if (interactionOpts === 'T') p += '\n每次回复末尾必须提供 [SUGGESTIONS: 选项1 | 选项2 | 选项3]。';
     p = await applyStyleProfile(p);
     // Narrative person / 叙事人称
     if (narrativePerson === 'me') p += '\n用第一人称「我」叙述。';
     else if (narrativePerson === 'he') p += `\n用第三人称叙述，以「${playAs === 'myself' ? '主角' : playAs}」的视角展开。`;
+    else p += '\n用第二人称「你」叙述。';
     return truncateSystemPrompt(p);
   };
 
@@ -226,13 +226,23 @@ export function useSystemPrompt(
       if (c.speakingStyle) p += `。口癖：${c.speakingStyle.slice(0, 60)}`;
       p += '\n';
     }
-    p += `\n【小说梗概】\n《${script?.title || '未命名'}》${script?.worldSetting || ''}`;
-    p += `\n\n【发言规则 - 必须遵守】`;
+    p += `\n\n---\n\n【小说梗概】\n《${script?.title || '未命名'}》`;
+    if (script?.worldSetting) p += `\n世界观：${script?.worldSetting}`;
+    if (script?.background) p += `\n背景：${script?.background}`;
+    const mq = script?.extraData?.mainQuests;
+    const sq = script?.extraData?.sideQuests;
+    if (mq) p += `\n主线：${mq}`;
+    if (sq) p += `\n支线：${sq}`;
+    p += `\n\n---\n\n【发言规则 - 必须遵守】`;
     p += `\n每次用户发言后，选择1-3个最相关的角色依次回应。`;
     p += `\n角色的回应格式：【角色名】对话内容`;
     p += `\n角色之间可以互相搭话、吐槽、争吵，但每个角色每次不超过200字。`;
     p += `\n不要让不相关的角色强行插话。请轮流让不同角色出场。`;
+    p = applySystemMode(p);
+    p = applyNarrativeMode(p);
     p = await applyGlobalRules(p);
+    p = await applyProtagonist(p);
+    p = applyBanghui(p);
     p = await applyStyleProfile(p);
     p += getFormatRules();
     return truncateSystemPrompt(p);
