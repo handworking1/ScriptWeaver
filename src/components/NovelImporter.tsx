@@ -52,7 +52,7 @@ export function NovelImporter({ configId, scriptId, onExtract }: Props) {
   "timeline": "事件时间线",
   "ageRule": "适用年龄（全年龄/16+/18+）",
   "lorebook": [{"keywords":"关键词1,关键词2","content":"注入内容"}],
-  "characters": [{"name":"角色名","personality":"性格","background":"背景","speakingStyle":"说话风格","appearance":"外貌描述"}]
+  "characters": [{"name":"角色名","personality":"性格","background":"背景","speakingStyle":"口癖","appearance":"外貌","firstMessage":"开场白","exampleDialogue":"用户：xxx\\n角色：xxx\\n用户：xxx\\n角色：xxx"}]
 }
 
 只输出JSON，不要任何额外文字。

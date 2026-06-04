@@ -190,10 +190,14 @@ export function ScriptsPage() {
         for (const c of extractedChars) {
           if (!c.name) continue;
           try {
+            // Merge firstMessage + exampleDialogue into speakingStyle / 开场白+示例并入口癖
+            let style = c.speakingStyle || '';
+            if (c.firstMessage) style += `\n【开场白】${c.firstMessage}`;
+            if (c.exampleDialogue) style += `\n【对话示例】${c.exampleDialogue}`;
             await window.electronAPI.createCharacter({
               id: generateId(), scriptId: newId,
               name: c.name, personality: c.personality || '',
-              background: c.background || '', speakingStyle: c.speakingStyle || '',
+              background: c.background || '', speakingStyle: style,
               appearance: c.appearance || '', avatar: '', createdAt: Date.now(),
             } as any);
           } catch { /* non-critical */ }
