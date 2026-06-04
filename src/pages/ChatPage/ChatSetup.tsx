@@ -6,8 +6,8 @@ import { useNavStore } from '@/stores/navStore';
 import { CharacterSelector } from './CharacterSelector';
 
 interface Props {
-  chatMode: '1v1' | 'world';
-  setChatMode: (m: '1v1' | 'world') => void;
+  chatMode: '1v1' | 'world' | 'group';
+  setChatMode: (m: '1v1' | 'world' | 'group') => void;
   selectedScriptId: string | null;
   selectedCharacterId: string | null;
   activeConfigId: string | null;
@@ -21,6 +21,8 @@ interface Props {
   narrativePerson: string;
   setNarrativePerson: (v: string) => void;
   protagonistName: string;
+  groupCharacterIds: string[];
+  setGroupCharacterIds: (ids: string[]) => void;
   scriptCharacters: { id: string; name: string }[];
   onStart: () => void;
 }
@@ -28,7 +30,9 @@ interface Props {
 export function ChatSetup({
   chatMode, setChatMode, selectedScriptId, selectedCharacterId, activeConfigId,
   activeTemplateId, replyLength, setReplyLength, interactionOpts, setInteractionOpts,
-  playAs, setPlayAs, narrativePerson, setNarrativePerson, protagonistName, scriptCharacters,
+  playAs, setPlayAs, narrativePerson, setNarrativePerson, protagonistName,
+  groupCharacterIds, setGroupCharacterIds,
+  scriptCharacters,
   onStart,
 }: Props) {
   const { scripts } = useScriptStore();
@@ -136,7 +140,32 @@ export function ChatSetup({
           <div className="flex gap-2">
             <button onClick={() => setChatMode('1v1')} className={`flex-1 py-2 rounded-lg text-sm ${chatMode === '1v1' ? 'bg-purple-900/60 text-purple-300 border border-purple-500/50' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>💬 角色对话</button>
             <button onClick={() => setChatMode('world')} className={`flex-1 py-2 rounded-lg text-sm ${chatMode === 'world' ? 'bg-purple-900/60 text-purple-300 border border-purple-500/50' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>🌍 世界参与</button>
+            <button onClick={() => setChatMode('group')} className={`flex-1 py-2 rounded-lg text-sm ${chatMode === 'group' ? 'bg-purple-900/60 text-purple-300 border border-purple-500/50' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>👥 群聊</button>
           </div>
+
+          {chatMode === 'group' && selectedScriptId && (
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">
+                选择参与群聊的角色 ({groupCharacterIds.length} 人)
+              </label>
+              <div className="max-h-48 overflow-y-auto space-y-1 bg-gray-800/50 rounded-lg p-2 border border-gray-700">
+                {scriptCharacters.length === 0 && (
+                  <div className="text-xs text-gray-500 p-2">该剧本暂未创建角色</div>
+                )}
+                {scriptCharacters.map(c => (
+                  <label key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-700/50 cursor-pointer">
+                    <input type="checkbox" checked={groupCharacterIds.includes(c.id)}
+                      onChange={e => {
+                        if (e.target.checked) setGroupCharacterIds([...groupCharacterIds, c.id]);
+                        else setGroupCharacterIds(groupCharacterIds.filter(id => id !== c.id));
+                      }}
+                      className="rounded" />
+                    <span className="text-sm text-gray-200">{c.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
 
           {chatMode === 'world' && selectedScriptId && (
             <div className="grid grid-cols-2 gap-2">

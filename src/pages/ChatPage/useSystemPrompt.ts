@@ -51,7 +51,7 @@ function truncateSystemPrompt(prompt: string): string {
 }
 
 export function useSystemPrompt(
-  chatMode: '1v1' | 'world',
+  chatMode: '1v1' | 'world' | 'group',
   character: Character | null,
   script: { id?: string; title?: string; worldSetting?: string; background?: string; extraData?: any } | undefined,
   templates: PromptTemplate[],
@@ -60,6 +60,7 @@ export function useSystemPrompt(
   interactionOpts: string,
   playAs: string = 'myself',
   narrativePerson: string = 'you',
+  groupCharacterIds: string[] = [],
 ) {
   const applyGlobalRules = async (prompt: string): Promise<string> => {
     try {
@@ -208,5 +209,34 @@ export function useSystemPrompt(
     return truncateSystemPrompt(p);
   };
 
-  return { build1v1Prompt, buildWorldPrompt };
+  const buildGroupPrompt = async (): Promise<string> => {
+    // Get group characters info / 获取群聊角色信息
+    const chars: Character[] = [];
+    for (const id of groupCharacterIds) {
+      try { const c = await window.electronAPI.getCharacter(id); if (c) chars.push(c as Character); }
+      catch { /* skip unavailable */ }
+    }
+    if (chars.length === 0) return '你是一个AI助手。';
+
+    let p = '你将同时扮演以下角色，根据剧情自然地轮流发言。\n\n';
+    p += '【角色列表】\n';
+    for (const c of chars) {
+      p += `- ${c.name}`;
+      if (c.personality) p += `：${c.personality.slice(0, 100)}`;
+      if (c.speakingStyle) p += `。口癖：${c.speakingStyle.slice(0, 60)}`;
+      p += '\n';
+    }
+    p += `\n【小说梗概】\n《${script?.title || '未命名'}》${script?.worldSetting || ''}`;
+    p += `\n\n【发言规则 - 必须遵守】`;
+    p += `\n每次用户发言后，选择1-3个最相关的角色依次回应。`;
+    p += `\n角色的回应格式：【角色名】对话内容`;
+    p += `\n角色之间可以互相搭话、吐槽、争吵，但每个角色每次不超过200字。`;
+    p += `\n不要让不相关的角色强行插话。请轮流让不同角色出场。`;
+    p = await applyGlobalRules(p);
+    p = await applyStyleProfile(p);
+    p += getFormatRules();
+    return truncateSystemPrompt(p);
+  };
+
+  return { build1v1Prompt, buildWorldPrompt, buildGroupPrompt };
 }

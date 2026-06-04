@@ -40,7 +40,7 @@ export function ChatPage() {
   const [showSetup, setShowSetup] = useState(true);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
-  const [chatMode, setChatMode] = useState<'1v1' | 'world'>('1v1');
+  const [chatMode, setChatMode] = useState<'1v1' | 'world' | 'group'>('1v1');
   const [replyLength, setReplyLength] = useState<'A'|'B'|'C'|'D'>('D');
   const [interactionOpts, setInteractionOpts] = useState<'T'|'F'>('F');
   const [shortcutBar, setShortcutBar] = useState<string[]>([]);
@@ -63,6 +63,8 @@ export function ChatPage() {
   /** Play as / 扮演角色 */
   const [playAs, setPlayAs] = useState('myself');
   const [narrativePerson, setNarrativePerson] = useState('you');
+  /** Group chat / 群聊 */
+  const [groupCharacterIds, setGroupCharacterIds] = useState<string[]>([]);
   /** en: Search query for filtering messages / zh: 消息搜索过滤词 */
   const [searchQuery, setSearchQuery] = useState('');
   /** Loading state for world intro generation / 世界介绍生成中的加载状态 */
@@ -80,7 +82,7 @@ export function ChatPage() {
   const script = scripts.find((s) => s.id === selectedScriptId);
   const character = useCharacterStore.getState().characters.find((c) => c.id === selectedCharacterId) ?? null;
 
-  const { build1v1Prompt, buildWorldPrompt } = useSystemPrompt(chatMode, character, script, templates, activeTemplateId, replyLength, interactionOpts, playAs, narrativePerson);
+  const { build1v1Prompt, buildWorldPrompt, buildGroupPrompt } = useSystemPrompt(chatMode, character, script, templates, activeTemplateId, replyLength, interactionOpts, playAs, narrativePerson, groupCharacterIds);
 
   useEffect(() => { loadConfigs(); loadTemplates(); (async () => { try { const d = await window.electronAPI.getSetting('chat_shortcuts'); if (d) setShortcutBar(JSON.parse(d)); } catch (err) { console.error('[ChatPage] loadShortcuts:', err); } })(); }, []);
 
@@ -176,8 +178,23 @@ export function ChatPage() {
    *  zh: 根据聊天模式路由到对应的启动函数。 */
   const handleStartChat = () => {
     if (!selectedScriptId || !activeConfigId) return;
+    if (chatMode === '1v1' && !selectedCharacterId) return;
+    if (chatMode === 'group' && groupCharacterIds.length === 0) return;
     if (chatMode === '1v1') start1v1Chat();
+    else if (chatMode === 'group') startGroupChat();
     else startWorldChat();
+  };
+
+  const startGroupChat = async () => {
+    const title = '群聊 · ' + (script?.title || '');
+    await createConversation(selectedScriptId!, '', chatMode as any, title);
+    const cid = useChatStore.getState().activeConversationId;
+    if (cid) {
+      const prompt = await buildGroupPrompt();
+      const sysMsg: Message = { id: generateId(), conversationId: cid, role: 'system', content: prompt, timestamp: Date.now() };
+      await window.electronAPI.createMessage(sysMsg);
+      useChatStore.setState({ messages: [sysMsg] });
+    }
   };
 
   const handleEditMessage = async (msg: Message) => {
@@ -266,7 +283,7 @@ export function ChatPage() {
     setShowConvList(false);
   };
 
-  if (showSetup) return <ChatSetup chatMode={chatMode} setChatMode={setChatMode} selectedScriptId={selectedScriptId} selectedCharacterId={selectedCharacterId} activeConfigId={activeConfigId} activeTemplateId={activeTemplateId} replyLength={replyLength} setReplyLength={setReplyLength} interactionOpts={interactionOpts} setInteractionOpts={setInteractionOpts} playAs={playAs} setPlayAs={setPlayAs} narrativePerson={narrativePerson} setNarrativePerson={setNarrativePerson} protagonistName={script?.extraData?.protagonistName || ''} scriptCharacters={useCharacterStore.getState().characters.map((c: any) => ({ id: c.id, name: c.name }))} onStart={handleStartChat} />;
+  if (showSetup) return <ChatSetup chatMode={chatMode} setChatMode={setChatMode as any} selectedScriptId={selectedScriptId} selectedCharacterId={selectedCharacterId} activeConfigId={activeConfigId} activeTemplateId={activeTemplateId} replyLength={replyLength} setReplyLength={setReplyLength} interactionOpts={interactionOpts} setInteractionOpts={setInteractionOpts} playAs={playAs} setPlayAs={setPlayAs} narrativePerson={narrativePerson} setNarrativePerson={setNarrativePerson} groupCharacterIds={groupCharacterIds} setGroupCharacterIds={setGroupCharacterIds} protagonistName={script?.extraData?.protagonistName || ''} scriptCharacters={useCharacterStore.getState().characters.map((c: any) => ({ id: c.id, name: c.name }))} onStart={handleStartChat} />;
 
   return (
     <div className="flex-1 flex flex-col h-full">
@@ -280,7 +297,7 @@ export function ChatPage() {
           ))}
           <button onClick={() => setShowSetup(true)} className="px-2 py-0.5 text-xs rounded bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200">+</button>
       </div>
-      <ChatHeader characterName={character?.name} characterAvatar={character?.avatar} scriptTitle={script?.title} chatMode={chatMode} isStreaming={isStreaming} displayMessagesLen={displayMessages.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} onBack={() => setShowSetup(true)} onStop={stopStreaming} onSummary={() => { if (activeConfigId && activeConversationId) { const name = character?.name || script?.title || '当前剧情'; requestSummary(activeConfigId, name); } }} onBranch={async () => { if (selectedScriptId) await branchConversation(selectedScriptId, selectedCharacterId || ''); }} onRegenerate={async () => { if (activeConfigId) await regenerateLast(activeConfigId, failoverConfigId ?? undefined); }} onUndo={() => undoLastMessage()} onConvList={loadConvList} onCompendium={() => setShowCompendium(!showCompendium)} showCompendium={showCompendium} onScriptPreview={() => setShowScriptPreview(!showScriptPreview)} showScriptPreview={showScriptPreview} onQuestList={() => setShowQuestList(!showQuestList)} showQuestList={showQuestList} hasQuests={!!(script?.extraData?.mainQuests || script?.extraData?.sideQuests)} replyLength={replyLength} onReplyLengthChange={handleReplyLengthChange} authorNote={authorNote} onAuthorNoteChange={(n) => { setAuthorNote(n); window.electronAPI.setSetting('author_note_' + activeConversationId, n).catch(() => {}); }} showAuthorNote={showAuthorNote} onNovelReader={() => setShowNovelReader(true)} onChapterMark={handleChapterMark} chapterPresets={chapterPresets} showStarredOnly={showStarredOnly} onToggleStarredOnly={() => setShowStarredOnly(v => !v)} starredCount={starredIds.length} onToggleAuthorNote={() => setShowAuthorNote(v => !v)} onShowSummaries={() => {
+      <ChatHeader characterName={character?.name} characterAvatar={character?.avatar} scriptTitle={script?.title} chatMode={chatMode as any} isStreaming={isStreaming} displayMessagesLen={displayMessages.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} onBack={() => setShowSetup(true)} onStop={stopStreaming} onSummary={() => { if (activeConfigId && activeConversationId) { const name = character?.name || script?.title || '当前剧情'; requestSummary(activeConfigId, name); } }} onBranch={async () => { if (selectedScriptId) await branchConversation(selectedScriptId, selectedCharacterId || ''); }} onRegenerate={async () => { if (activeConfigId) await regenerateLast(activeConfigId, failoverConfigId ?? undefined); }} onUndo={() => undoLastMessage()} onConvList={loadConvList} onCompendium={() => setShowCompendium(!showCompendium)} showCompendium={showCompendium} onScriptPreview={() => setShowScriptPreview(!showScriptPreview)} showScriptPreview={showScriptPreview} onQuestList={() => setShowQuestList(!showQuestList)} showQuestList={showQuestList} hasQuests={!!(script?.extraData?.mainQuests || script?.extraData?.sideQuests)} replyLength={replyLength} onReplyLengthChange={handleReplyLengthChange} authorNote={authorNote} onAuthorNoteChange={(n) => { setAuthorNote(n); window.electronAPI.setSetting('author_note_' + activeConversationId, n).catch(() => {}); }} showAuthorNote={showAuthorNote} onNovelReader={() => setShowNovelReader(true)} onChapterMark={handleChapterMark} chapterPresets={chapterPresets} showStarredOnly={showStarredOnly} onToggleStarredOnly={() => setShowStarredOnly(v => !v)} starredCount={starredIds.length} onToggleAuthorNote={() => setShowAuthorNote(v => !v)} onShowSummaries={() => {
   const cid = activeConversationId;
   if (!cid) return;
   window.electronAPI.getSetting('auto_summaries_' + cid).then(raw => {
@@ -361,7 +378,7 @@ export function ChatPage() {
         </div>
       )}
       <ChatMessages displayMessages={displayMessages} streamingContent={streamingContent} isStreaming={isStreaming} suggestions={suggestions} showSummary={showSummary} summaryContent={summaryContent} summaryLoading={summaryLoading} summaryError={summaryError} characterName={character?.name} characterAvatar={character?.avatar} searchQuery={searchQuery} starredIds={starredIds} onToggleStar={handleToggleStar} editingMessageId={editingMessageId} editContent={editContent} setEditContent={setEditContent} onEditSave={handleEditMessage} onEditCancel={() => setEditingMessageId(null)} onEditStart={(msg) => { setEditingMessageId(msg.id); setEditContent(msg.content); }} onQuickReply={(t) => { if (activeConfigId) sendMessage(activeConfigId, t, failoverConfigId ?? undefined); }} onDismissSummary={dismissSummary} onCopySummary={() => navigator.clipboard.writeText(summaryContent)} />
-      <ChatInput inputValue={inputValue} setInputValue={setInputValue} isStreaming={isStreaming} shortcutBar={shortcutBar} shortcutsExpanded={shortcutsExpanded} setShortcutsExpanded={setShortcutsExpanded} activeConfigId={activeConfigId} failoverConfigId={failoverConfigId} sendMessage={(cid, t, fid) => sendMessage(cid, t, fid)} recentMessages={displayMessages.slice(-6)} characterName={character?.name} banghuiEnabled={script?.extraData?.banghuiEnabled === 'Y'} chatMode={chatMode} scriptId={selectedScriptId ?? undefined} />
+      <ChatInput inputValue={inputValue} setInputValue={setInputValue} isStreaming={isStreaming} shortcutBar={shortcutBar} shortcutsExpanded={shortcutsExpanded} setShortcutsExpanded={setShortcutsExpanded} activeConfigId={activeConfigId} failoverConfigId={failoverConfigId} sendMessage={(cid, t, fid) => sendMessage(cid, t, fid)} recentMessages={displayMessages.slice(-6)} characterName={character?.name} banghuiEnabled={script?.extraData?.banghuiEnabled === 'Y'} chatMode={chatMode as any} scriptId={selectedScriptId ?? undefined} />
       {showConvList && (
         <div className="fixed inset-0 z-50 flex justify-center items-start pt-20" onClick={() => setShowConvList(false)}>
           <div className="bg-gray-800 rounded-xl border border-gray-700 w-96 max-h-[60vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
