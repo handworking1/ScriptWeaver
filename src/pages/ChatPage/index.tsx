@@ -51,6 +51,10 @@ export function ChatPage() {
   const [showQuestList, setShowQuestList] = useState(false);
   const [authorNote, setAuthorNote] = useState('');
   const [showAuthorNote, setShowAuthorNote] = useState(false);
+  /** Chapter markers / 章节标记 */
+  const [showChapterPopup, setShowChapterPopup] = useState(false);
+  const [chapterTitle, setChapterTitle] = useState('');
+  const [chapterMarkers, setChapterMarkers] = useState<{ title: string; at: number }[]>([]);
   /** en: Search query for filtering messages / zh: 消息搜索过滤词 */
   const [searchQuery, setSearchQuery] = useState('');
   /** Loading state for world intro generation / 世界介绍生成中的加载状态 */
@@ -197,6 +201,26 @@ export function ChatPage() {
       setConvTitles(prev => ({ ...prev, [id]: title }));
     }
   };
+  /** Chapter presets from script / 剧本章节预设 */
+  const chapterPresets = (script?.extraData?.chapters || '')
+    .split(/[\n,，]/).map(s => s.trim()).filter(Boolean);
+
+  /** Mark chapter with preset selection / 标记章节（支持预设选择） */
+  const handleChapterMark = () => {
+    setChapterTitle(chapterPresets[chapterMarkers.length] || '');
+    setShowChapterPopup(true);
+  };
+  const confirmChapterMark = async () => {
+    const title = chapterTitle.trim() || `第${chapterMarkers.length + 1}章`;
+    const marker = { title, at: Date.now() };
+    const updated = [...chapterMarkers, marker];
+    setChapterMarkers(updated);
+    if (activeConversationId) {
+      await window.electronAPI.setSetting('chapter_markers_' + activeConversationId, JSON.stringify(updated));
+    }
+    setShowChapterPopup(false);
+  };
+
   /** Close a conversation tab / 关闭对话标签 */
   const closeConv = (id: string) => {
     setOpenConvIds(prev => prev.filter(x => x !== id));
@@ -237,7 +261,7 @@ export function ChatPage() {
           ))}
           <button onClick={() => setShowSetup(true)} className="px-2 py-0.5 text-xs rounded bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200">+</button>
       </div>
-      <ChatHeader characterName={character?.name} characterAvatar={character?.avatar} scriptTitle={script?.title} chatMode={chatMode} isStreaming={isStreaming} displayMessagesLen={displayMessages.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} onBack={() => setShowSetup(true)} onStop={stopStreaming} onSummary={() => { if (activeConfigId && activeConversationId) { const name = character?.name || script?.title || '当前剧情'; requestSummary(activeConfigId, name); } }} onBranch={async () => { if (selectedScriptId) await branchConversation(selectedScriptId, selectedCharacterId || ''); }} onRegenerate={async () => { if (activeConfigId) await regenerateLast(activeConfigId, failoverConfigId ?? undefined); }} onUndo={() => undoLastMessage()} onConvList={loadConvList} onCompendium={() => setShowCompendium(!showCompendium)} showCompendium={showCompendium} onScriptPreview={() => setShowScriptPreview(!showScriptPreview)} showScriptPreview={showScriptPreview} onQuestList={() => setShowQuestList(!showQuestList)} showQuestList={showQuestList} hasQuests={!!(script?.extraData?.mainQuests || script?.extraData?.sideQuests)} replyLength={replyLength} onReplyLengthChange={handleReplyLengthChange} authorNote={authorNote} onAuthorNoteChange={(n) => { setAuthorNote(n); window.electronAPI.setSetting('author_note_' + activeConversationId, n).catch(() => {}); }} showAuthorNote={showAuthorNote} onToggleAuthorNote={() => setShowAuthorNote(v => !v)} onShowSummaries={() => {
+      <ChatHeader characterName={character?.name} characterAvatar={character?.avatar} scriptTitle={script?.title} chatMode={chatMode} isStreaming={isStreaming} displayMessagesLen={displayMessages.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} onBack={() => setShowSetup(true)} onStop={stopStreaming} onSummary={() => { if (activeConfigId && activeConversationId) { const name = character?.name || script?.title || '当前剧情'; requestSummary(activeConfigId, name); } }} onBranch={async () => { if (selectedScriptId) await branchConversation(selectedScriptId, selectedCharacterId || ''); }} onRegenerate={async () => { if (activeConfigId) await regenerateLast(activeConfigId, failoverConfigId ?? undefined); }} onUndo={() => undoLastMessage()} onConvList={loadConvList} onCompendium={() => setShowCompendium(!showCompendium)} showCompendium={showCompendium} onScriptPreview={() => setShowScriptPreview(!showScriptPreview)} showScriptPreview={showScriptPreview} onQuestList={() => setShowQuestList(!showQuestList)} showQuestList={showQuestList} hasQuests={!!(script?.extraData?.mainQuests || script?.extraData?.sideQuests)} replyLength={replyLength} onReplyLengthChange={handleReplyLengthChange} authorNote={authorNote} onAuthorNoteChange={(n) => { setAuthorNote(n); window.electronAPI.setSetting('author_note_' + activeConversationId, n).catch(() => {}); }} showAuthorNote={showAuthorNote} onChapterMark={handleChapterMark} chapterPresets={chapterPresets} onToggleAuthorNote={() => setShowAuthorNote(v => !v)} onShowSummaries={() => {
   const cid = activeConversationId;
   if (!cid) return;
   window.electronAPI.getSetting('auto_summaries_' + cid).then(raw => {
@@ -263,6 +287,36 @@ export function ChatPage() {
         </div>
       )}
       <TokenBar used={tokenCount} limit={tokenLimit} totalInSession={totalTokensSession} estimatedCost={estimatedCost} />
+
+      {/* Chapter marker popup / 章节标记弹窗 */}
+      {showChapterPopup && (
+        <div className="flex-shrink-0 bg-purple-900/30 border-b border-purple-800/50 px-4 py-2 flex items-center gap-2">
+          <span className="text-sm text-purple-300">📑</span>
+          <input value={chapterTitle} onChange={e => setChapterTitle(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') confirmChapterMark(); if (e.key === 'Escape') setShowChapterPopup(false); }}
+            placeholder="章节标题..." autoFocus
+            className="flex-1 bg-purple-900/30 border border-purple-700/50 rounded px-2 py-1 text-sm text-purple-200 focus:outline-none focus:border-purple-500" />
+          {chapterPresets.length > 0 && (
+            <select value={chapterTitle} onChange={e => setChapterTitle(e.target.value)}
+              className="bg-purple-900/30 border border-purple-700/50 rounded px-2 py-1 text-xs text-purple-200">
+              <option value="">自定义</option>
+              {chapterPresets.filter(p => !chapterMarkers.some(m => m.title === p)).map(p => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          )}
+          <button onClick={confirmChapterMark} disabled={!chapterTitle.trim()}
+            className="px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white rounded">标记</button>
+          <button onClick={() => setShowChapterPopup(false)} className="text-gray-500 hover:text-gray-300 text-sm">✕</button>
+        </div>
+      )}
+
+      {/* Chapter dividers in messages / 消息流中的章节分隔 */}
+      {chapterMarkers.map((m, i) => (
+        <div key={i} className="flex-shrink-0 bg-gray-800 border-b border-purple-800/30 px-4 py-1.5 flex items-center gap-2">
+          <span className="text-purple-400 text-xs">━━ 📖 {m.title}</span>
+        </div>
+      ))}
 
       {/* Error toast — auto-dismiss after 5s / 错误横幅，5秒自动消失 */}
       {error && (

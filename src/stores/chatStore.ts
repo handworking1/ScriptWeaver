@@ -358,6 +358,17 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           }
         } catch { /* best-effort */ }
       }
+
+      /** Auto chapter detection / 自动章节检测 */
+      if (nonSysLen > 0 && nonSysLen % 20 === 0) {
+        try {
+          const lastMsgs = newMessages.slice(-6).map(m => m.content.slice(0, 300)).join(' ');
+          if (/几天后|与此同时|另一边|转眼间|翌日|次日|数日后|新的篇章|下一站|出发前往|到达.*了|踏入|离开了/.test(lastMsgs)) {
+            const cn = Math.floor(nonSysLen / 20) + 1;
+            set({ streamingContent: get().streamingContent + `\n\n💡 检测到场景切换，可在顶部 📑章节 标记为「第${cn}章」` });
+          }
+        } catch { /* best-effort */ }
+      }
     } catch (err) {
       // DB write failed — keep streamingContent visible so user can copy it.
       // DB 写入失败——保留流式内容，用户仍可复制。
