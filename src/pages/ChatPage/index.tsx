@@ -55,6 +55,9 @@ export function ChatPage() {
   const [showChapterPopup, setShowChapterPopup] = useState(false);
   const [chapterTitle, setChapterTitle] = useState('');
   const [chapterMarkers, setChapterMarkers] = useState<{ title: string; at: number }[]>([]);
+  /** Starred messages / 精彩标注 */
+  const [starredIds, setStarredIds] = useState<string[]>([]);
+  const [showStarredOnly, setShowStarredOnly] = useState(false);
   /** en: Search query for filtering messages / zh: 消息搜索过滤词 */
   const [searchQuery, setSearchQuery] = useState('');
   /** Loading state for world intro generation / 世界介绍生成中的加载状态 */
@@ -205,6 +208,17 @@ export function ChatPage() {
   const chapterPresets = (script?.extraData?.chapters || '')
     .split(/[\n,，]/).map(s => s.trim()).filter(Boolean);
 
+  /** Toggle star / 切换标注 */
+  const handleToggleStar = async (msgId: string) => {
+    const updated = starredIds.includes(msgId)
+      ? starredIds.filter(id => id !== msgId)
+      : [...starredIds, msgId];
+    setStarredIds(updated);
+    if (activeConversationId) {
+      await window.electronAPI.setSetting('starred_msgs_' + activeConversationId, JSON.stringify(updated));
+    }
+  };
+
   /** Mark chapter with preset selection / 标记章节（支持预设选择） */
   const handleChapterMark = () => {
     setChapterTitle(chapterPresets[chapterMarkers.length] || '');
@@ -261,7 +275,7 @@ export function ChatPage() {
           ))}
           <button onClick={() => setShowSetup(true)} className="px-2 py-0.5 text-xs rounded bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200">+</button>
       </div>
-      <ChatHeader characterName={character?.name} characterAvatar={character?.avatar} scriptTitle={script?.title} chatMode={chatMode} isStreaming={isStreaming} displayMessagesLen={displayMessages.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} onBack={() => setShowSetup(true)} onStop={stopStreaming} onSummary={() => { if (activeConfigId && activeConversationId) { const name = character?.name || script?.title || '当前剧情'; requestSummary(activeConfigId, name); } }} onBranch={async () => { if (selectedScriptId) await branchConversation(selectedScriptId, selectedCharacterId || ''); }} onRegenerate={async () => { if (activeConfigId) await regenerateLast(activeConfigId, failoverConfigId ?? undefined); }} onUndo={() => undoLastMessage()} onConvList={loadConvList} onCompendium={() => setShowCompendium(!showCompendium)} showCompendium={showCompendium} onScriptPreview={() => setShowScriptPreview(!showScriptPreview)} showScriptPreview={showScriptPreview} onQuestList={() => setShowQuestList(!showQuestList)} showQuestList={showQuestList} hasQuests={!!(script?.extraData?.mainQuests || script?.extraData?.sideQuests)} replyLength={replyLength} onReplyLengthChange={handleReplyLengthChange} authorNote={authorNote} onAuthorNoteChange={(n) => { setAuthorNote(n); window.electronAPI.setSetting('author_note_' + activeConversationId, n).catch(() => {}); }} showAuthorNote={showAuthorNote} onChapterMark={handleChapterMark} chapterPresets={chapterPresets} onToggleAuthorNote={() => setShowAuthorNote(v => !v)} onShowSummaries={() => {
+      <ChatHeader characterName={character?.name} characterAvatar={character?.avatar} scriptTitle={script?.title} chatMode={chatMode} isStreaming={isStreaming} displayMessagesLen={displayMessages.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} onBack={() => setShowSetup(true)} onStop={stopStreaming} onSummary={() => { if (activeConfigId && activeConversationId) { const name = character?.name || script?.title || '当前剧情'; requestSummary(activeConfigId, name); } }} onBranch={async () => { if (selectedScriptId) await branchConversation(selectedScriptId, selectedCharacterId || ''); }} onRegenerate={async () => { if (activeConfigId) await regenerateLast(activeConfigId, failoverConfigId ?? undefined); }} onUndo={() => undoLastMessage()} onConvList={loadConvList} onCompendium={() => setShowCompendium(!showCompendium)} showCompendium={showCompendium} onScriptPreview={() => setShowScriptPreview(!showScriptPreview)} showScriptPreview={showScriptPreview} onQuestList={() => setShowQuestList(!showQuestList)} showQuestList={showQuestList} hasQuests={!!(script?.extraData?.mainQuests || script?.extraData?.sideQuests)} replyLength={replyLength} onReplyLengthChange={handleReplyLengthChange} authorNote={authorNote} onAuthorNoteChange={(n) => { setAuthorNote(n); window.electronAPI.setSetting('author_note_' + activeConversationId, n).catch(() => {}); }} showAuthorNote={showAuthorNote} onChapterMark={handleChapterMark} chapterPresets={chapterPresets} showStarredOnly={showStarredOnly} onToggleStarredOnly={() => setShowStarredOnly(v => !v)} starredCount={starredIds.length} onToggleAuthorNote={() => setShowAuthorNote(v => !v)} onShowSummaries={() => {
   const cid = activeConversationId;
   if (!cid) return;
   window.electronAPI.getSetting('auto_summaries_' + cid).then(raw => {
@@ -341,7 +355,7 @@ export function ChatPage() {
           <span className="text-sm text-purple-300">🌍 正在生成世界介绍...</span>
         </div>
       )}
-      <ChatMessages displayMessages={displayMessages} streamingContent={streamingContent} isStreaming={isStreaming} suggestions={suggestions} showSummary={showSummary} summaryContent={summaryContent} summaryLoading={summaryLoading} summaryError={summaryError} characterName={character?.name} characterAvatar={character?.avatar} searchQuery={searchQuery} editingMessageId={editingMessageId} editContent={editContent} setEditContent={setEditContent} onEditSave={handleEditMessage} onEditCancel={() => setEditingMessageId(null)} onEditStart={(msg) => { setEditingMessageId(msg.id); setEditContent(msg.content); }} onQuickReply={(t) => { if (activeConfigId) sendMessage(activeConfigId, t, failoverConfigId ?? undefined); }} onDismissSummary={dismissSummary} onCopySummary={() => navigator.clipboard.writeText(summaryContent)} />
+      <ChatMessages displayMessages={displayMessages} streamingContent={streamingContent} isStreaming={isStreaming} suggestions={suggestions} showSummary={showSummary} summaryContent={summaryContent} summaryLoading={summaryLoading} summaryError={summaryError} characterName={character?.name} characterAvatar={character?.avatar} searchQuery={searchQuery} starredIds={starredIds} onToggleStar={handleToggleStar} editingMessageId={editingMessageId} editContent={editContent} setEditContent={setEditContent} onEditSave={handleEditMessage} onEditCancel={() => setEditingMessageId(null)} onEditStart={(msg) => { setEditingMessageId(msg.id); setEditContent(msg.content); }} onQuickReply={(t) => { if (activeConfigId) sendMessage(activeConfigId, t, failoverConfigId ?? undefined); }} onDismissSummary={dismissSummary} onCopySummary={() => navigator.clipboard.writeText(summaryContent)} />
       <ChatInput inputValue={inputValue} setInputValue={setInputValue} isStreaming={isStreaming} shortcutBar={shortcutBar} shortcutsExpanded={shortcutsExpanded} setShortcutsExpanded={setShortcutsExpanded} activeConfigId={activeConfigId} failoverConfigId={failoverConfigId} sendMessage={(cid, t, fid) => sendMessage(cid, t, fid)} recentMessages={displayMessages.slice(-6)} characterName={character?.name} banghuiEnabled={script?.extraData?.banghuiEnabled === 'Y'} chatMode={chatMode} scriptId={selectedScriptId ?? undefined} />
       {showConvList && (
         <div className="fixed inset-0 z-50 flex justify-center items-start pt-20" onClick={() => setShowConvList(false)}>

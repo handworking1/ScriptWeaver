@@ -8,6 +8,9 @@ interface ChatBubbleProps {
   characterAvatar?: string;
   /** Search query for highlighting / 搜索高亮 */
   searchQuery?: string;
+  /** Starred highlight / 精彩标注 */
+  starred?: boolean;
+  onStar?: () => void;
 }
 
 function highlightText(text: string, query: string): string {
@@ -16,7 +19,7 @@ function highlightText(text: string, query: string): string {
   return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="bg-yellow-500/30 text-yellow-200 rounded px-0.5">$1</mark>');
 }
 
-export function ChatBubble({ role, content, timestamp, characterName, characterAvatar, searchQuery }: ChatBubbleProps) {
+export function ChatBubble({ role, content, timestamp, characterName, characterAvatar, searchQuery, starred, onStar }: ChatBubbleProps) {
   if (role === 'system') return null;
 
   const isUser = role === 'user';
@@ -53,8 +56,13 @@ export function ChatBubble({ role, content, timestamp, characterName, characterA
           )}
         </div>
         {timestamp && (
-          <div className={`text-xs text-gray-500 mt-1 ${isUser ? 'text-right mr-1' : 'ml-1'}`}>
-            {new Date(timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+          <div className={`text-xs text-gray-500 mt-1 flex items-center gap-1 ${isUser ? 'justify-end mr-1' : 'ml-1'}`}>
+            <span>{new Date(timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</span>
+            {onStar && (
+              <button onClick={onStar} className={`text-xs hover:scale-110 transition-transform ${starred ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-500'}`} title={starred ? '取消标注' : '标注精彩片段'}>
+                ⭐
+              </button>
+            )}
           </div>
         )}
       </div>

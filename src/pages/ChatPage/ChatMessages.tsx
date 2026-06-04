@@ -9,6 +9,8 @@ interface Props {
   streamingContent: string;
   isStreaming: boolean;
   searchQuery?: string;
+  starredIds: string[];
+  onToggleStar: (msgId: string) => void;
   suggestions: { text: string }[];
   showSummary: boolean;
   summaryContent: string;
@@ -30,7 +32,7 @@ interface Props {
 export const ChatMessages = memo(function ChatMessages({
   displayMessages, streamingContent, isStreaming, suggestions,
   showSummary, summaryContent, summaryLoading, summaryError,
-  characterName, characterAvatar, searchQuery,
+  characterName, characterAvatar, searchQuery, starredIds, onToggleStar,
   editingMessageId, editContent, setEditContent, onEditSave, onEditCancel, onEditStart,
   onQuickReply, onDismissSummary, onCopySummary,
 }: Props) {
@@ -75,7 +77,7 @@ export const ChatMessages = memo(function ChatMessages({
               </div>
             ) : (
               <div>
-                <ChatBubble role={msg.role} content={msg.content} timestamp={msg.timestamp} characterName={characterName} characterAvatar={characterAvatar} />
+                <ChatBubble role={msg.role} content={msg.content} timestamp={msg.timestamp} characterName={characterName} characterAvatar={characterAvatar} starred={starredIds.includes(msg.id)} onStar={() => onToggleStar(msg.id)} />
                 <div className={`flex gap-1 mb-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'} opacity-0 group-hover:opacity-100 transition-opacity`}>
                   {msg.role === 'user' && <button onClick={() => onEditStart(msg)} className="text-xs text-gray-600 hover:text-gray-400 px-1">✏️</button>}
                 </div>

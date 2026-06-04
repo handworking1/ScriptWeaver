@@ -41,6 +41,10 @@ interface Props {
   /** Chapter marker / 章节标记 */
   onChapterMark: () => void;
   chapterPresets: string[];
+  /** Starred filter / 精彩筛选 */
+  showStarredOnly: boolean;
+  onToggleStarredOnly: () => void;
+  starredCount: number;
   selectedScriptId: string | null;
 }
 
@@ -55,6 +59,7 @@ export const ChatHeader = memo(function ChatHeader({
   authorNote, onAuthorNoteChange, showAuthorNote, onToggleAuthorNote,
   onShowSummaries,
   onChapterMark, chapterPresets,
+  showStarredOnly, onToggleStarredOnly, starredCount,
   selectedScriptId,
 }: Props) {
   return (
@@ -108,6 +113,9 @@ export const ChatHeader = memo(function ChatHeader({
             <option value="C">📏 C 800字</option>
           </select>
         )}
+        {displayMessagesLen > 0 && <button onClick={onToggleStarredOnly} className={`px-2 py-1 text-xs rounded ${showStarredOnly ? 'bg-yellow-900/40 text-yellow-300' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`} title="只看精彩片段">
+          ⭐{starredCount > 0 ? starredCount : ''}
+        </button>}
         <button onClick={onToggleAuthorNote} className={`px-2 py-1 text-xs rounded ${showAuthorNote ? 'bg-amber-900/40 text-amber-300' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`} title="作者注记">📝 注记</button>
         {!isStreaming && displayMessagesLen > 0 && <button onClick={onChapterMark} className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded" title="标记章节">📑 章节</button>}
         {!isStreaming && displayMessagesLen > 0 && <button onClick={onShowSummaries} className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded" title="摘要历史">📄</button>}
