@@ -39,7 +39,7 @@ export function RelationGraph({ chars, relations, onChange, onAddRelation }: Pro
   const [newFrom, setNewFrom] = useState('');
   const [newTo, setNewTo] = useState('');
   const [newType, setNewType] = useState('普通朋友');
-  const [newStrength, setNewStrength] = useState(50);
+  const [newStrength] = useState(50);
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
   const [dragging, setDragging] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);

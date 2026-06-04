@@ -63,6 +63,9 @@ export function normalizeApiUrl(rawUrl: string): string {
   // Already a complete endpoint — use as-is / 已是完整端点
   if (url.endsWith('/chat/completions')) return url;
 
+  // Already has /v1 path — just append /chat/completions / 已有 /v1 则只追加
+  if (url.endsWith('/v1')) return url + '/chat/completions';
+
   // Append standard OpenAI-compatible path / 追加标准路径
   return url + '/v1/chat/completions';
 }

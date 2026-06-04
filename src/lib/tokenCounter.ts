@@ -7,6 +7,7 @@
 /** en: Fast token estimator — single-pass Chinese char count, O(n) not O(n²).
  *  zh: 快速 token 估算——单次扫描中文字符数，O(n) 而非 O(n²)。 */
 export function estimateTokens(text: string): number {
+  if (!text) return 0;
   // Single regex for all Chinese chars / 一次正则匹配所有中文字符
   const chineseChars = (text.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
 

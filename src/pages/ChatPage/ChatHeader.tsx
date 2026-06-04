@@ -58,10 +58,10 @@ export const ChatHeader = memo(function ChatHeader({
   onScriptPreview, showScriptPreview,
   onQuestList, showQuestList, hasQuests,
   replyLength, onReplyLengthChange,
-  authorNote, onAuthorNoteChange, showAuthorNote, onToggleAuthorNote,
+  authorNote: _authorNote, onAuthorNoteChange: _onAuthorNoteChange, showAuthorNote, onToggleAuthorNote,
   onShowSummaries,
   onNovelReader,
-  onChapterMark, chapterPresets,
+  onChapterMark, chapterPresets: _chapterPresets,
   showStarredOnly, onToggleStarredOnly, starredCount,
   selectedScriptId,
 }: Props) {

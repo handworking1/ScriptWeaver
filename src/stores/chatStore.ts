@@ -245,7 +245,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         timestamp: m.timestamp,
       });
     }
-    set({ activeConversationId: conv.id, tokenCount: get().tokenCount, totalTokensSession: get().totalTokensSession });
+    set((state) => ({ activeConversationId: conv.id, tokenCount: state.tokenCount, totalTokensSession: state.totalTokensSession }));
     return conv;
   },
 
@@ -334,27 +334,29 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       } catch (err) { console.error('[finishStreaming] updateConversation failed:', err); }
 
       // Count new tokens + accumulate session total / 新token计数 + 累计会话总量
+      // en: 使用 set(state) 防止 addExternalTokens 并发覆盖 / Use set(state) to prevent race with addExternalTokens
       const newTokens = estimateTokens(assistantMsg.content);
-      const newTotal = state.totalTokensSession + newTokens;
-      set({
+      set((state) => ({
         tokenCount: estimateMessagesTokens(newMessages),
-        totalTokensSession: newTotal,
-        estimatedCost: estimateCost(newTotal, 0, getActiveModelInfo().model),
-      });
+        totalTokensSession: state.totalTokensSession + newTokens,
+        estimatedCost: estimateCost(state.totalTokensSession + newTokens, 0, getActiveModelInfo().model),
+      }));
 
       /** Auto-summary every 30 non-system messages (~15 turns) / 每15轮自动摘要 */
       const nonSysLen = newMessages.filter(m => m.role !== 'system').length;
-      if (nonSysLen > 0 && nonSysLen % 30 === 0) {
+      // en: 仅在有活跃配置时执行自动摘要和章节检测 / Only run if active config exists
+      if (nonSysLen > 0 && nonSysLen % 30 === 0 && getActiveModelInfo().model) {
         try {
           const { activeConfigId: cid } = useConfigStore.getState();
-          if (!cid) return;
-          const r = await window.electronAPI.discussSettings(cid, 'script', { title:'', worldSetting:'', background:'', mainQuests:'', sideQuests:'', environment:'', map:'', data:'' },
-            [{ role:'system', content:`用1-2句话总结对话剧情进展：\n${newMessages.slice(-20).map(m=>`[${m.role}]: ${m.content.slice(0,800)}`).join('\n')}` }]);
-          if (r.reply) {
-            const raw = await window.electronAPI.getSetting('auto_summaries_' + convId);
-            const list: any[] = JSON.parse(raw || '[]');
-            list.push({ text: r.reply, at: Date.now() });
-            await window.electronAPI.setSetting('auto_summaries_' + convId, JSON.stringify(list.slice(-20)));
+          if (cid) {
+            const r = await window.electronAPI.discussSettings(cid, 'script', { title:'', worldSetting:'', background:'', mainQuests:'', sideQuests:'', environment:'', map:'', data:'' },
+              [{ role:'system', content:`用1-2句话总结对话剧情进展：\n${newMessages.slice(-20).map(m=>`[${m.role}]: ${m.content.slice(0,800)}`).join('\n')}` }]);
+            if (r.reply) {
+              const raw = await window.electronAPI.getSetting('auto_summaries_' + convId);
+              const list: any[] = JSON.parse(raw || '[]');
+              list.push({ text: r.reply, at: Date.now() });
+              await window.electronAPI.setSetting('auto_summaries_' + convId, JSON.stringify(list.slice(-20)));
+            }
           }
         } catch { /* best-effort */ }
       }

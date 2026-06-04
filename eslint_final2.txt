@@ -1,0 +1,248 @@
+(node:31160) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///F:/aiiiiiiiiii/eslint.config.js?mtime=1780392877403 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to F:\aiiiiiiiiii\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+F:\aiiiiiiiiii\electron\db\characters.ts
+  14:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\electron\db\configs.ts
+  15:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\electron\db\conversations.ts
+   5:68  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  25:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\electron\db\importExport.ts
+   19:15   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   34:36   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   59:17   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   67:29   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   84:48   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   84:67   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   84:89   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   84:106  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   84:124  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   84:149  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  111:17   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\electron\db\init.ts
+  68:99  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  71:96  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\electron\db\scripts.ts
+  14:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\electron\db\seedTemplates.ts
+  54:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\electron\db\templates.ts
+  14:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\electron\db\utils.ts
+  38:76  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  52:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  60:75  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\electron\ipc-handlers.ts
+   33:19   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  126:46   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  137:58   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  138:23   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  152:49   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  164:61   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  176:48   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  191:60   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  192:23   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  209:52   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  220:64   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  229:47   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  251:48   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  258:60   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  265:76   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  304:19   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  311:64   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  318:19   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  327:67   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  352:46   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  353:47   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  394:45   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  395:46   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  395:83   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  398:45   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  402:57   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  403:19   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  418:21   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  420:31   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  422:47   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  435:70   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  451:66   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  458:19   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  525:21   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  572:19   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  578:105  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  608:19   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  614:87   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  614:101  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  639:19   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  650:44   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  655:50   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\electron\preload.ts
+  113:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\__tests__\ChatInput.test.tsx
+  16:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\__tests__\db.test.ts
+  21:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\__tests__\store.test.ts
+  21:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\components\CharacterCompendium.tsx
+  76:6  warning  React Hook useEffect has a missing dependency: 'persist'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+F:\aiiiiiiiiii\src\components\ImportExportButtons.tsx
+  18:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  60:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\components\NovelImporter.tsx
+  58:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\components\RelationGraph.tsx
+  42:23  error    'setNewStrength' is assigned a value but never used                                                       @typescript-eslint/no-unused-vars
+  57:6   warning  React Hook useEffect has a missing dependency: 'chars'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+F:\aiiiiiiiiii\src\components\ScriptCard.tsx
+  36:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\components\ScriptPreview.tsx
+  11:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\components\SettingsDiscussion.tsx
+  47:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  77:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  85:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\lib\characterCard.ts
+  68:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  73:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  79:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  84:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  97:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\pages\AIConfigPage.tsx
+  252:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\pages\AIDiscussPage\CharacterModal.tsx
+   43:32  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  112:56  warning  Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\pages\AIDiscussPage\DiscussCharacterPanel.tsx
+  32:32  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  55:12  warning  Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+  59:19  warning  Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\pages\AIDiscussPage\index.tsx
+   31:54   warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+   67:6    warning  React Hook useEffect has a missing dependency: 'loadScripts'. Either include it or remove the dependency array                            react-hooks/exhaustive-deps
+  100:6    warning  React Hook useEffect has a missing dependency: 'targetTitle'. Either include it or remove the dependency array                            react-hooks/exhaustive-deps
+  160:50   warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  186:6    warning  React Hook useEffect has a missing dependency: 'selectedScript'. Either include it or remove the dependency array                         react-hooks/exhaustive-deps
+  186:108  warning  React Hook useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked  react-hooks/exhaustive-deps
+  217:12   warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  251:19   warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  301:21   warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  318:18   warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  328:19   warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  349:38   warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  352:307  warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  354:19   warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  371:51   warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  371:75   warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  372:62   warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  373:113  warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  381:19   warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  406:21   warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  408:605  warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  413:19   warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\pages\CharactersPage.tsx
+   50:19  warning  Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   80:19  warning  Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   86:6   warning  React Hook useEffect has a missing dependency: 'loadScripts'. Either include it or remove the dependency array     react-hooks/exhaustive-deps
+   92:6   warning  React Hook useEffect has a missing dependency: 'loadCharacters'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  158:17  warning  Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  189:31  warning  Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\pages\ChatPage\CharacterSelector.tsx
+  10:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\pages\ChatPage\ChatHeader.tsx
+  61:3   error  'authorNote' is defined but never used. Allowed unused args must match /^_/u          @typescript-eslint/no-unused-vars
+  61:15  error  'onAuthorNoteChange' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  64:18  error  'chapterPresets' is defined but never used. Allowed unused args must match /^_/u      @typescript-eslint/no-unused-vars
+
+F:\aiiiiiiiiii\src\pages\ChatPage\ChatInput.tsx
+  134:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\pages\ChatPage\ChatSetup.tsx
+   16:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   18:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   36:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  194:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\pages\ChatPage\index.tsx
+   71:44   warning  Unexpected any. Specify a different type                                                                                                                                                          @typescript-eslint/no-explicit-any
+   82:253  warning  React Hook useEffect has missing dependencies: 'loadConfigs' and 'loadTemplates'. Either include them or remove the dependency array                                                              react-hooks/exhaustive-deps
+   92:6    warning  React Hook useEffect has a missing dependency: 'clearError'. Either include it or remove the dependency array                                                                                     react-hooks/exhaustive-deps
+  118:6    warning  React Hook useEffect has missing dependencies: 'addOpenConv', 'loadMessages', 'selectCharacter', 'selectScript', and 'setResumeConversation'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  252:6    warning  React Hook useEffect has a missing dependency: 'switchConv'. Either include it or remove the dependency array                                                                                     react-hooks/exhaustive-deps
+  285:62   warning  Unexpected any. Specify a different type                                                                                                                                                          @typescript-eslint/no-explicit-any
+  366:152  warning  Unexpected any. Specify a different type                                                                                                                                                          @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\pages\ChatPage\useSystemPrompt.ts
+  56:85  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\pages\HistoryPage.tsx
+   34:48  warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+   42:6   warning  React Hook useEffect has missing dependencies: 'loadConversations' and 'loadScripts'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  187:35  warning  Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\pages\ScriptsPage.tsx
+   75:19  warning  Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+   81:6   warning  React Hook useEffect has a missing dependency: 'loadScripts'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  169:19  warning  Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+  176:17  warning  Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\stores\characterStore.ts
+  24:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\stores\chatStore.ts
+  356:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\stores\configStore.ts
+  37:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\stores\navStore.ts
+  34:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\stores\scriptStore.ts
+  24:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+F:\aiiiiiiiiii\src\types\electron.d.ts
+  49:61  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:75  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:73  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:89  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  56:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  57:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  58:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  59:24  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 159 problems (4 errors, 155 warnings)
+

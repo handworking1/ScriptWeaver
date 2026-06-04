@@ -24,8 +24,7 @@ export const ChatInput = memo(function ChatInput({
 }: Props) {
   const [aiReplies, setAiReplies] = useState<string[]>([]);
   const [replyLoading, setReplyLoading] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [mentionQuery, setMentionQuery] = useState('');
+  const mentionQueryRef = useRef('');
   const [mentionChars, setMentionChars] = useState<{ id: string; name: string }[]>([]);
   const [showMention, setShowMention] = useState(false);
 
@@ -70,7 +69,7 @@ export const ChatInput = memo(function ChatInput({
     if (mentionTimerRef.current) clearTimeout(mentionTimerRef.current);
 
     mentionTimerRef.current = setTimeout(() => {
-      setMentionQuery(q);
+      mentionQueryRef.current = q;
       (async () => {
         try {
           const chars = await window.electronAPI.getCharacters(scriptId);
@@ -93,7 +92,7 @@ export const ChatInput = memo(function ChatInput({
     // ⚡ @私聊: wrap message as a private-chat instruction for that NPC / 将消息包装为私聊指令
     if (chatMode === 'world') {
       // en: Match @name — Chinese 2-4 chars or Latin word, stops at space / 匹配@角色名（中文2-4字或拉丁词，空格截止）
-      const atMatch = c.match(/@([\u4e00-\u9fff]{2,4}|[\p{L}\p{N}_]+)/u);
+      const atMatch = c.match(/@([\u4e00-\u9fff]{1,6}|[\p{L}\p{N}_]+)/u);
       if (atMatch) {
         const name = atMatch[1];
         // en: Remove only the @name prefix, keep the message / 只删除@角色名前缀，保留消息内容

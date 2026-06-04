@@ -100,7 +100,7 @@ export function Sidebar() {
         </div>
       </div>
       <div className={`p-4 border-t ${isDark ? 'border-gray-800 text-gray-600' : 'border-gray-200 text-gray-400'} text-xs`}>
-        v1.3.0
+        v1.4.0
       </div>
     </aside>
   );
