@@ -10,5 +10,6 @@ out/
 .reasonix/
 eslint_output*.txt
 eslint_final.txt
+eslint_final*.txt
 err.txt
 err2.txt
