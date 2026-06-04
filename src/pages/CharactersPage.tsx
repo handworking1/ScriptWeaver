@@ -88,10 +88,12 @@ export function CharactersPage() {
   }, []);
 
   useEffect(() => {
-    if (selectedScriptId) {
+    if (standaloneMode) {
+      loadCharacters(undefined as any); // Load all characters / 加载所有角色
+    } else if (selectedScriptId) {
       loadCharacters(selectedScriptId);
     }
-  }, [selectedScriptId]);
+  }, [selectedScriptId, standaloneMode]);
 
   const currentScript = scripts.find((s) => s.id === selectedScriptId);
 
@@ -140,6 +142,19 @@ export function CharactersPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !selectedScriptId) return;
+
+    // Save protagonist flag to script / 主角标记保存到剧本
+    if (isProtagonist && selectedScriptId && name.trim()) {
+      try {
+        const scripts = await window.electronAPI.getScripts();
+        const s = scripts.find((x: any) => x.id === selectedScriptId);
+        if (s) {
+          const ed = typeof s.extraData === 'string' ? JSON.parse(s.extraData) : (s.extraData || {});
+          ed.protagonistName = name.trim();
+          await window.electronAPI.updateScript(selectedScriptId, { extraData: ed } as any);
+        }
+      } catch { /* non-critical */ }
+    }
 
     if (editingCharacter) {
       await editCharacter(editingCharacter.id, {

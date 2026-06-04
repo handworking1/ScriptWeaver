@@ -127,6 +127,7 @@ export function ScriptsPage() {
     setStyleProfileEnabled(ed.styleProfileEnabled || 'N');
     setProtagonistName(ed.protagonistName || '');
     setProtagonistPersonality(ed.protagonistPersonality || '');
+    setExtractedChars([]);
     setShowExtra(false);
     setShowForm(true);
   };
@@ -163,6 +164,22 @@ export function ScriptsPage() {
           title: title.trim(), worldSetting: worldSetting.trim(), background: background.trim(),
           extraData,
         });
+        // Create extracted characters for existing script too / 编辑剧本也创建提取的角色
+        for (const c of extractedChars) {
+          if (!c.name) continue;
+          try {
+            let style = c.speakingStyle || '';
+            if (c.firstMessage) style += `\n【开场白】${c.firstMessage}`;
+            if (c.exampleDialogue) style += `\n【对话示例】${c.exampleDialogue}`;
+            await window.electronAPI.createCharacter({
+              id: generateId(), scriptId: editingScript.id,
+              name: c.name, personality: c.personality || '',
+              background: c.background || '', speakingStyle: style,
+              appearance: c.appearance || '', avatar: '', createdAt: Date.now(),
+            } as any);
+          } catch { /* non-critical */ }
+        }
+        setExtractedChars([]);
       } else {
         const newId = generateId();
         const now = Date.now();
