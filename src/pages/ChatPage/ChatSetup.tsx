@@ -16,12 +16,20 @@ interface Props {
   setReplyLength: (v: any) => void;
   interactionOpts: string;
   setInteractionOpts: (v: any) => void;
+  playAs: string;
+  setPlayAs: (v: string) => void;
+  narrativePerson: string;
+  setNarrativePerson: (v: string) => void;
+  protagonistName: string;
+  scriptCharacters: { id: string; name: string }[];
   onStart: () => void;
 }
 
 export function ChatSetup({
   chatMode, setChatMode, selectedScriptId, selectedCharacterId, activeConfigId,
-  activeTemplateId, replyLength, setReplyLength, interactionOpts, setInteractionOpts, onStart,
+  activeTemplateId, replyLength, setReplyLength, interactionOpts, setInteractionOpts,
+  playAs, setPlayAs, narrativePerson, setNarrativePerson, protagonistName, scriptCharacters,
+  onStart,
 }: Props) {
   const { scripts } = useScriptStore();
   const { configs } = useConfigStore();
@@ -129,6 +137,31 @@ export function ChatSetup({
             <button onClick={() => setChatMode('1v1')} className={`flex-1 py-2 rounded-lg text-sm ${chatMode === '1v1' ? 'bg-purple-900/60 text-purple-300 border border-purple-500/50' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>💬 角色对话</button>
             <button onClick={() => setChatMode('world')} className={`flex-1 py-2 rounded-lg text-sm ${chatMode === 'world' ? 'bg-purple-900/60 text-purple-300 border border-purple-500/50' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>🌍 世界参与</button>
           </div>
+
+          {chatMode === 'world' && selectedScriptId && (
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">我是</label>
+                <select value={playAs} onChange={e => setPlayAs(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200">
+                  <option value="myself">我自己</option>
+                  {protagonistName && <option value={protagonistName}>主角 · {protagonistName}</option>}
+                  {scriptCharacters.filter(c => c.name !== protagonistName).map(c => (
+                    <option key={c.id} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">人称</label>
+                <select value={narrativePerson} onChange={e => setNarrativePerson(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200">
+                  <option value="you">你</option>
+                  <option value="me">我</option>
+                  <option value="he">他/她</option>
+                </select>
+              </div>
+            </div>
+          )}
 
           {chatMode === '1v1' && (selectedScriptId || true) && (
             <div>

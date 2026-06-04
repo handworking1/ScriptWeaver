@@ -36,6 +36,9 @@ export function ScriptsPage() {
   const [styleProfileEnabled, setStyleProfileEnabled] = useState('N');
   const [referenceWorks, setReferenceWorks] = useState('');
   const [eraBackground, setEraBackground] = useState('');
+  const [protagonistName, setProtagonistName] = useState('');
+  const [protagonistPersonality, setProtagonistPersonality] = useState('');
+  const [autoCreateProtagonist, setAutoCreateProtagonist] = useState(true);
   const [protagonistDilemma, setProtagonistDilemma] = useState('');
   const [coreCheat, setCoreCheat] = useState('');
   const [ageRule, setAgeRule] = useState('');
@@ -121,6 +124,8 @@ export function ScriptsPage() {
     setSelectedTags(ed.tags ? ed.tags.split(',').filter(Boolean) : []);
     setLorebook(Array.isArray(ed.lorebook) ? ed.lorebook : []);
     setStyleProfileEnabled(ed.styleProfileEnabled || 'N');
+    setProtagonistName(ed.protagonistName || '');
+    setProtagonistPersonality(ed.protagonistPersonality || '');
     setShowExtra(false);
     setShowForm(true);
   };
@@ -145,6 +150,7 @@ export function ScriptsPage() {
       chapters: chapters.trim(),
       strictMode, workflowMode, recapMode, periodicSummary, ruleSelfCheck, banghuiEnabled,
       styleProfileEnabled,
+      protagonistName, protagonistPersonality,
       lorebook,
     };
 
@@ -157,9 +163,10 @@ export function ScriptsPage() {
           extraData,
         });
       } else {
+        const newId = generateId();
         const now = Date.now();
         await addScript({
-          id: generateId(),
+          id: newId,
           title: title.trim(),
           worldSetting: worldSetting.trim(),
           background: background.trim(),
@@ -167,6 +174,17 @@ export function ScriptsPage() {
           createdAt: now,
           updatedAt: now,
         });
+        // Auto-create protagonist character / 自动创建主角
+        if (autoCreateProtagonist && protagonistName.trim()) {
+          try {
+            await window.electronAPI.createCharacter({
+              id: generateId(), scriptId: newId,
+              name: protagonistName.trim(), personality: protagonistPersonality.trim(),
+              background: '', speakingStyle: '', appearance: '', avatar: '',
+              createdAt: Date.now(),
+            } as any);
+          } catch { /* non-critical */ }
+        }
       }
       setShowForm(false);
     } catch (err: any) {

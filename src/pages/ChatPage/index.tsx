@@ -60,6 +60,9 @@ export function ChatPage() {
   const [starredIds, setStarredIds] = useState<string[]>([]);
   const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [showNovelReader, setShowNovelReader] = useState(false);
+  /** Play as / 扮演角色 */
+  const [playAs, setPlayAs] = useState('myself');
+  const [narrativePerson, setNarrativePerson] = useState('you');
   /** en: Search query for filtering messages / zh: 消息搜索过滤词 */
   const [searchQuery, setSearchQuery] = useState('');
   /** Loading state for world intro generation / 世界介绍生成中的加载状态 */
@@ -77,7 +80,7 @@ export function ChatPage() {
   const script = scripts.find((s) => s.id === selectedScriptId);
   const character = useCharacterStore.getState().characters.find((c) => c.id === selectedCharacterId) ?? null;
 
-  const { build1v1Prompt, buildWorldPrompt } = useSystemPrompt(chatMode, character, script, templates, activeTemplateId, replyLength, interactionOpts);
+  const { build1v1Prompt, buildWorldPrompt } = useSystemPrompt(chatMode, character, script, templates, activeTemplateId, replyLength, interactionOpts, playAs, narrativePerson);
 
   useEffect(() => { loadConfigs(); loadTemplates(); (async () => { try { const d = await window.electronAPI.getSetting('chat_shortcuts'); if (d) setShortcutBar(JSON.parse(d)); } catch (err) { console.error('[ChatPage] loadShortcuts:', err); } })(); }, []);
 
@@ -263,7 +266,7 @@ export function ChatPage() {
     setShowConvList(false);
   };
 
-  if (showSetup) return <ChatSetup chatMode={chatMode} setChatMode={setChatMode} selectedScriptId={selectedScriptId} selectedCharacterId={selectedCharacterId} activeConfigId={activeConfigId} activeTemplateId={activeTemplateId} replyLength={replyLength} setReplyLength={setReplyLength} interactionOpts={interactionOpts} setInteractionOpts={setInteractionOpts} onStart={handleStartChat} />;
+  if (showSetup) return <ChatSetup chatMode={chatMode} setChatMode={setChatMode} selectedScriptId={selectedScriptId} selectedCharacterId={selectedCharacterId} activeConfigId={activeConfigId} activeTemplateId={activeTemplateId} replyLength={replyLength} setReplyLength={setReplyLength} interactionOpts={interactionOpts} setInteractionOpts={setInteractionOpts} playAs={playAs} setPlayAs={setPlayAs} narrativePerson={narrativePerson} setNarrativePerson={setNarrativePerson} protagonistName={script?.extraData?.protagonistName || ''} scriptCharacters={useCharacterStore.getState().characters.map((c: any) => ({ id: c.id, name: c.name }))} onStart={handleStartChat} />;
 
   return (
     <div className="flex-1 flex flex-col h-full">

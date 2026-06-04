@@ -58,6 +58,8 @@ export function useSystemPrompt(
   activeTemplateId: string | null,
   replyLength: string,
   interactionOpts: string,
+  playAs: string = 'myself',
+  narrativePerson: string = 'you',
 ) {
   const applyGlobalRules = async (prompt: string): Promise<string> => {
     try {
@@ -180,7 +182,12 @@ export function useSystemPrompt(
     const mq = script?.extraData?.mainQuests;
     const sq = script?.extraData?.sideQuests;
     // en: Split into blocks with --- separator so stripFirstUseOnly can remove them
-    let p = `你是剧本《${script?.title || '未命名'}》的叙述者（Game Master）。`;
+    // Build role identity / 构建角色身份
+    let p = '';
+    if (playAs !== 'myself') {
+      p = `用户在扮演【${playAs}】。请用第二人称"你"称呼用户，将所有 NPC 视作独立角色。\n`;
+    }
+    p += `你是剧本《${script?.title || '未命名'}》的叙述者（Game Master）。`;
     p += `\n\n---\n\n【世界观】${script?.worldSetting || '未设定'}`;
     p += `\n\n---\n\n【故事背景】${script?.background || '未设定'}`;
     if (mq) p += `\n\n---\n\n【主线任务】${mq}`;
@@ -195,6 +202,9 @@ export function useSystemPrompt(
     p += getFormatRules();
     if (interactionOpts === 'T') p += '\n每次回复末尾必须提供 [SUGGESTIONS: 选项1 | 选项2 | 选项3]。';
     p = await applyStyleProfile(p);
+    // Narrative person / 叙事人称
+    if (narrativePerson === 'me') p += '\n用第一人称「我」叙述。';
+    else if (narrativePerson === 'he') p += `\n用第三人称叙述，以「${playAs === 'myself' ? '主角' : playAs}」的视角展开。`;
     return truncateSystemPrompt(p);
   };
 

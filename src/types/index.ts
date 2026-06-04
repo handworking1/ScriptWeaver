@@ -20,6 +20,8 @@ export interface ScriptExtra {
   chapters: string;
   banghuiEnabled: string;
   styleProfileEnabled?: string;
+  protagonistName?: string;
+  protagonistPersonality?: string;
   lorebook?: { id: string; keywords: string; content: string }[];
 }
 
