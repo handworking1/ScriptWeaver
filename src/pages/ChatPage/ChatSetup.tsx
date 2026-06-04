@@ -130,10 +130,10 @@ export function ChatSetup({
             <button onClick={() => setChatMode('world')} className={`flex-1 py-2 rounded-lg text-sm ${chatMode === 'world' ? 'bg-purple-900/60 text-purple-300 border border-purple-500/50' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>🌍 世界参与</button>
           </div>
 
-          {chatMode === '1v1' && selectedScriptId && (
+          {chatMode === '1v1' && (selectedScriptId || true) && (
             <div>
               <label className="block text-sm text-gray-400 mb-2">选择角色</label>
-              <CharacterSelector scriptId={selectedScriptId} selectedId={selectedCharacterId || null} />
+              <CharacterSelector scriptId={selectedScriptId || '_standalone_'} selectedId={selectedCharacterId || null} />
             </div>
           )}
 

@@ -14,6 +14,7 @@ export function CharactersPage() {
   const { characters, loading, loadCharacters, addCharacter, editCharacter, removeCharacter } = useCharacterStore();
   const { selectedScriptId, selectScript, selectedCharacterId, selectCharacter, navigate } = useNavStore();
 
+  const [standaloneMode, setStandaloneMode] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
@@ -140,7 +141,7 @@ export function CharactersPage() {
     } else {
       await addCharacter({
         id: generateId(),
-        scriptId: selectedScriptId,
+        scriptId: standaloneMode ? (null as any) : selectedScriptId,
         name: name.trim(),
         personality: personality.trim(),
         background: background.trim(),
@@ -174,10 +175,18 @@ export function CharactersPage() {
           <div>
             <h2 className="text-2xl font-bold text-gray-100">🎭 角色管理</h2>
             <p className="text-sm text-gray-500 mt-1">
-              {currentScript ? `剧本：${currentScript.title}` : '请先在剧本管理中选择一个剧本'}
+              {standaloneMode ? '独立角色，无需剧本，直接对话' : currentScript ? `剧本：${currentScript.title}` : '选择剧本或切换到独立角色'}
             </p>
           </div>
           <div className="flex gap-2">
+            <button onClick={() => setStandaloneMode(false)}
+              className={`px-3 py-1 text-xs rounded ${!standaloneMode ? 'bg-purple-700 text-white' : 'bg-gray-700 text-gray-400'}`}>
+              📜 剧本角色
+            </button>
+            <button onClick={() => setStandaloneMode(true)}
+              className={`px-3 py-1 text-xs rounded ${standaloneMode ? 'bg-purple-700 text-white' : 'bg-gray-700 text-gray-400'}`}>
+              🎭 独立角色
+            </button>
             <button onClick={async () => {
               const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
               input.onchange = async (e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) return;
@@ -358,10 +367,10 @@ export function CharactersPage() {
         )}
 
         {/* Character List */}
-        {!selectedScriptId ? (
+        {!standaloneMode && !selectedScriptId ? (
           <div className="text-center py-16">
             <div className="text-5xl mb-4">👆</div>
-            <p className="text-gray-500">请先在剧本管理中创建剧本，然后选择剧本</p>
+            <p className="text-gray-500">请先选择剧本或切换到「🎭 独立角色」模式</p>
           </div>
         ) : loading ? (
           <div className="text-center text-gray-500 py-12">加载中...</div>
