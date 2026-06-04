@@ -14,6 +14,7 @@ interface Props {
 export function NovelImporter({ configId, scriptId, onExtract }: Props) {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<'extract' | 'style'>('extract');
   const [preview, setPreview] = useState<Record<string, string> | null>(null);
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,13 +95,56 @@ export function NovelImporter({ configId, scriptId, onExtract }: Props) {
     finally { setLoading(false); }
   };
 
+  const handleAnalyzeStyle = async () => {
+    if (!text.trim() || !configId || !scriptId) return;
+    setLoading(true);
+    try {
+      // Sample 3 representative passages / 选取3段代表性文字
+      const head = text.slice(0, 500);
+      const mid = text.slice(Math.floor(text.length * 0.4), Math.floor(text.length * 0.4) + 500);
+      const tail = text.slice(-500);
+      const samples = [head, mid, tail].filter(Boolean).join('\n\n---\n\n');
+
+      const result = await window.electronAPI.discussSettings(configId, 'script',
+        { title: '', worldSetting: '', background: '', mainQuests: '', sideQuests: '', environment: '', map: '', data: '' },
+        [{ role: 'system', content: `分析以下小说的文风，输出JSON：
+{"styleProfile":"## 参考示例（严格模仿此风格写作）\\n\\n${samples.slice(0, 2000).replace(/\n/g, '\\n')}\\n\\n## 风格要点\\n- 句式特点：...\\n- 用词风格：...\\n- 描写密度：...\\n- 对话风格：...\\n- 节奏控制：...\\n- 叙事视角：...\\n\\n请灵活运用以上风格，不必逐字模仿。"}
+
+只输出JSON` }]);
+      if (result.reply) {
+        const match = result.reply.match(/\{[\s\S]*\}/);
+        if (match) {
+          const data = JSON.parse(match[0]);
+          if (data.styleProfile) {
+            await window.electronAPI.setSetting('style_profile_' + scriptId, data.styleProfile);
+            setPreview({ styleProfile: data.styleProfile });
+          }
+        }
+      }
+    } catch (err: any) { alert('分析失败：' + (err.message || '未知错误')); }
+    finally { setLoading(false); }
+  };
+
   return (
     <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 space-y-4">
       <div>
-        <h3 className="text-lg font-semibold text-gray-100 mb-2">📤 从小说提取剧本</h3>
+        <h3 className="text-lg font-semibold text-gray-100 mb-2">
+          {mode === 'extract' ? '📤 从小说提取剧本' : '📝 分析作者文风'}
+        </h3>
         <p className="text-xs text-gray-500 mb-3">
-          上传 .txt/.md 小说文件或粘贴文本，AI 自动提取剧本设定。支持百万字级小说。
+          {mode === 'extract' ? '上传 .txt/.md 小说或粘贴文本，AI提取剧本设定' : 'AI分析小说文风，生成风格模仿提示词'}
         </p>
+      </div>
+
+      <div className="flex gap-2 mb-2">
+        <button onClick={() => { setMode('extract'); setPreview(null); }}
+          className={`px-3 py-1 text-xs rounded ${mode === 'extract' ? 'bg-purple-700 text-white' : 'bg-gray-700 text-gray-400'}`}>
+          📤 提取剧本
+        </button>
+        <button onClick={() => { setMode('style'); setPreview(null); }}
+          className={`px-3 py-1 text-xs rounded ${mode === 'style' ? 'bg-purple-700 text-white' : 'bg-gray-700 text-gray-400'}`}>
+          📝 分析文风
+        </button>
       </div>
 
       <input type="file" accept=".txt,.md" onChange={handleFile}
@@ -116,9 +160,9 @@ export function NovelImporter({ configId, scriptId, onExtract }: Props) {
         </div>
       )}
 
-      <button onClick={handleExtract} disabled={loading || !text.trim() || !configId}
+      <button onClick={mode === 'extract' ? handleExtract : handleAnalyzeStyle} disabled={loading || !text.trim() || !configId || (mode === 'style' && !scriptId)}
         className="px-4 py-2 text-sm bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white rounded-lg">
-        {loading ? '⏳ 提取中...' : '🤖 开始提取'}
+        {loading ? '⏳ 处理中...' : mode === 'extract' ? '🤖 开始提取' : '📝 分析文风'}
       </button>
 
       {preview && (

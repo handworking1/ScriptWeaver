@@ -53,7 +53,7 @@ function truncateSystemPrompt(prompt: string): string {
 export function useSystemPrompt(
   chatMode: '1v1' | 'world',
   character: Character | null,
-  script: { title?: string; worldSetting?: string; background?: string; extraData?: any } | undefined,
+  script: { id?: string; title?: string; worldSetting?: string; background?: string; extraData?: any } | undefined,
   templates: PromptTemplate[],
   activeTemplateId: string | null,
   replyLength: string,
@@ -122,6 +122,18 @@ export function useSystemPrompt(
     return prompt;
   };
 
+  const applyStyleProfile = async (prompt: string): Promise<string> => {
+    if (script?.extraData?.styleProfileEnabled !== 'Y') return prompt;
+    if (!script?.id) return prompt;
+    try {
+      const profile = await window.electronAPI.getSetting('style_profile_' + script.id);
+      if (profile) {
+        return prompt + `\n\n---\n【文风模仿 - 必须遵守】${profile.slice(0, 2000)}`;
+      }
+    } catch { /* no style profile */ }
+    return prompt;
+  };
+
   const applyBanghui = (prompt: string): string => {
     if (script?.extraData?.banghuiEnabled !== 'Y') return prompt;
     return `【[帮回]核心辅助系统 v3.1】\n你的固定身份之一是"[帮回]核心辅助"，负责响应用户特定指令提供叙事策略支持。\n
@@ -160,6 +172,7 @@ export function useSystemPrompt(
     p = await applyProtagonist(p);
     p = applyBanghui(p);
     p += getFormatRules();
+    p = await applyStyleProfile(p);
     return truncateSystemPrompt(p);
   };
 
@@ -181,6 +194,7 @@ export function useSystemPrompt(
     p = applyBanghui(p);
     p += getFormatRules();
     if (interactionOpts === 'T') p += '\n每次回复末尾必须提供 [SUGGESTIONS: 选项1 | 选项2 | 选项3]。';
+    p = await applyStyleProfile(p);
     return truncateSystemPrompt(p);
   };
 

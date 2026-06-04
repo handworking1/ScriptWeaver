@@ -33,6 +33,7 @@ export function ScriptsPage() {
   const [periodicSummary, setPeriodicSummary] = useState('O');
   const [ruleSelfCheck, setRuleSelfCheck] = useState('Y');
   const [banghuiEnabled, setBanghuiEnabled] = useState('N');
+  const [styleProfileEnabled, setStyleProfileEnabled] = useState('N');
   const [referenceWorks, setReferenceWorks] = useState('');
   const [eraBackground, setEraBackground] = useState('');
   const [protagonistDilemma, setProtagonistDilemma] = useState('');
@@ -119,6 +120,7 @@ export function ScriptsPage() {
     setChapters(ed.chapters || '');
     setSelectedTags(ed.tags ? ed.tags.split(',').filter(Boolean) : []);
     setLorebook(Array.isArray(ed.lorebook) ? ed.lorebook : []);
+    setStyleProfileEnabled(ed.styleProfileEnabled || 'N');
     setShowExtra(false);
     setShowForm(true);
   };
@@ -142,6 +144,7 @@ export function ScriptsPage() {
       timeline: timeline.trim(),
       chapters: chapters.trim(),
       strictMode, workflowMode, recapMode, periodicSummary, ruleSelfCheck, banghuiEnabled,
+      styleProfileEnabled,
       lorebook,
     };
 
@@ -465,6 +468,17 @@ export function ScriptsPage() {
                             </select>
                           </div>
                           <p className="text-xs text-gray-600">AI每10轮对话进行一次内部剧情总结，确保长线记忆一致性</p>
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-xs text-gray-400">文风模仿</span>
+                            <select value={styleProfileEnabled} onChange={(e) => setStyleProfileEnabled(e.target.value)}
+                              className="bg-gray-900 border border-gray-700 rounded px-2 py-0.5 text-xs text-gray-200">
+                              <option value="N">不开启</option>
+                              <option value="Y">开启</option>
+                            </select>
+                          </div>
+                          <p className="text-xs text-gray-600">从小说提取文风后，开启此选项让AI模仿该风格写作。在「📤从小说提取→📝分析文风」中生成</p>
                         </div>
                         <div>
                           <div className="flex items-center justify-between mb-0.5">
