@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { RelationGraph } from './RelationGraph';
 
 interface CharEntry {
   id: string;
@@ -26,8 +27,23 @@ export function CharacterCompendium({ scriptId, conversationId, configId, onClos
   const [chars, setChars] = useState<CharEntry[]>([]);
   const [saved, setSaved] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
+  /** Relations / 关系图 */
+  const [relations, setRelations] = useState<{ from: string; to: string; type: string; strength: number; note: string }[]>([]);
+  const [tab, setTab] = useState<'chars' | 'relations'>('chars');
   /** Cleanup timer ref / 清理定时器引用 */
   const savedTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  /** Load relations / 加载关系图 */
+  const loadRelations = async () => {
+    try {
+      const d = await window.electronAPI.getSetting(`relation_map_${scriptId}`);
+      if (d) setRelations(JSON.parse(d));
+    } catch { /* none */ }
+  };
+  const saveRelations = async (updated: typeof relations) => {
+    setRelations(updated);
+    await window.electronAPI.setSetting(`relation_map_${scriptId}`, JSON.stringify(updated));
+  };
 
   const load = async () => {
     try {
@@ -135,8 +151,11 @@ ${chatContent.slice(0, 8000)}`;
     <div className="fixed inset-y-0 right-0 w-80 bg-gray-900 border-l border-gray-700 flex flex-col z-[60] shadow-2xl">
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
         <div>
-          <div className="text-sm font-medium text-gray-200">📖 角色图鉴</div>
-          <div className="text-xs text-gray-500">{chars.length} 个角色</div>
+          <div className="flex gap-2 items-center">
+            <button onClick={() => setTab('chars')} className={`text-sm ${tab === 'chars' ? 'font-medium text-purple-400' : 'text-gray-500'}`}>📖 图鉴</button>
+            <button onClick={() => { loadRelations(); setTab('relations'); }} className={`text-sm ${tab === 'relations' ? 'font-medium text-purple-400' : 'text-gray-500'}`}>🔗 关系</button>
+          </div>
+          <div className="text-xs text-gray-500">{chars.length} 个角色 · {relations.length} 条关系</div>
         </div>
         <div className="flex gap-2">
           {configId && conversationId && (
@@ -153,7 +172,11 @@ ${chatContent.slice(0, 8000)}`;
       {saved && <div className="px-4 py-1 bg-green-900/30 text-green-400 text-xs text-center">✓ 已保存</div>}
 
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
-        {chars.length === 0 && (
+        {tab === 'relations' ? (
+          <RelationGraph chars={chars} relations={relations} onChange={saveRelations}
+            onAddRelation={r => saveRelations([...relations, r])} />
+        ) : (
+        <>{chars.length === 0 && (
           <div className="text-center text-gray-600 text-xs py-8">
             点击 🤖 分析 让 AI 自动从对话中提取角色信息
           </div>
@@ -199,6 +222,7 @@ ${chatContent.slice(0, 8000)}`;
               placeholder="备注、关系、特殊能力..." />
           </div>
         ))}
+        </>)}
       </div>
     </div>
   );
