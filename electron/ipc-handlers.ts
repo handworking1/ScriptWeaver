@@ -397,7 +397,7 @@ export function registerIpcHandlers(): void {
       }));
       const nonSystem = messages.filter((m: any) => m.role !== 'system');
       // en: 按 token 数动态截断 (0=不限制) / Dynamic token-based truncation (0=unlimited)
-      const maxContextTokens = configRow.max_tokens || 32768;
+      const maxContextTokens = configRow.max_tokens ?? 32768;
       const maxChars = maxContextTokens * 2;
       let totalChars = systemMsgs.reduce((s: number, m: any) => s + (m.content?.length || 0), 0);
       const kept: any[] = [];

@@ -37,7 +37,7 @@ export const ChatInput = memo(function ChatInput({
   useEffect(() => {
     window.electronAPI.getSetting('msg_templates').then(d => {
       if (d) setTemplates(JSON.parse(d));
-    }).catch(() => {});
+    }).catch(err => console.error('[msg_templates]', err));
   }, []);
 
   const applyTemplate = (text: string) => {
