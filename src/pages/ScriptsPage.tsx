@@ -208,7 +208,7 @@ export function ScriptsPage() {
           </div>
         </div>
 
-        {showImporter && <NovelImporter configId={activeConfigId} onExtract={(fields) => {
+        {showImporter && <NovelImporter configId={activeConfigId} scriptId={editingScript?.id || null} onExtract={(fields: any) => {
           if (fields.title) setTitle(fields.title);
           if (fields.worldSetting) setWorldSetting(fields.worldSetting);
           if (fields.background) setBackground(fields.background);
@@ -220,8 +220,14 @@ export function ScriptsPage() {
           if (fields.protagonistDilemma) setProtagonistDilemma(fields.protagonistDilemma);
           if (fields.coreCheat) setCoreCheat(fields.coreCheat);
           if (fields.chapters) setChapters(fields.chapters);
-          if (fields.characters && Array.isArray(fields.characters)) {
-            // Could auto-create characters here in future
+          if (fields.environment) setEnvironment(fields.environment);
+          if (fields.map) setMap(fields.map);
+          if (fields.data) setExtraDataText(fields.data);
+          if (fields.timeline) setTimeline(fields.timeline);
+          if (fields.ageRule) setAgeRule(fields.ageRule);
+          if (Array.isArray(fields.lorebook)) {
+            setLorebook(prev => [...prev, ...fields.lorebook.map((item: any) =>
+              ({ id: Date.now().toString(36) + Math.random().toString(36).slice(2), keywords: item.keywords || '', content: item.content || '' }))]);
           }
           setShowImporter(false);
           setShowForm(true);

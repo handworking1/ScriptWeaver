@@ -7,10 +7,11 @@ import { sampleNovel } from '@/lib/novelUtils';
 
 interface Props {
   configId: string | null;
-  onExtract: (fields: Record<string, string>) => void;
+  scriptId?: string | null;
+  onExtract: (fields: any) => void;
 }
 
-export function NovelImporter({ configId, onExtract }: Props) {
+export function NovelImporter({ configId, scriptId, onExtract }: Props) {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<Record<string, string> | null>(null);
@@ -30,29 +31,63 @@ export function NovelImporter({ configId, onExtract }: Props) {
       const sampled = sampleNovel(text);
       const result = await window.electronAPI.discussSettings(configId, 'script',
         { title: '', worldSetting: '', background: '', mainQuests: '', sideQuests: '', environment: '', map: '', data: '' },
-        [{ role: 'system', content: `从以下小说片段中提取剧本设定。输出JSON：
+        [{ role: 'system', content: `从以下小说片段中提取完整剧本设定。输出严格JSON：
+
 {
   "title": "小说名",
-  "worldSetting": "世界观概括（50字内）",
-  "background": "故事背景（100字内）",
-  "tags": "类型标签（逗号分隔，如：玄幻,升级流）",
-  "mainQuests": "主线任务",
-  "sideQuests": "支线任务",
-  "referenceWorks": "对标作品",
-  "eraBackground": "时代背景",
-  "protagonistDilemma": "主角困境",
-  "coreCheat": "金手指",
-  "chapters": "章节/卷划分",
-  "characters": [{"name":"角色名","personality":"性格","background":"背景"}]
+  "worldSetting": "世界观概括（100字内）",
+  "background": "故事背景（150字内）",
+  "tags": "类型标签（逗号分隔，如：玄幻,升级流,爽文）",
+  "mainQuests": "主线任务（每条用换行分隔）",
+  "sideQuests": "支线任务（每条用换行分隔）",
+  "referenceWorks": "对标作品（1-3部，逗号分隔）",
+  "eraBackground": "时代背景（如：古代架空仙侠世界）",
+  "protagonistDilemma": "主角困境（宏观+中观+微观+个人四层）",
+  "coreCheat": "金手指/核心信息差",
+  "chapters": "章节/卷划分（每卷一行）",
+  "environment": "环境描述（气候/地理/建筑/科技水平）",
+  "map": "地图（区域/关键地点/路径）",
+  "data": "其他设定（势力/等级/货币/特殊规则）",
+  "timeline": "事件时间线",
+  "ageRule": "适用年龄（全年龄/16+/18+）",
+  "lorebook": [{"keywords":"关键词1,关键词2","content":"注入内容"}],
+  "characters": [{"name":"角色名","personality":"性格","background":"背景","speakingStyle":"说话风格","appearance":"外貌描述"}]
 }
 
-小说内容：\n${sampled.slice(0, 12000)}` }]);
+只输出JSON，不要任何额外文字。
+
+小说内容：\n${sampled.slice(0, 13000)}` }]);
       if (result.reply) {
         const match = result.reply.match(/\{[\s\S]*\}/);
         if (match) {
-          const data = JSON.parse(match[0]);
-          setPreview(data);
-          onExtract(data);
+          try {
+            const data = JSON.parse(match[0]);
+            setPreview(data);
+
+            // Auto-create characters / 自动创建角色
+            if (scriptId && Array.isArray(data.characters) && data.characters.length > 0) {
+              const created: string[] = [];
+              for (const c of data.characters) {
+                if (!c.name) continue;
+                await window.electronAPI.createCharacter({
+                  id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                  scriptId,
+                  name: c.name,
+                  personality: c.personality || '',
+                  background: c.background || '',
+                  speakingStyle: c.speakingStyle || '',
+                  appearance: c.appearance || '',
+                  avatar: '',
+                  createdAt: Date.now(),
+                } as any);
+                created.push(c.name);
+              }
+              data._createdChars = created;
+              setPreview({ ...data, _createdChars: created });
+            }
+
+            onExtract(data);
+          } catch (err) { alert('AI返回格式异常，请重试'); }
         }
       }
     } catch (err: any) { alert('提取失败：' + (err.message || '未知错误')); }
@@ -91,8 +126,12 @@ export function NovelImporter({ configId, onExtract }: Props) {
           <div className="text-green-400 mb-2">✅ 提取完成：</div>
           {preview.title && <div>📖 标题：{preview.title}</div>}
           {preview.tags && <div>🏷️ 类型：{preview.tags}</div>}
-          {preview.worldSetting && <div>🌍 世界观：{preview.worldSetting}</div>}
-          {preview.characters && <div>👥 角色：{Array.isArray(preview.characters) ? preview.characters.length : 0} 个</div>}
+          {preview.worldSetting && <div className="truncate">🌍 世界观：{preview.worldSetting}</div>}
+          {preview.mainQuests && <div>🎯 主线：已提取</div>}
+          {preview.chapters && <div>📑 章节：{preview.chapters.split(/[\n,]/).filter(Boolean).length} 卷</div>}
+          {preview.lorebook && <div>🌐 世界信息：{Array.isArray(preview.lorebook) ? preview.lorebook.length : 0} 条</div>}
+          {preview._createdChars && <div>👥 角色：已自动创建 {preview._createdChars.length} 个</div>}
+          {preview.characters && !preview._createdChars && <div>👥 角色：{Array.isArray(preview.characters) ? preview.characters.length : 0} 个（选择剧本后可自动创建）</div>}
         </div>
       )}
     </div>
