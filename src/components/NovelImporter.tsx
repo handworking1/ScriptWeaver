@@ -65,28 +65,8 @@ export function NovelImporter({ configId, scriptId, onExtract }: Props) {
             const data = JSON.parse(match[0]);
             setPreview(data);
 
-            // Auto-create characters / 自动创建角色
-            if (scriptId && Array.isArray(data.characters) && data.characters.length > 0) {
-              const created: string[] = [];
-              for (const c of data.characters) {
-                if (!c.name) continue;
-                await window.electronAPI.createCharacter({
-                  id: Date.now().toString(36) + Math.random().toString(36).slice(2),
-                  scriptId,
-                  name: c.name,
-                  personality: c.personality || '',
-                  background: c.background || '',
-                  speakingStyle: c.speakingStyle || '',
-                  appearance: c.appearance || '',
-                  avatar: '',
-                  createdAt: Date.now(),
-                } as any);
-                created.push(c.name);
-              }
-              data._createdChars = created;
-              setPreview({ ...data, _createdChars: created });
-            }
-
+            // Pass characters to onExtract — ScriptsPage creates them after script is saved
+            // 角色数据传给onExtract——剧本保存后由ScriptsPage创建
             onExtract(data);
           } catch (err) { alert('AI返回格式异常，请重试'); }
         }
@@ -174,8 +154,7 @@ export function NovelImporter({ configId, scriptId, onExtract }: Props) {
           {preview.mainQuests && <div>🎯 主线：已提取</div>}
           {preview.chapters && <div>📑 章节：{preview.chapters.split(/[\n,]/).filter(Boolean).length} 卷</div>}
           {preview.lorebook && <div>🌐 世界信息：{Array.isArray(preview.lorebook) ? preview.lorebook.length : 0} 条</div>}
-          {preview._createdChars && <div>👥 角色：已自动创建 {preview._createdChars.length} 个</div>}
-          {preview.characters && !preview._createdChars && <div>👥 角色：{Array.isArray(preview.characters) ? preview.characters.length : 0} 个（选择剧本后可自动创建）</div>}
+          {preview.characters && <div>👥 角色：{Array.isArray(preview.characters) ? preview.characters.length : 0} 个（保存剧本时自动创建）</div>}
         </div>
       )}
     </div>

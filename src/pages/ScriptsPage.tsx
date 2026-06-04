@@ -48,6 +48,7 @@ export function ScriptsPage() {
   const [lorebook, setLorebook] = useState<{ id: string; keywords: string; content: string }[]>([]);
   const [showExtra, setShowExtra] = useState(false);
   const [showImporter, setShowImporter] = useState(false);
+  const [extractedChars, setExtractedChars] = useState<any[]>([]);
 
   const GENRE_CATEGORIES = [
     { label: '主要题材', tags: ['言情', '玄幻', '仙侠', '悬疑', '推理', '科幻', '奇幻', '脑洞', '都市', '校园', '历史', '古言', '武侠', '军事', '体育', '无CP', '纯爱', '百合', '女频', '男频'] },
@@ -185,6 +186,19 @@ export function ScriptsPage() {
             } as any);
           } catch { /* non-critical */ }
         }
+        // Auto-create extracted characters / 自动创建小说提取的角色
+        for (const c of extractedChars) {
+          if (!c.name) continue;
+          try {
+            await window.electronAPI.createCharacter({
+              id: generateId(), scriptId: newId,
+              name: c.name, personality: c.personality || '',
+              background: c.background || '', speakingStyle: c.speakingStyle || '',
+              appearance: c.appearance || '', avatar: '', createdAt: Date.now(),
+            } as any);
+          } catch { /* non-critical */ }
+        }
+        setExtractedChars([]);
       }
       setShowForm(false);
     } catch (err: any) {
@@ -246,6 +260,9 @@ export function ScriptsPage() {
           if (fields.data) setExtraDataText(fields.data);
           if (fields.timeline) setTimeline(fields.timeline);
           if (fields.ageRule) setAgeRule(fields.ageRule);
+          if (Array.isArray(fields.characters)) {
+            setExtractedChars(fields.characters);
+          }
           if (Array.isArray(fields.lorebook)) {
             setLorebook(prev => [...prev, ...fields.lorebook.map((item: any) =>
               ({ id: Date.now().toString(36) + Math.random().toString(36).slice(2), keywords: item.keywords || '', content: item.content || '' }))]);
