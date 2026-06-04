@@ -38,6 +38,8 @@ interface Props {
   onToggleAuthorNote: () => void;
   /** Auto-summary list / 自动摘要 */
   onShowSummaries: () => void;
+  /** Novel reader / 小说阅读 */
+  onNovelReader: () => void;
   /** Chapter marker / 章节标记 */
   onChapterMark: () => void;
   chapterPresets: string[];
@@ -58,6 +60,7 @@ export const ChatHeader = memo(function ChatHeader({
   replyLength, onReplyLengthChange,
   authorNote, onAuthorNoteChange, showAuthorNote, onToggleAuthorNote,
   onShowSummaries,
+  onNovelReader,
   onChapterMark, chapterPresets,
   showStarredOnly, onToggleStarredOnly, starredCount,
   selectedScriptId,
@@ -113,6 +116,7 @@ export const ChatHeader = memo(function ChatHeader({
             <option value="C">📏 C 800字</option>
           </select>
         )}
+        {displayMessagesLen > 0 && <button onClick={onNovelReader} className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded" title="小说阅读">📖 阅读</button>}
         {displayMessagesLen > 0 && <button onClick={onToggleStarredOnly} className={`px-2 py-1 text-xs rounded ${showStarredOnly ? 'bg-yellow-900/40 text-yellow-300' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`} title="只看精彩片段">
           ⭐{starredCount > 0 ? starredCount : ''}
         </button>}

@@ -6,6 +6,7 @@ import { ScriptCard } from '@/components/ScriptCard';
 import { ImportExportButtons } from '@/components/ImportExportButtons';
 import { generateId } from '@/lib/id';
 import { LorebookEditor } from '@/components/LorebookEditor';
+import { NovelImporter } from '@/components/NovelImporter';
 import type { Script } from '@/types';
 
 export function ScriptsPage() {
@@ -42,6 +43,7 @@ export function ScriptsPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [lorebook, setLorebook] = useState<{ id: string; keywords: string; content: string }[]>([]);
   const [showExtra, setShowExtra] = useState(false);
+  const [showImporter, setShowImporter] = useState(false);
 
   const GENRE_CATEGORIES = [
     { label: '主要题材', tags: ['言情', '玄幻', '仙侠', '悬疑', '推理', '科幻', '奇幻', '脑洞', '都市', '校园', '历史', '古言', '武侠', '军事', '体育', '无CP', '纯爱', '百合', '女频', '男频'] },
@@ -199,8 +201,31 @@ export function ScriptsPage() {
             >
               + 新建剧本
             </button>
+            <button onClick={() => setShowImporter(v => !v)}
+              className="px-4 py-2 bg-teal-700 hover:bg-teal-600 text-white rounded-lg text-sm font-medium transition-colors">
+              📤 从小说提取
+            </button>
           </div>
         </div>
+
+        {showImporter && <NovelImporter configId={activeConfigId} onExtract={(fields) => {
+          if (fields.title) setTitle(fields.title);
+          if (fields.worldSetting) setWorldSetting(fields.worldSetting);
+          if (fields.background) setBackground(fields.background);
+          if (fields.tags) setSelectedTags(fields.tags.split(/[,，]/).filter(Boolean));
+          if (fields.mainQuests) setMainQuests(fields.mainQuests);
+          if (fields.sideQuests) setSideQuests(fields.sideQuests);
+          if (fields.referenceWorks) setReferenceWorks(fields.referenceWorks);
+          if (fields.eraBackground) setEraBackground(fields.eraBackground);
+          if (fields.protagonistDilemma) setProtagonistDilemma(fields.protagonistDilemma);
+          if (fields.coreCheat) setCoreCheat(fields.coreCheat);
+          if (fields.chapters) setChapters(fields.chapters);
+          if (fields.characters && Array.isArray(fields.characters)) {
+            // Could auto-create characters here in future
+          }
+          setShowImporter(false);
+          setShowForm(true);
+        }} />}
 
         {/* Form Modal */}
         {showForm && (

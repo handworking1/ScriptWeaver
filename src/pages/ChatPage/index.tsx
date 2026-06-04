@@ -9,6 +9,7 @@ import { useNavStore } from '@/stores/navStore';
 import { CharacterCompendium } from '@/components/CharacterCompendium';
 import { ScriptPreview } from '@/components/ScriptPreview';
 import { QuestPanel } from '@/components/QuestPanel';
+import { NovelReader } from '@/components/NovelReader';
 import { TokenBar } from '@/components/TokenBar';
 import { generateId } from '@/lib/id';
 import type { Message } from '@/types';
@@ -58,6 +59,7 @@ export function ChatPage() {
   /** Starred messages / 精彩标注 */
   const [starredIds, setStarredIds] = useState<string[]>([]);
   const [showStarredOnly, setShowStarredOnly] = useState(false);
+  const [showNovelReader, setShowNovelReader] = useState(false);
   /** en: Search query for filtering messages / zh: 消息搜索过滤词 */
   const [searchQuery, setSearchQuery] = useState('');
   /** Loading state for world intro generation / 世界介绍生成中的加载状态 */
@@ -275,7 +277,7 @@ export function ChatPage() {
           ))}
           <button onClick={() => setShowSetup(true)} className="px-2 py-0.5 text-xs rounded bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200">+</button>
       </div>
-      <ChatHeader characterName={character?.name} characterAvatar={character?.avatar} scriptTitle={script?.title} chatMode={chatMode} isStreaming={isStreaming} displayMessagesLen={displayMessages.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} onBack={() => setShowSetup(true)} onStop={stopStreaming} onSummary={() => { if (activeConfigId && activeConversationId) { const name = character?.name || script?.title || '当前剧情'; requestSummary(activeConfigId, name); } }} onBranch={async () => { if (selectedScriptId) await branchConversation(selectedScriptId, selectedCharacterId || ''); }} onRegenerate={async () => { if (activeConfigId) await regenerateLast(activeConfigId, failoverConfigId ?? undefined); }} onUndo={() => undoLastMessage()} onConvList={loadConvList} onCompendium={() => setShowCompendium(!showCompendium)} showCompendium={showCompendium} onScriptPreview={() => setShowScriptPreview(!showScriptPreview)} showScriptPreview={showScriptPreview} onQuestList={() => setShowQuestList(!showQuestList)} showQuestList={showQuestList} hasQuests={!!(script?.extraData?.mainQuests || script?.extraData?.sideQuests)} replyLength={replyLength} onReplyLengthChange={handleReplyLengthChange} authorNote={authorNote} onAuthorNoteChange={(n) => { setAuthorNote(n); window.electronAPI.setSetting('author_note_' + activeConversationId, n).catch(() => {}); }} showAuthorNote={showAuthorNote} onChapterMark={handleChapterMark} chapterPresets={chapterPresets} showStarredOnly={showStarredOnly} onToggleStarredOnly={() => setShowStarredOnly(v => !v)} starredCount={starredIds.length} onToggleAuthorNote={() => setShowAuthorNote(v => !v)} onShowSummaries={() => {
+      <ChatHeader characterName={character?.name} characterAvatar={character?.avatar} scriptTitle={script?.title} chatMode={chatMode} isStreaming={isStreaming} displayMessagesLen={displayMessages.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} onBack={() => setShowSetup(true)} onStop={stopStreaming} onSummary={() => { if (activeConfigId && activeConversationId) { const name = character?.name || script?.title || '当前剧情'; requestSummary(activeConfigId, name); } }} onBranch={async () => { if (selectedScriptId) await branchConversation(selectedScriptId, selectedCharacterId || ''); }} onRegenerate={async () => { if (activeConfigId) await regenerateLast(activeConfigId, failoverConfigId ?? undefined); }} onUndo={() => undoLastMessage()} onConvList={loadConvList} onCompendium={() => setShowCompendium(!showCompendium)} showCompendium={showCompendium} onScriptPreview={() => setShowScriptPreview(!showScriptPreview)} showScriptPreview={showScriptPreview} onQuestList={() => setShowQuestList(!showQuestList)} showQuestList={showQuestList} hasQuests={!!(script?.extraData?.mainQuests || script?.extraData?.sideQuests)} replyLength={replyLength} onReplyLengthChange={handleReplyLengthChange} authorNote={authorNote} onAuthorNoteChange={(n) => { setAuthorNote(n); window.electronAPI.setSetting('author_note_' + activeConversationId, n).catch(() => {}); }} showAuthorNote={showAuthorNote} onNovelReader={() => setShowNovelReader(true)} onChapterMark={handleChapterMark} chapterPresets={chapterPresets} showStarredOnly={showStarredOnly} onToggleStarredOnly={() => setShowStarredOnly(v => !v)} starredCount={starredIds.length} onToggleAuthorNote={() => setShowAuthorNote(v => !v)} onShowSummaries={() => {
   const cid = activeConversationId;
   if (!cid) return;
   window.electronAPI.getSetting('auto_summaries_' + cid).then(raw => {
@@ -368,6 +370,7 @@ export function ChatPage() {
       {showCompendium && selectedScriptId && <CharacterCompendium scriptId={selectedScriptId} conversationId={activeConversationId} configId={activeConfigId} onClose={() => setShowCompendium(false)} />}
       {showScriptPreview && script && <ScriptPreview script={script} onClose={() => setShowScriptPreview(false)} />}
       {showQuestList && selectedScriptId && <QuestPanel scriptId={selectedScriptId} conversationId={activeConversationId} configId={activeConfigId} mainQuests={script?.extraData?.mainQuests || ''} sideQuests={script?.extraData?.sideQuests || ''} onClose={() => setShowQuestList(false)} />}
+      {showNovelReader && <NovelReader messages={useChatStore.getState().messages} chapterMarkers={chapterMarkers} starredIds={starredIds} onClose={() => setShowNovelReader(false)} />}
     </div>
   );
 }
