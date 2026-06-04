@@ -29,6 +29,7 @@ export function CharactersPage() {
   const [speakingStyle, setSpeakingStyle] = useState('');
   const [appearance, setAppearance] = useState('');
   const [avatar, setAvatar] = useState('');
+  const [isProtagonist, setIsProtagonist] = useState(false);
 
 
 
@@ -117,6 +118,17 @@ export function CharactersPage() {
     setAvatar(character.avatar);
     setShowParse(false);
     setParseText('');
+    // Check if this character is the script protagonist / 检查是否为主角
+    setIsProtagonist(false);
+    if (selectedScriptId) {
+      window.electronAPI.getScripts().then((scripts: any[]) => {
+        const s = scripts.find((x: any) => x.id === selectedScriptId);
+        if (s) {
+          const ed = typeof s.extraData === 'string' ? JSON.parse(s.extraData) : (s.extraData || {});
+          setIsProtagonist(ed.protagonistName === character.name);
+        }
+      }).catch(() => {});
+    }
     setShowForm(true);
   };
 
@@ -139,6 +151,18 @@ export function CharactersPage() {
         avatar,
       });
     } else {
+      // Save protagonist flag to script / 保存主角标记到剧本
+      if (isProtagonist && selectedScriptId && name.trim()) {
+        try {
+          const scripts = await window.electronAPI.getScripts();
+          const s = scripts.find((x: any) => x.id === selectedScriptId);
+          if (s) {
+            const ed = typeof s.extraData === 'string' ? JSON.parse(s.extraData) : (s.extraData || {});
+            ed.protagonistName = name.trim();
+            await window.electronAPI.updateScript(selectedScriptId, { extraData: ed } as any);
+          }
+        } catch { /* non-critical */ }
+      }
       await addCharacter({
         id: generateId(),
         scriptId: standaloneMode ? (null as any) : selectedScriptId,
@@ -256,14 +280,21 @@ export function CharactersPage() {
                       </button>
                     </div>
                   </div>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-purple-500"
-                    placeholder="输入角色名后点击 AI 补全自动生成性格、背景等"
-                    required
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-purple-500"
+                      placeholder="输入角色名后点击 AI 补全自动生成性格、背景等"
+                      required
+                    />
+                    <label className="flex items-center gap-1 text-xs text-gray-400 flex-shrink-0">
+                      <input type="checkbox" checked={isProtagonist}
+                        onChange={e => setIsProtagonist(e.target.checked)} />
+                      主角
+                    </label>
+                  </div>
                 </div>
                 {/* Parse profile textarea / 识别人设文本输入区 */}
                 {showParse && (
