@@ -324,6 +324,29 @@ export function ScriptsPage() {
                   />
                 </div>
 
+                {/* Protagonist / 主角设定 */}
+                <div className="bg-purple-900/20 rounded-lg p-3 border border-purple-800/30 space-y-2">
+                  <div className="text-xs text-purple-400 font-medium">👤 主角设定</div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">姓名</label>
+                    <div className="flex gap-2 items-center">
+                      <input value={protagonistName} onChange={e => setProtagonistName(e.target.value)}
+                        className="flex-1 bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-purple-500"
+                        placeholder="如：苏尘" />
+                      <label className="flex items-center gap-1 text-xs text-gray-400 flex-shrink-0">
+                        <input type="checkbox" checked={autoCreateProtagonist} onChange={e => setAutoCreateProtagonist(e.target.checked)} />
+                        自动创建角色
+                      </label>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">性格</label>
+                    <input value={protagonistPersonality} onChange={e => setProtagonistPersonality(e.target.value)}
+                      className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-purple-500"
+                      placeholder="如：坚韧隐忍，外冷内热" />
+                  </div>
+                </div>
+
                 {/* Genre tags */}
                 <div>
                   <label className="block text-xs text-gray-500 mb-2">
