@@ -244,9 +244,9 @@ export function ChatSetup({
           </div>
 
           <button onClick={onStart}
-            disabled={chatMode === '1v1' ? !selectedScriptId || !selectedCharacterId || !activeConfigId : !selectedScriptId || !activeConfigId}
+            disabled={chatMode === '1v1' ? !selectedScriptId || !selectedCharacterId || !activeConfigId : chatMode === 'group' ? !selectedScriptId || groupCharacterIds.length === 0 || !activeConfigId : !selectedScriptId || !activeConfigId}
             className="w-full mt-4 px-4 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg font-medium">
-            {chatMode === 'world' ? '🌍 进入世界' : '💬 开始对话'}
+            {chatMode === 'world' ? '🌍 进入世界' : chatMode === 'group' ? '👥 开始群聊' : '💬 开始对话'}
           </button>
 
           {recentConvs.length > 0 && (

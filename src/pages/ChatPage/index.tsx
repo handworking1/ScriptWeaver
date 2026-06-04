@@ -109,7 +109,7 @@ export function ChatPage() {
       // Stale guard / 过期检查：如果resumeConversationId已变化，放弃本次结果
       if (useNavStore.getState().resumeConversationId !== targetId) return;
       selectScript(conv.scriptId); selectCharacter(conv.characterId || null);
-      setChatMode(conv.characterId ? '1v1' : 'world');
+      setChatMode(conv.title?.startsWith('群聊 · ') ? 'group' : conv.characterId ? '1v1' : 'world');
       useChatStore.getState().setActiveConversation(conv.id);
       addOpenConv(conv.id, conv.title || '未命名');
       await loadMessages(conv.id);
@@ -187,14 +187,14 @@ export function ChatPage() {
 
   const startGroupChat = async () => {
     const title = '群聊 · ' + (script?.title || '');
-    await createConversation(selectedScriptId!, '', chatMode as any, title);
-    const cid = useChatStore.getState().activeConversationId;
-    if (cid) {
-      const prompt = await buildGroupPrompt();
-      const sysMsg: Message = { id: generateId(), conversationId: cid, role: 'system', content: prompt, timestamp: Date.now() };
-      await window.electronAPI.createMessage(sysMsg);
-      useChatStore.setState({ messages: [sysMsg] });
-    }
+    const conv = await createConversation(generateId(), selectedScriptId!, '', title);
+    if (!conv) return;
+    addOpenConv(conv.id, title);
+    const prompt = await buildGroupPrompt();
+    const sysMsg: Message = { id: generateId(), conversationId: conv.id, role: 'system', content: prompt, timestamp: Date.now() };
+    await window.electronAPI.createMessage(sysMsg);
+    await loadMessages(conv.id);
+    setShowSetup(false);
   };
 
   const handleEditMessage = async (msg: Message) => {
@@ -277,7 +277,7 @@ export function ChatPage() {
     if (c) {
       selectScript(c.scriptId);
       selectCharacter(c.characterId || null);
-      setChatMode(c.characterId ? '1v1' : 'world');
+      setChatMode(c.title?.startsWith('群聊 · ') ? 'group' : c.characterId ? '1v1' : 'world');
       addOpenConv(id, c.title || '未命名');
     }
     setShowConvList(false);

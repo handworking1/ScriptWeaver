@@ -4,7 +4,7 @@ interface Props {
   characterName?: string;
   characterAvatar?: string;
   scriptTitle?: string;
-  chatMode: '1v1' | 'world';
+  chatMode: '1v1' | 'world' | 'group';
   isStreaming: boolean;
   displayMessagesLen: number;
   searchQuery: string;
@@ -68,7 +68,15 @@ export const ChatHeader = memo(function ChatHeader({
   return (
     <div className="flex-shrink-0 bg-gray-900 border-b border-gray-800 px-4 py-2 flex items-center gap-3 flex-wrap">
       <button onClick={onBack} className="text-gray-500 hover:text-gray-300 text-sm">← 返回</button>
-      {chatMode === 'world' ? (
+      {chatMode === 'group' ? (
+        <>
+          <span className="text-lg">👥</span>
+          <div>
+            <div className="text-sm font-medium text-gray-200">{scriptTitle ?? '未知'}</div>
+            <div className="text-xs text-teal-400">群聊模式</div>
+          </div>
+        </>
+      ) : chatMode === 'world' ? (
         <>
           <span className="text-lg">🌍</span>
           <div>
