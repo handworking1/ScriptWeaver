@@ -3,7 +3,7 @@
  * D&D角色卡 — 属性面板+技能列表+HP/AC+装备。
  */
 import { useState } from 'react';
-import { RACES, CLASSES, SKILLS, STAT_ZH, LEVELS } from '@/data/dnd5e';
+import { RACES, CLASSES, SKILLS, STAT_ZH, LEVELS, EQUIP } from '@/data/dnd5e';
 import { abilityMod, profBonus, maxHP } from '@/lib/dice';
 
 export interface CharSheet {
@@ -110,7 +110,12 @@ export function CharacterCreator({ onCreate }: { onCreate: (s: CharSheet) => voi
     if (r) for (const [k, v] of Object.entries(r.bonus)) finalStats[k] = (finalStats[k] || 0) + v!;
     const c = CLASSES.find(x => x.name === className);
     const hp = c ? maxHP(c.hitDice, abilityMod(finalStats.con), 1) : 10;
-    const ac = 10 + abilityMod(finalStats.dex) + (equipment.includes('盾牌') ? 2 : 0);
+    let armorAc = 10;
+    for (const e of equipment) {
+      const eq = EQUIP.find(x => x.name === e);
+      if (eq && eq.ac) armorAc = Math.max(armorAc, eq.ac);
+    }
+    const ac = armorAc + abilityMod(finalStats.dex) + (equipment.includes('盾牌') ? 2 : 0);
     onCreate({ name: name||'冒险者', race, className, level:1, xp:0, stats:finalStats, hp:{max:hp,current:hp}, ac, profSkills, equipment });
   };
 

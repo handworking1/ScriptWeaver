@@ -4,7 +4,6 @@
  */
 import { useState, useRef, useEffect } from 'react';
 import { DNDSheet, CharacterCreator, CharSheet } from '@/components/DNDSheet';
-import { useChatStore } from '@/stores/chatStore';
 import { useConfigStore } from '@/stores/configStore';
 import { roll, d20Check, abilityMod, profBonus, attackRoll, damageRoll } from '@/lib/dice';
 import { STAT_ZH, SKILLS } from '@/data/dnd5e';
@@ -22,6 +21,17 @@ export default function DNDPage() {
 
   useEffect(() => { chatRef.current?.scrollTo(0, chatRef.current.scrollHeight); }, [messages]);
 
+  const buildGMPrompt = (s: CharSheet): string => {
+    const r = `你是D&D地下城主。玩家角色：${s.name}，${s.race} ${s.className}，Lv${s.level}。
+力量${s.stats.str}(${abilityMod(s.stats.str)>=0?'+':''}${abilityMod(s.stats.str)}) 敏捷${s.stats.dex}(${abilityMod(s.stats.dex)>=0?'+':''}${abilityMod(s.stats.dex)}) 体质${s.stats.con}(${abilityMod(s.stats.con)>=0?'+':''}${abilityMod(s.stats.con)})
+智力${s.stats.int}(${abilityMod(s.stats.int)>=0?'+':''}${abilityMod(s.stats.int)}) 感知${s.stats.wis}(${abilityMod(s.stats.wis)>=0?'+':''}${abilityMod(s.stats.wis)}) 魅力${s.stats.cha}(${abilityMod(s.stats.cha)>=0?'+':''}${abilityMod(s.stats.cha)})
+HP ${s.hp.current}/${s.hp.max} AC ${s.ac}
+熟练技能：${s.profSkills.join('、')} 熟练加值：+${profBonus(s.level)}
+装备：${s.equipment.join('、')}
+规则：需检定时报DC。成功→叙事成功；失败→有趣的意外。支持指令：/check 属性 DC、/roll 2d6+3、/attack。`;
+    return r;
+  };
+
   if (showCreator || !sheet) {
     return (
       <div className="flex-1 overflow-y-auto p-6 flex items-start justify-center pt-16">
@@ -34,20 +44,9 @@ export default function DNDPage() {
     );
   }
 
-  const buildGMPrompt = (s: CharSheet) => {
-    const r = `你是D&D地下城主。玩家角色：${s.name}，${s.race} ${s.className}，Lv${s.level}。
-力量${s.stats.str}(${abilityMod(s.stats.str)>=0?'+':''}${abilityMod(s.stats.str)}) 敏捷${s.stats.dex}(${abilityMod(s.stats.dex)>=0?'+':''}${abilityMod(s.stats.dex)}) 体质${s.stats.con}(${abilityMod(s.stats.con)>=0?'+':''}${abilityMod(s.stats.con)})
-智力${s.stats.int}(${abilityMod(s.stats.int)>=0?'+':''}${abilityMod(s.stats.int)}) 感知${s.stats.wis}(${abilityMod(s.stats.wis)>=0?'+':''}${abilityMod(s.stats.wis)}) 魅力${s.stats.cha}(${abilityMod(s.stats.cha)>=0?'+':''}${abilityMod(s.stats.cha)})
-HP ${s.hp.current}/${s.hp.max} AC ${s.ac}
-熟练技能：${s.profSkills.join('、')} 熟练加值：+${profBonus(s.level)}
-装备：${s.equipment.join('、')}
-规则：需检定时报DC。成功→叙事成功；失败→有趣的意外。支持指令：/check 属性 DC、/roll 2d6+3、/attack。`;
-    return r;
-  };
-
   const send = async () => {
     const text = input.trim();
-    if (!text || !activeConfig) return;
+    if (!text) return;
     setInput('');
     setMessages(prev => [...prev, { role: 'user', content: text }]);
 
@@ -80,7 +79,8 @@ HP ${s.hp.current}/${s.hp.max} AC ${s.ac}
       return;
     }
 
-    // AI GM call
+    // AI GM call (needs config) / AI调用需要配置
+    if (!activeConfig) return;
     setLoading(true);
     try {
       const result = await window.electronAPI.discussSettings(activeConfig, 'script',
