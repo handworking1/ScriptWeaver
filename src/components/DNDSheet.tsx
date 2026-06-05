@@ -104,6 +104,17 @@ export function CharacterCreator({ onCreate }: { onCreate: (s: CharSheet) => voi
   const [equipment, setEquipment] = useState<string[]>(['长剑','盾牌','探索套件']);
   const [name, setName] = useState('');
 
+  // Point-buy: 8=0,9=1,10=2,11=3,12=4,13=5,14=7,15=9 / 购点计算
+  const ptCost = (v: number) => [0,0,0,0,0,0,0,0,0,1,2,3,4,5,7,9][Math.min(v,15)] || 9;
+  const pointTotal = (s: Record<string,number>) => Object.values(s).reduce((a,v) => a+ptCost(v), 0);
+  const handleStatChange = (k: string, newV: number) => {
+    if (newV < 8 || newV > 15) return;
+    const oldCost = ptCost(stats[k]);
+    const newCost = ptCost(newV);
+    if (pointTotal(stats) - oldCost + newCost > 27) return;
+    setStats({...stats,[k]:newV});
+  };
+
   const finish = () => {
     const r = RACES.find(x => x.name === race);
     const finalStats = { ...stats };
@@ -174,18 +185,24 @@ export function CharacterCreator({ onCreate }: { onCreate: (s: CharSheet) => voi
 
       {step === 2 && (
         <div>
-          <div className="text-gray-500 mb-2">分配属性值（可用27点点数购买，或使用标准数组 15/14/13/12/10/8）</div>
+          <div className="text-gray-500 mb-2">分配属性值（27点购点法） · 已用 {pointTotal(stats)}/27</div>
           <div className="space-y-1">
             {Object.entries(stats).map(([k,v]) => (
               <div key={k} className="flex items-center gap-2">
                 <span className="w-10 text-gray-400">{STAT_ZH[k]}</span>
-                <input type="range" min={3} max={18} value={v} onChange={e => setStats({...stats,[k]:parseInt(e.target.value)})}
+                <input type="range" min={8} max={15} value={v} disabled={true}
+                  onChange={e => handleStatChange(k, parseInt(e.target.value))}
                   className="flex-1 accent-purple-500" />
-                <span className="w-12 text-right text-gray-200">
+                <button onClick={() => handleStatChange(k, v-1)} className="text-gray-500 hover:text-gray-300 text-xs w-4">−</button>
+                <button onClick={() => handleStatChange(k, v+1)} className="text-gray-500 hover:text-gray-300 text-xs w-4">+</button>
+                <span className="w-14 text-right text-gray-200">
                   {v} ({abilityMod(v)>=0?'+':''}{abilityMod(v)})
                 </span>
               </div>
             ))}
+          </div>
+          <div className={`text-xs mt-1 ${pointTotal(stats)===27?'text-green-400':'text-gray-500'}`}>
+            {pointTotal(stats)===27 ? '✓ 已用完所有点数' : `剩余 ${27-pointTotal(stats)} 点`}
           </div>
           <button onClick={() => setStep(3)} className="mt-3 w-full py-1.5 bg-purple-600 text-white rounded">下一步</button>
         </div>
