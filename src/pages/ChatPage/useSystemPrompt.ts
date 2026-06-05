@@ -207,7 +207,7 @@ export function useSystemPrompt(
     p = applyBanghui(p);
     p += getFormatRules();
     if (observerMode) {
-      p += '\n\n【观察模式 - 自主推进剧情】\n用户正在旁观故事发展。你需要自主推进剧情，每次回复300-500字，按剧情逻辑自然推进，在末端留一个悬念或选择点。如果用户输入了内容，以用户输入为准调整方向。';
+      p += '\n\n【观察模式 - 自主推进剧情】\n用户正在旁观故事发展。你需要自主推进剧情，按剧情逻辑自然推进，在末端留一个悬念或选择点。字数不限，节奏自己把握。如果用户输入了内容，以用户输入为准调整方向。';
     }
     p = await applyStyleProfile(p);
     return truncateSystemPrompt(p);
