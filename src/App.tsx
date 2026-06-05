@@ -7,6 +7,7 @@ import { AIConfigPage } from '@/pages/AIConfigPage';
 import { ChatPage } from '@/pages/ChatPage';
 import { HistoryPage } from '@/pages/HistoryPage';
 import { AIDiscussPage } from '@/pages/AIDiscussPage';
+import DNDPage from '@/pages/DNDPage';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const pages = {
@@ -14,6 +15,7 @@ const pages = {
   characters: CharactersPage,
   aiConfig: AIConfigPage,
   chat: ChatPage,
+  dnd: DNDPage,
   history: HistoryPage,
   aiDiscuss: AIDiscussPage,
 };

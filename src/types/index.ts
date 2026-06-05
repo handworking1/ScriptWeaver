@@ -117,6 +117,7 @@ export type Page =
   | 'characters'
   | 'aiConfig'
   | 'chat'
+  | 'dnd'
   | 'history'
   | 'aiDiscuss';
 

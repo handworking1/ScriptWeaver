@@ -10,6 +10,7 @@ const navItems: { page: Page; label: string; icon: string }[] = [
   { page: 'characters', label: '角色管理', icon: '🎭' },
   { page: 'aiDiscuss', label: 'AI 剧本讨论', icon: '🤖' },
   { page: 'chat', label: '聊天', icon: '💬' },
+  { page: 'dnd', label: 'D&D 跑团', icon: '🎲' },
   { page: 'history', label: '历史记录', icon: '📋' },
   { page: 'aiConfig', label: '设置', icon: '⚙️' },
 ];
