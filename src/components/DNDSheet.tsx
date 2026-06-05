@@ -15,80 +15,97 @@ export interface CharSheet {
 interface Props { sheet: CharSheet; onChange: (s: CharSheet) => void; readOnly?: boolean }
 
 export function DNDSheet({ sheet, onChange, readOnly }: Props) {
-  const update = (patch: Partial<CharSheet>) => onChange({ ...sheet, ...patch });
-  const updateStat = (k: string, v: number) => {
-    const s = { ...sheet.stats, [k]: v };
-    const c = CLASSES.find(x => x.name === sheet.className);
-    const hp = c ? maxHP(c.hitDice, abilityMod(s.con), sheet.level) : sheet.hp.max;
-    update({ stats: s, hp: { max: hp, current: Math.min(sheet.hp.current, hp) } });
-  };
+  const [showSkills, setShowSkills] = useState(false);
+  const [showEquip, setShowEquip] = useState(false);
   const pBonus = profBonus(sheet.level);
-  const stats = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
+  const stats = ['str','dex','con','int','wis','cha'] as const;
 
   return (
-    <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 space-y-3 text-xs">
+    <div className="bg-gray-800 rounded-xl border border-gray-700 text-xs overflow-hidden">
       {/* Header */}
-      <div className="text-center border-b border-gray-700 pb-2">
+      <div className="bg-gradient-to-r from-purple-900/40 to-gray-800 p-3 text-center">
         <div className="text-sm font-bold text-gray-100">{sheet.name || '未命名'}</div>
         <div className="text-gray-400 mt-0.5">{sheet.race} · {sheet.className} · Lv{sheet.level}</div>
       </div>
 
-      {/* Stats / 属性 */}
-      <div className="grid grid-cols-3 gap-1">
-        {stats.map(k => (
-          <div key={k} className="bg-gray-900 rounded p-1.5 text-center">
-            <div className="text-gray-500">{STAT_ZH[k]}</div>
-            <div className="text-lg font-bold text-gray-100">{sheet.stats[k] || 10}</div>
-            <div className="text-xs text-purple-400">
-              {abilityMod(sheet.stats[k] || 10) >= 0 ? '+' : ''}{abilityMod(sheet.stats[k] || 10)}
-            </div>
+      <div className="p-3 space-y-2">
+      {/* Stats */}
+      <div className="grid grid-cols-6 gap-0.5">
+        {stats.map(k => {
+          const mod = abilityMod(sheet.stats[k]);
+          return (
+          <div key={k} className="bg-gray-900 rounded p-1 text-center">
+            <div className="text-gray-600 text-[10px]">{STAT_ZH[k]}</div>
+            <div className="font-bold text-gray-200 text-sm">{sheet.stats[k]}</div>
+            <div className="text-purple-400 text-[10px]">{mod>=0?'+':''}{mod}</div>
           </div>
-        ))}
+        )})}
       </div>
 
-      {/* HP + AC + Initiative */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="bg-gray-900 rounded p-2 text-center">
-          <div className="text-gray-500">HP</div>
-          <div className="font-bold text-red-400">{sheet.hp.current}/{sheet.hp.max}</div>
+      {/* HP/AC/INI bar */}
+      <div className="flex gap-1">
+        <div className="flex-1 bg-gray-900 rounded p-1.5 text-center">
+          <div className="text-gray-600 text-[10px]">生命</div>
+          <div className="font-bold text-red-400">{sheet.hp.current}<span className="text-gray-600 text-[10px]">/{sheet.hp.max}</span></div>
         </div>
-        <div className="bg-gray-900 rounded p-2 text-center">
-          <div className="text-gray-500">AC</div>
-          <div className="font-bold text-blue-400">{sheet.ac || 10}</div>
+        <div className="flex-1 bg-gray-900 rounded p-1.5 text-center">
+          <div className="text-gray-600 text-[10px]">AC</div>
+          <div className="font-bold text-blue-400">{sheet.ac}</div>
         </div>
-        <div className="bg-gray-900 rounded p-2 text-center">
-          <div className="text-gray-500">先攻</div>
-          <div className="font-bold text-green-400">
-            {abilityMod(sheet.stats.dex) >= 0 ? '+' : ''}{abilityMod(sheet.stats.dex)}
-          </div>
+        <div className="flex-1 bg-gray-900 rounded p-1.5 text-center">
+          <div className="text-gray-600 text-[10px]">先攻</div>
+          <div className="font-bold text-green-400">{abilityMod(sheet.stats.dex)>=0?'+':''}{abilityMod(sheet.stats.dex)}</div>
+        </div>
+        <div className="flex-1 bg-gray-900 rounded p-1.5 text-center">
+          <div className="text-gray-600 text-[10px]">熟练</div>
+          <div className="font-bold text-amber-400">+{pBonus}</div>
         </div>
       </div>
 
-      {/* Skills / 技能 */}
-      <div>
-        <div className="text-gray-500 mb-1">技能 (熟练+{pBonus})</div>
-        <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 max-h-32 overflow-y-auto">
-          {SKILLS.map(sk => {
-            const mod = abilityMod(sheet.stats[sk.stat] || 10);
-            const prof = sheet.profSkills.includes(sk.name) ? pBonus : 0;
-            const total = mod + prof;
+      {/* Collapsible Skills */}
+      <button onClick={() => setShowSkills(v=>!v)} className="w-full flex items-center justify-between bg-gray-900 rounded p-1.5 hover:bg-gray-850">
+        <span className="text-gray-400 text-[10px]">技能熟练</span>
+        <span className="text-gray-500 text-[10px]">{showSkills?'▲':'▼'}</span>
+      </button>
+      {showSkills && (
+        <div className="space-y-0.5 bg-gray-900/50 rounded p-1.5 max-h-40 overflow-y-auto">
+          {sheet.profSkills.map(sk => {
+            const s = SKILLS.find(x=>x.name===sk);
+            const mod = abilityMod(sheet.stats[s?.stat||'str']);
             return (
-              <div key={sk.name} className={`flex justify-between text-xs px-1 py-0.5 rounded ${prof > 0 ? 'bg-purple-900/20' : ''}`}>
-                <span className="text-gray-400">{sk.name}</span>
-                <span className="text-gray-200">{total >= 0 ? '+' : ''}{total}</span>
+              <div key={sk} className="flex justify-between items-center text-[10px] py-0.5 px-1 rounded hover:bg-gray-800" title={s?.desc}>
+                <div>
+                  <span className="text-gray-300">{sk}</span>
+                  <span className="text-gray-600 ml-1">({STAT_ZH[s?.stat||'']})</span>
+                </div>
+                <span className="text-purple-300">{mod+pBonus>=0?'+':''}{mod+pBonus}</span>
               </div>
-            );
-          })}
+            )})}
+          <div className="text-gray-600 text-[10px] mt-1 italic border-t border-gray-800 pt-1">hover查看技能说明</div>
         </div>
-      </div>
+      )}
 
-      {/* Equipment / 装备 */}
-      <div>
-        <div className="text-gray-500 mb-1">装备</div>
-        <div className="text-gray-400 space-y-0.5">
-          {sheet.equipment.length === 0 && <div className="text-gray-600">无</div>}
-          {sheet.equipment.map((e, i) => <div key={i}>⚔️ {e}</div>)}
+      {/* Collapsible Equipment */}
+      <button onClick={() => setShowEquip(v=>!v)} className="w-full flex items-center justify-between bg-gray-900 rounded p-1.5 hover:bg-gray-850">
+        <span className="text-gray-400 text-[10px]">装备 ({sheet.equipment.length})</span>
+        <span className="text-gray-500 text-[10px]">{showEquip?'▲':'▼'}</span>
+      </button>
+      {showEquip && (
+        <div className="space-y-0.5 bg-gray-900/50 rounded p-1.5 max-h-32 overflow-y-auto">
+          {sheet.equipment.map((ename,i) => {
+            const eq = EQUIP.find(e=>e.name===ename) as any;
+            return (
+              <div key={i} className="text-[10px] py-0.5 px-1 rounded hover:bg-gray-800" title={eq?.desc || ''}>
+                <div className="flex justify-between">
+                  <span className="text-gray-300">{ename}</span>
+                  <span className="text-gray-600">{eq?.cat}</span>
+                </div>
+                <div className="text-gray-500">{eq?.desc}</div>
+              </div>
+            )})}
+          <div className="text-gray-600 text-[10px] mt-1 italic border-t border-gray-800 pt-1">hover查看装备说明</div>
         </div>
+      )}
       </div>
     </div>
   );
