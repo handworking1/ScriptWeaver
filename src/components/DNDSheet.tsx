@@ -128,29 +128,49 @@ export function CharacterCreator({ onCreate }: { onCreate: (s: CharSheet) => voi
         ))}
       </div>
 
-      {step === 0 && (
+      {step === 0 && (<>
         <div className="grid grid-cols-3 gap-1">
           {RACES.map(r => (
-            <button key={r.name} onClick={() => { setRace(r.name); setStep(1); }}
+            <button key={r.name} onClick={() => setRace(r.name)}
               className={`p-2 rounded text-center ${race===r.name?'bg-purple-900/60 text-purple-300':'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}>
               <div className="font-medium">{r.name}</div>
-              <div className="text-gray-500">{r.traits.slice(0,20)}...</div>
+              <div className="text-xs text-gray-500">
+                {Object.entries(r.bonus).map(([k,v]) => `${STAT_ZH[k]}+${v}`).join(' ')}
+              </div>
             </button>
           ))}
         </div>
-      )}
+        {/* Race detail / 种族详情 */}
+        <div className="bg-gray-900 rounded-lg p-3 border border-gray-700 text-xs space-y-1">
+          <div className="font-medium text-gray-200">{race}</div>
+          <div className="text-gray-400">{RACES.find(r=>r.name===race)?.traits}</div>
+          <div className="text-gray-500">速度：{RACES.find(r=>r.name===race)?.speed}尺 · {RACES.find(r=>r.name===race)?.size}</div>
+          <div className="text-purple-400">
+            属性加成：{Object.entries(RACES.find(r=>r.name===race)?.bonus||{}).map(([k,v])=>`${STAT_ZH[k]}+${v}`).join('、')}
+          </div>
+        </div>
+        <button onClick={() => setStep(1)} className="w-full py-1.5 bg-purple-600 text-white rounded">选定 {race}</button>
+      </>)}
 
-      {step === 1 && (
+      {step === 1 && (<>
         <div className="grid grid-cols-2 gap-1">
           {CLASSES.map(c => (
-            <button key={c.name} onClick={() => { setClassName(c.name); setProfSkills(c.skills.slice(0,c.skillCount)); setStep(2); }}
+            <button key={c.name} onClick={() => setClassName(c.name)}
               className={`p-2 rounded ${className===c.name?'bg-purple-900/60 text-purple-300':'bg-gray-700 text-gray-400'}`}>
               <div className="font-medium">{c.name}</div>
               <div className="text-xs text-gray-500">{c.hitDice} HP · {STAT_ZH[c.primary]}</div>
             </button>
           ))}
         </div>
-      )}
+        <div className="bg-gray-900 rounded-lg p-3 border border-gray-700 text-xs space-y-1">
+          <div className="font-medium text-gray-200">{className}</div>
+          <div className="text-gray-400">生命骰：{CLASSES.find(x=>x.name===className)?.hitDice} · 主属性：{STAT_ZH[CLASSES.find(x=>x.name===className)?.primary||'str']}</div>
+          <div className="text-gray-500">护甲：{CLASSES.find(x=>x.name===className)?.armor}</div>
+          <div className="text-gray-500">武器：{CLASSES.find(x=>x.name===className)?.weapons}</div>
+          <div className="text-purple-400">特性：{CLASSES.find(x=>x.name===className)?.features.join('、')}</div>
+        </div>
+        <button onClick={() => { setProfSkills(CLASSES.find(x=>x.name===className)!.skills.slice(0,CLASSES.find(x=>x.name===className)!.skillCount)); setStep(2); }} className="w-full py-1.5 bg-purple-600 text-white rounded">选定 {className}</button>
+      </>)}
 
       {step === 2 && (
         <div>
