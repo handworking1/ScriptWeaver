@@ -207,7 +207,7 @@ export function CharacterCreator({ onCreate }: { onCreate: (s: CharSheet) => voi
             {Object.entries(stats).map(([k,v]) => (
               <div key={k} className="flex items-center gap-2">
                 <span className="w-10 text-gray-400">{STAT_ZH[k]}</span>
-                <input type="range" min={8} max={15} value={v} disabled={true}
+                <input type="range" min={8} max={15} value={v}
                   onChange={e => handleStatChange(k, parseInt(e.target.value))}
                   className="flex-1 accent-purple-500" />
                 <button onClick={() => handleStatChange(k, v-1)} className="text-gray-500 hover:text-gray-300 text-xs w-4">−</button>
