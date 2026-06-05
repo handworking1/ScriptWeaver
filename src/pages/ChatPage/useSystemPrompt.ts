@@ -190,6 +190,10 @@ export function useSystemPrompt(
       p = `用户在扮演【${playAs}】。请称呼用户为「${playAs}」，将所有 NPC 视作独立角色。\n`;
     }
     p += `你是剧本《${script?.title || '未命名'}》的叙述者（Game Master）。`;
+    // Narrative person — placed early so AI follows it / 叙事人称放在前面
+    if (narrativePerson === 'me') p += '\n【必须用第一人称"我"叙述】';
+    else if (narrativePerson === 'he') p += `\n【必须用第三人称叙述，以「${playAs === 'myself' ? '主角' : playAs}」为主语，避免使用"你"】`;
+    else p += '\n【必须用第二人称"你"叙述】';
     p += `\n\n---\n\n【世界观】${script?.worldSetting || '未设定'}`;
     p += `\n\n---\n\n【故事背景】${script?.background || '未设定'}`;
     if (mq) p += `\n\n---\n\n【主线任务】${mq}`;
@@ -206,10 +210,6 @@ export function useSystemPrompt(
       p += '\n\n【观察模式 - 自主推进剧情】\n用户正在旁观故事发展。你需要自主推进剧情，每次回复300-500字，按剧情逻辑自然推进，在末端留一个悬念或选择点。如果用户输入了内容，以用户输入为准调整方向。';
     }
     p = await applyStyleProfile(p);
-    // Narrative person / 叙事人称
-    if (narrativePerson === 'me') p += '\n用第一人称「我」叙述。';
-    else if (narrativePerson === 'he') p += `\n用第三人称叙述，以「${playAs === 'myself' ? '主角' : playAs}」的视角展开。`;
-    else p += '\n用第二人称「你」叙述。';
     return truncateSystemPrompt(p);
   };
 
