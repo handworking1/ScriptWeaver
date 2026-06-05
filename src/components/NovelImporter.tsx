@@ -14,7 +14,7 @@ interface Props {
 export function NovelImporter({ configId, scriptId, onExtract }: Props) {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<'extract' | 'style'>('extract');
+  const [styleLoading, setStyleLoading] = useState(false);
   const [preview, setPreview] = useState<Record<string, string> | null>(null);
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,7 +77,7 @@ export function NovelImporter({ configId, scriptId, onExtract }: Props) {
 
   const handleAnalyzeStyle = async () => {
     if (!text.trim() || !configId || !scriptId) return;
-    setLoading(true);
+    setStyleLoading(true);
     try {
       // Sample 3 representative passages / 选取3段代表性文字
       const head = text.slice(0, 500);
@@ -102,29 +102,16 @@ export function NovelImporter({ configId, scriptId, onExtract }: Props) {
         }
       }
     } catch (err: any) { alert('分析失败：' + (err.message || '未知错误')); }
-    finally { setLoading(false); }
+    finally { setStyleLoading(false); }
   };
 
   return (
     <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 space-y-4">
       <div>
-        <h3 className="text-lg font-semibold text-gray-100 mb-2">
-          {mode === 'extract' ? '📤 从小说提取剧本' : '📝 分析作者文风'}
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-100 mb-2">📤 从小说提取剧本</h3>
         <p className="text-xs text-gray-500 mb-3">
-          {mode === 'extract' ? '上传 .txt/.md 小说或粘贴文本，AI提取剧本设定' : 'AI分析小说文风，生成风格模仿提示词'}
+          上传 .txt/.md 小说或粘贴文本，AI提取剧本设定。提取后可点击「📝 分析文风」。
         </p>
-      </div>
-
-      <div className="flex gap-2 mb-2">
-        <button onClick={() => { setMode('extract'); setPreview(null); }}
-          className={`px-3 py-1 text-xs rounded ${mode === 'extract' ? 'bg-purple-700 text-white' : 'bg-gray-700 text-gray-400'}`}>
-          📤 提取剧本
-        </button>
-        <button onClick={() => { setMode('style'); setPreview(null); }}
-          className={`px-3 py-1 text-xs rounded ${mode === 'style' ? 'bg-purple-700 text-white' : 'bg-gray-700 text-gray-400'}`}>
-          📝 分析文风
-        </button>
       </div>
 
       <input type="file" accept=".txt,.md" onChange={handleFile}
@@ -140,10 +127,16 @@ export function NovelImporter({ configId, scriptId, onExtract }: Props) {
         </div>
       )}
 
-      <button onClick={mode === 'extract' ? handleExtract : handleAnalyzeStyle} disabled={loading || !text.trim() || !configId || (mode === 'style' && !scriptId)}
-        className="px-4 py-2 text-sm bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white rounded-lg">
-        {loading ? '⏳ 处理中...' : mode === 'extract' ? '🤖 开始提取' : '📝 分析文风'}
-      </button>
+      <div className="flex gap-2">
+        <button onClick={handleExtract} disabled={loading || !text.trim() || !configId}
+          className="flex-1 px-4 py-2 text-sm bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white rounded-lg">
+          {loading ? '⏳ 提取中...' : '🤖 开始提取'}
+        </button>
+        <button onClick={handleAnalyzeStyle} disabled={styleLoading || !text.trim() || !configId || !scriptId}
+          className="px-4 py-2 text-sm bg-teal-600 hover:bg-teal-500 disabled:opacity-40 text-white rounded-lg">
+          {styleLoading ? '⏳ 分析中...' : '📝 分析文风'}
+        </button>
+      </div>
 
       {preview && (
         <div className="bg-gray-900 rounded-lg p-3 border border-gray-700 space-y-1 text-xs">
