@@ -193,7 +193,9 @@ export function CharacterCreator({ onCreate }: { onCreate: (s: CharSheet) => voi
 
       {step === 2 && (
         <div>
-          <div className="text-gray-500 mb-2">分配属性值（点击+/−调整，推荐总和不超过72）</div>
+          {(() => { const t = Object.values(stats).reduce((a,b)=>a+b,0); return (
+          <div className={`text-xs mb-2 ${t>78?'text-red-400':t>=72?'text-green-400':'text-gray-500'}`}>分配属性值 · 总和 {t}/78 {t>78?'⚠超出':t>=72?'✓':'(可继续增加)'}</div>
+          );})()}
           <div className="space-y-1">
             {Object.entries(stats).map(([k,v]) => (
               <div key={k} className="flex items-center gap-2 bg-gray-900 rounded p-2">
@@ -201,7 +203,11 @@ export function CharacterCreator({ onCreate }: { onCreate: (s: CharSheet) => voi
                 <button onClick={() => setStats({...stats,[k]:Math.max(8,v-1)})}
                   className="w-8 h-8 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-lg leading-none">−</button>
                 <span className="flex-1 text-center text-lg font-bold text-purple-300">{v}</span>
-                <button onClick={() => setStats({...stats,[k]:Math.min(18,v+1)})}
+                <button onClick={() => {
+                  const total = Object.values(stats).reduce((a,b)=>a+b,0);
+                  if (total >= 78 || v >= 18) return;
+                  setStats({...stats,[k]:v+1});
+                }}
                   className="w-8 h-8 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-lg leading-none">+</button>
                 <span className="w-12 text-right text-sm text-gray-400">
                   {abilityMod(v)>=0?'+':''}{abilityMod(v)}
