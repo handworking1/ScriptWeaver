@@ -13,14 +13,15 @@ interface Props {
   recentMessages: { role: string; content: string }[];
   characterName?: string;
   banghuiEnabled?: boolean;
-  chatMode?: '1v1' | 'world';
+  chatMode?: string;
   scriptId?: string;
+  observerMode?: boolean;
 }
 
 export const ChatInput = memo(function ChatInput({
   inputValue, setInputValue, isStreaming, shortcutBar, shortcutsExpanded,
   setShortcutsExpanded, activeConfigId, failoverConfigId, sendMessage,
-  recentMessages, characterName, banghuiEnabled, chatMode, scriptId,
+  recentMessages, characterName, banghuiEnabled, chatMode, scriptId, observerMode,
 }: Props) {
   const [aiReplies, setAiReplies] = useState<string[]>([]);
   const [replyLoading, setReplyLoading] = useState(false);
@@ -219,8 +220,14 @@ export const ChatInput = memo(function ChatInput({
             className="w-12 h-12 bg-amber-700 hover:bg-amber-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl flex items-center justify-center flex-shrink-0 transition-colors" title="AI 写回复">
             <span className="text-sm">{replyLoading ? '⏳' : '✨'}</span>
           </button>
-          <button onClick={handleSend} disabled={!inputValue.trim() || isStreaming || !activeConfigId}
-            className="px-6 h-12 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white rounded-xl text-sm font-medium flex-shrink-0 flex items-center transition-opacity">发送</button>
+          {observerMode ? (
+            <button onClick={() => { if (activeConfigId) sendMessage(activeConfigId, '（继续推进剧情）', failoverConfigId ?? undefined); }}
+              disabled={isStreaming || !activeConfigId}
+              className="px-6 h-12 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 text-white rounded-xl text-sm font-medium flex-shrink-0 flex items-center transition-opacity">▶ 继续</button>
+          ) : (
+            <button onClick={handleSend} disabled={!inputValue.trim() || isStreaming || !activeConfigId}
+              className="px-6 h-12 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white rounded-xl text-sm font-medium flex-shrink-0 flex items-center transition-opacity">发送</button>
+          )}
         </div>
       </div>
     </>

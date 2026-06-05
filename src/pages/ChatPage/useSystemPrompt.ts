@@ -61,6 +61,7 @@ export function useSystemPrompt(
   playAs: string = 'myself',
   narrativePerson: string = 'you',
   groupCharacterIds: string[] = [],
+  observerMode: boolean = false,
 ) {
   const applyGlobalRules = async (prompt: string): Promise<string> => {
     try {
@@ -201,6 +202,9 @@ export function useSystemPrompt(
     p = await applyProtagonist(p);
     p = applyBanghui(p);
     p += getFormatRules();
+    if (observerMode) {
+      p += '\n\n【观察模式 - 自主推进剧情】\n用户正在旁观故事发展。你需要自主推进剧情，每次回复300-500字，按剧情逻辑自然推进，在末端留一个悬念或选择点。如果用户输入了内容，以用户输入为准调整方向。';
+    }
     p = await applyStyleProfile(p);
     // Narrative person / 叙事人称
     if (narrativePerson === 'me') p += '\n用第一人称「我」叙述。';

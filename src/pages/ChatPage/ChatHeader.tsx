@@ -43,6 +43,9 @@ interface Props {
   /** Chapter marker / 章节标记 */
   onChapterMark: () => void;
   chapterPresets: string[];
+  /** Observer mode / 观察模式 */
+  observerMode: boolean;
+  onToggleObserver: () => void;
   /** Starred filter / 精彩筛选 */
   showStarredOnly: boolean;
   onToggleStarredOnly: () => void;
@@ -62,6 +65,7 @@ export const ChatHeader = memo(function ChatHeader({
   onShowSummaries,
   onNovelReader,
   onChapterMark, chapterPresets: _chapterPresets,
+  observerMode, onToggleObserver,
   showStarredOnly, onToggleStarredOnly, starredCount,
   selectedScriptId,
 }: Props) {
@@ -124,6 +128,7 @@ export const ChatHeader = memo(function ChatHeader({
             <option value="C">📏 C 800字</option>
           </select>
         )}
+        {displayMessagesLen > 0 && <button onClick={onToggleObserver} className={`px-2 py-1 text-xs rounded ${observerMode ? 'bg-teal-900/40 text-teal-300' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`} title="观察模式">👁️ 观察</button>}
         {displayMessagesLen > 0 && <button onClick={onNovelReader} className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded" title="小说阅读">📖 阅读</button>}
         {displayMessagesLen > 0 && <button onClick={onToggleStarredOnly} className={`px-2 py-1 text-xs rounded ${showStarredOnly ? 'bg-yellow-900/40 text-yellow-300' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`} title="只看精彩片段">
           ⭐{starredCount > 0 ? starredCount : ''}
