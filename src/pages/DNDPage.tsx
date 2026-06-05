@@ -21,6 +21,20 @@ export default function DNDPage() {
 
   useEffect(() => { chatRef.current?.scrollTo(0, chatRef.current.scrollHeight); }, [messages]);
 
+  // Auto-start: ask AI GM to introduce the world / 自动让AI GM介绍世界观
+  useEffect(() => {
+    if (!sheet || !activeConfig) return;
+    const initialPrompt = `开始跑团。请先介绍这个世界、当前场景和氛围，描述玩家角色${sheet.name}身处的环境和眼前所见。`;
+    (async () => {
+      try {
+        const result = await window.electronAPI.discussSettings(activeConfig, 'script',
+          { title:'D&D跑团', worldSetting:'', background:'', mainQuests:'', sideQuests:'', environment:'', map:'', data:'' },
+          [{ role:'system', content: buildGMPrompt(sheet) }, { role:'user', content: initialPrompt }]);
+        if (result.reply) setMessages([{ role:'assistant' as const, content: result.reply! }]);
+      } catch { /* AI unavailable */ }
+    })();
+  }, [sheet]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const buildGMPrompt = (s: CharSheet): string => {
     const r = `你是D&D地下城主。玩家角色：${s.name}，${s.race} ${s.className}，Lv${s.level}。
 ${Object.entries(s.stats).map(([k,v])=>`${STAT_ZH[k]}${v}(${abilityMod(v)>=0?'+':''}${abilityMod(v)})`).join(' ')}
