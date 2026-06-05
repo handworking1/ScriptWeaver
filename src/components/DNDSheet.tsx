@@ -193,18 +193,18 @@ export function CharacterCreator({ onCreate }: { onCreate: (s: CharSheet) => voi
 
       {step === 2 && (
         <div>
-          <div className="text-gray-500 mb-2">分配属性值（推荐种族加成前总和72以内）</div>
+          <div className="text-gray-500 mb-2">分配属性值（点击+/−调整，推荐总和不超过72）</div>
           <div className="space-y-1">
             {Object.entries(stats).map(([k,v]) => (
-              <div key={k} className="flex items-center gap-2">
-                <span className="w-10 text-gray-400">{STAT_ZH[k]}</span>
-                <input type="range" min={8} max={18} value={v}
-                  onChange={e => setStats({...stats,[k]:parseInt(e.target.value)})}
-                  className="flex-1 accent-purple-500" />
-                <button onClick={() => setStats({...stats,[k]:Math.max(8,v-1)})} className="text-gray-500 hover:text-gray-300 text-xs w-4">−</button>
-                <button onClick={() => setStats({...stats,[k]:Math.min(18,v+1)})} className="text-gray-500 hover:text-gray-300 text-xs w-4">+</button>
-                <span className="w-14 text-right text-gray-200">
-                  {v} ({abilityMod(v)>=0?'+':''}{abilityMod(v)})
+              <div key={k} className="flex items-center gap-2 bg-gray-900 rounded p-2">
+                <span className="w-12 text-gray-300 text-sm">{STAT_ZH[k]}</span>
+                <button onClick={() => setStats({...stats,[k]:Math.max(8,v-1)})}
+                  className="w-8 h-8 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-lg leading-none">−</button>
+                <span className="flex-1 text-center text-lg font-bold text-purple-300">{v}</span>
+                <button onClick={() => setStats({...stats,[k]:Math.min(18,v+1)})}
+                  className="w-8 h-8 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-lg leading-none">+</button>
+                <span className="w-12 text-right text-sm text-gray-400">
+                  {abilityMod(v)>=0?'+':''}{abilityMod(v)}
                 </span>
               </div>
             ))}
