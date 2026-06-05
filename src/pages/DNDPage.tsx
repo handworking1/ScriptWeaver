@@ -43,7 +43,7 @@ HP ${s.hp.current}/${s.hp.max} AC ${s.ac} 技能:${s.profSkills.join('、')} 熟
         <div className="w-full max-w-lg">
           <h2 className="text-xl font-bold text-gray-100 mb-4 text-center">🎲 D&D 跑团</h2>
           <CharacterCreator onCreate={s => { setSheet(s); setShowCreator(false);
-            setMessages([{ role:'system', content: buildGMPrompt(s) }]); }} />
+            setMessages([]); }} />
         </div>
       </div>
     );
@@ -90,7 +90,7 @@ HP ${s.hp.current}/${s.hp.max} AC ${s.ac} 技能:${s.profSkills.join('、')} 熟
     try {
       const result = await window.electronAPI.discussSettings(activeConfig, 'script',
         { title:'D&D跑团', worldSetting:'', background:'', mainQuests:'', sideQuests:'', environment:'', map:'', data:'' },
-        [...messages.slice(-10), { role:'user', content: text }]);
+        [{ role:'system', content: buildGMPrompt(sheet) }, ...messages.slice(-10).filter(m => m.role !== 'system'), { role:'user', content: text }]);
       if (result.reply) {
         setMessages(prev => [...prev, { role:'assistant' as const, content: result.reply! }]);
       }
@@ -128,7 +128,7 @@ HP ${s.hp.current}/${s.hp.max} AC ${s.ac} 技能:${s.profSkills.join('、')} 熟
       <div className="flex-1 flex flex-col">
         {/* Chat / 聊天区 */}
         <div ref={chatRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-          {messages.map((m, i) => (
+          {messages.filter(m => m.role !== 'system').map((m, i) => (
             <div key={i} className={`${m.role==='user'?'text-right':'text-left'}`}>
               <div className={`inline-block max-w-[80%] rounded-xl px-4 py-2 text-sm ${m.role==='user'?'bg-purple-600 text-white rounded-tr-md':'bg-gray-800 text-gray-200 rounded-tl-md'}`}>
                 <div className="whitespace-pre-wrap">{m.content}</div>
