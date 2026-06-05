@@ -5,8 +5,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { DNDSheet, CharacterCreator, CharSheet } from '@/components/DNDSheet';
 import { useConfigStore } from '@/stores/configStore';
-import { roll, d20Check, abilityMod, profBonus, attackRoll, damageRoll } from '@/lib/dice';
-import { STAT_ZH, SKILLS } from '@/data/dnd5e';
+import { roll, d20Check, abilityMod, profBonus, attackRoll, damageRoll, maxHP } from '@/lib/dice';
+import { STAT_ZH, SKILLS, CLASSES } from '@/data/dnd5e';
 
 export default function DNDPage() {
   const [sheet, setSheet] = useState<CharSheet | null>(null);
@@ -23,12 +23,17 @@ export default function DNDPage() {
 
   const buildGMPrompt = (s: CharSheet): string => {
     const r = `你是D&D地下城主。玩家角色：${s.name}，${s.race} ${s.className}，Lv${s.level}。
-力量${s.stats.str}(${abilityMod(s.stats.str)>=0?'+':''}${abilityMod(s.stats.str)}) 敏捷${s.stats.dex}(${abilityMod(s.stats.dex)>=0?'+':''}${abilityMod(s.stats.dex)}) 体质${s.stats.con}(${abilityMod(s.stats.con)>=0?'+':''}${abilityMod(s.stats.con)})
-智力${s.stats.int}(${abilityMod(s.stats.int)>=0?'+':''}${abilityMod(s.stats.int)}) 感知${s.stats.wis}(${abilityMod(s.stats.wis)>=0?'+':''}${abilityMod(s.stats.wis)}) 魅力${s.stats.cha}(${abilityMod(s.stats.cha)>=0?'+':''}${abilityMod(s.stats.cha)})
-HP ${s.hp.current}/${s.hp.max} AC ${s.ac}
-熟练技能：${s.profSkills.join('、')} 熟练加值：+${profBonus(s.level)}
-装备：${s.equipment.join('、')}
-规则：需检定时报DC。成功→叙事成功；失败→有趣的意外。支持指令：/check 属性 DC、/roll 2d6+3、/attack。`;
+${Object.entries(s.stats).map(([k,v])=>`${STAT_ZH[k]}${v}(${abilityMod(v)>=0?'+':''}${abilityMod(v)})`).join(' ')}
+HP ${s.hp.current}/${s.hp.max} AC ${s.ac} 技能:${s.profSkills.join('、')} 熟练:+${profBonus(s.level)}
+装备:${s.equipment.join('、')}
+
+【怪物数据 - 可在战斗中引用】
+哥布林 HP7 AC15 攻击+4/1d6+2 敏捷隐蔽+6 | 兽人 HP15 AC13 攻击+5/1d12+3 | 骷髅 HP13 AC13 攻击+4/1d6+2 穿刺挥砍易伤 | 巨蜘蛛 HP26 AC14 攻击+5/1d8+3+毒素(体质DC11/2d8) | 石像鬼 HP52 AC15 攻击+6/2d6+3 非魔法武器抵抗 | 龙崽 HP33 AC17 攻击+6/2d6+4 喷吐武器DC11/4d6
+
+【战斗规则 - 必须遵守】
+进入战斗时：1)掷先攻→按顺序行动 2)每回合附回复末尾标注当前状态: [回合X | 敌人A HP 5/12 | 敌人B HP 0/7死亡] 3)怪物HP归零立即移除 4)战斗结束宣布经验值
+【长休/短休】短休1小时→可花费生命骰恢复HP。长休8小时→HP回满+回复一半生命骰+法术位回满
+【裁决】需检定时报DC。成功→叙事成功。失败→有趣的意外。支持指令:/check、/roll、/attack(默认vs AC12)。/status查看PC状态`;
     return r;
   };
 
@@ -100,6 +105,21 @@ HP ${s.hp.current}/${s.hp.max} AC ${s.ac}
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-bold text-gray-200">🎲 D&D 跑团</span>
           <button onClick={() => setShowCreator(true)} className="text-xs text-gray-500 hover:text-purple-400">✏️</button>
+        </div>
+        <div className="flex gap-1 mb-2">
+          <select value={sheet.level} onChange={e => {
+            const lv = parseInt(e.target.value);
+            const c = CLASSES.find(x=>x.name===sheet.className);
+            const hp = c ? maxHP(c.hitDice, abilityMod(sheet.stats.con), lv) : sheet.hp.max;
+            setSheet({...sheet, level:lv, hp:{max:hp,current:hp}});
+          }} className="bg-gray-900 border border-gray-700 rounded px-1 py-0.5 text-xs text-gray-200 flex-1">
+            {[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].map(lv=>
+              <option key={lv} value={lv}>Lv {lv}</option>)}
+          </select>
+          <button onClick={() => setSheet({...sheet, hp:{...sheet.hp, current:Math.min(sheet.hp.current+Math.ceil(sheet.hp.max/4), sheet.hp.max)}})}
+            className="px-2 py-0.5 bg-green-900/50 text-green-400 text-xs rounded" title="短休">🛌短休</button>
+          <button onClick={() => setSheet({...sheet, hp:{...sheet.hp, current:sheet.hp.max}})}
+            className="px-2 py-0.5 bg-blue-900/50 text-blue-400 text-xs rounded" title="长休">💤长休</button>
         </div>
         <DNDSheet sheet={sheet} onChange={setSheet} />
       </div>
