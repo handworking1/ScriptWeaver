@@ -34,10 +34,24 @@ export const CLASSES = [
 ];
 
 export const SKILLS = [
-  { name:'运动', stat:'str' },{ name:'体操', stat:'dex' },{ name:'巧手', stat:'dex' },{ name:'隐匿', stat:'dex' },
-  { name:'奥秘', stat:'int' },{ name:'历史', stat:'int' },{ name:'调查', stat:'int' },{ name:'自然', stat:'int' },{ name:'宗教', stat:'int' },
-  { name:'驯兽', stat:'wis' },{ name:'洞察', stat:'wis' },{ name:'医药', stat:'wis' },{ name:'察觉', stat:'wis' },{ name:'生存', stat:'wis' },
-  { name:'欺瞒', stat:'cha' },{ name:'威吓', stat:'cha' },{ name:'表演', stat:'cha' },{ name:'游说', stat:'cha' },
+  { name:'运动', stat:'str', desc:'攀爬、跳跃、游泳等体能活动' },
+  { name:'体操', stat:'dex', desc:'平衡、翻腾、空中保持姿态' },
+  { name:'巧手', stat:'dex', desc:'扒窃、开锁、机关操作' },
+  { name:'隐匿', stat:'dex', desc:'潜行、躲藏、不被发现' },
+  { name:'奥秘', stat:'int', desc:'魔法、符文、位面知识' },
+  { name:'历史', stat:'int', desc:'历史事件、王朝、古代文明' },
+  { name:'调查', stat:'int', desc:'寻找线索、推理分析、鉴别假货' },
+  { name:'自然', stat:'int', desc:'动植物、地理、天气' },
+  { name:'宗教', stat:'int', desc:'神祇、祭祀、圣物、教派' },
+  { name:'驯兽', stat:'wis', desc:'安抚动物、判断其意图' },
+  { name:'洞察', stat:'wis', desc:'识破谎言、揣摩动机' },
+  { name:'医药', stat:'wis', desc:'诊断伤情、稳定濒死同伴' },
+  { name:'察觉', stat:'wis', desc:'观察环境、发现隐藏线索' },
+  { name:'生存', stat:'wis', desc:'追踪、觅食、辨别方向' },
+  { name:'欺瞒', stat:'cha', desc:'说谎、伪装、隐瞒真相' },
+  { name:'威吓', stat:'cha', desc:'威胁、逼供、制造恐惧' },
+  { name:'表演', stat:'cha', desc:'弹唱、演讲、吸引注意' },
+  { name:'游说', stat:'cha', desc:'谈判、交涉、建立关系' },
 ];
 
 export const STAT_ZH: Record<string,string> = { str:'力量',dex:'敏捷',con:'体质',int:'智力',wis:'感知',cha:'魅力' };

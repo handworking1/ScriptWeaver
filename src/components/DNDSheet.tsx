@@ -211,15 +211,22 @@ export function CharacterCreator({ onCreate }: { onCreate: (s: CharSheet) => voi
       {step === 3 && (
         <div>
           <div className="text-gray-500 mb-2">选择熟练技能（{CLASSES.find(x=>x.name===className)?.skillCount}项）</div>
-          <div className="grid grid-cols-3 gap-1 max-h-48 overflow-y-auto">
-            {(CLASSES.find(x=>x.name===className)?.skills||[]).map(sk => (
-              <button key={sk} onClick={() => {
-                if (profSkills.includes(sk)) setProfSkills(profSkills.filter(x=>x!==sk));
-                else setProfSkills([...profSkills,sk].slice(0, CLASSES.find(x=>x.name===className)?.skillCount||2));
-              }} className={`p-1 rounded text-xs ${profSkills.includes(sk)?'bg-purple-900/60 text-purple-300':'bg-gray-700 text-gray-400'}`}>
-                {sk}
-              </button>
-            ))}
+          <div className="grid grid-cols-2 gap-1 max-h-56 overflow-y-auto">
+            {(CLASSES.find(x=>x.name===className)?.skills||[]).map(sk => {
+              const detail = SKILLS.find(s=>s.name===sk);
+              return (
+                <button key={sk} onClick={() => {
+                  if (profSkills.includes(sk)) setProfSkills(profSkills.filter(x=>x!==sk));
+                  else setProfSkills([...profSkills,sk].slice(0, CLASSES.find(x=>x.name===className)?.skillCount||2));
+                }} className={`p-2 rounded text-left ${profSkills.includes(sk)?'bg-purple-900/60 text-purple-300':'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}>
+                  <div className="flex justify-between text-xs">
+                    <span>{sk}</span>
+                    <span className="text-gray-500">({STAT_ZH[detail?.stat||'']?.[0]})</span>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-0.5">{detail?.desc}</div>
+                </button>
+              );
+            })}
           </div>
           <button onClick={() => setStep(4)} className="mt-3 w-full py-1.5 bg-purple-600 text-white rounded">下一步</button>
         </div>
